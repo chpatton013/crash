@@ -1,0 +1,9 @@
+[submodule "external/boost"]
+	path = external/boost
+	url = git@github.com:boostorg/boost.git
+[submodule "external/glm"]
+	path = external/glm
+	url = git@github.com:g-truc/glm.git
+[submodule "external/Catch"]
+	path = external/Catch
+	url = git@github.com:philsquared/Catch.git
