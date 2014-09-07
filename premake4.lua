@@ -9,10 +9,10 @@
 
 shared = {
    flags = {},
-   includedirs = {'./include'},
+   includedirs = {'./include', './external/boost', './external/glm'},
    buildoptions = {'--pipe', '--std=c++1y', '-Wno-unused-result'},
    links = {},
-   libdirs = {'./lib'},
+   libdirs = {'./lib', './external/boost/stage/lib'},
    linkoptions = {},
    headers = './include/crash'
 }
@@ -40,6 +40,10 @@ testing = {
 }
 
 modules = {
+   util = {
+      links = {'boost_filesystem', 'boost_system'}
+   },
+   math = {}
 }
 
 -- Utility functions.
