@@ -128,7 +128,8 @@ for module_name,module_config in pairs(modules) do
    configure_project(module_name, module_config, primary)
 
    -- testing target
-   table.insert(module_config.links or {}, target)
+   module_config.links = module_config.links or {}
+   table.insert(module_config.links, target)
    project(string.format('%s_test', target))
    configure_project(module_name, module_config, testing)
 end
