@@ -104,9 +104,10 @@ bool approxLessThan(T a, T b);
 template < class T >
 bool approxGreaterThan(T a, T b);
 
+/**
+ * The constant value of pi as a float.
+ */
 extern const float pi;
-extern const float degreesPerRadian;
-extern const float radiansPerDegree;
 
 /**
  * A vector marking the origin of 3-space.

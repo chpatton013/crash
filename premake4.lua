@@ -9,6 +9,7 @@
 
 shared = {
    flags = {},
+   defines = {'GLM_FORCE_RADIANS'},
    includedirs = {'./include', './external/boost', './external/glm'},
    buildoptions = {'--pipe', '--std=c++1y', '-Wno-unused-result'},
    links = {},
@@ -94,6 +95,7 @@ function configure_project(module_name, module_config, template)
    })
 
    flags(config_merge(template, module_config, 'flags'))
+   defines(config_merge(template, module_config, 'defines'))
 
    includedirs(config_merge(template, module_config, 'includedirs'))
    buildoptions(config_merge(template, module_config, 'buildoptions'))

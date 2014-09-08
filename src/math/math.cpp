@@ -44,18 +44,13 @@ glm::mat4 crash::math::transform(const glm::vec3& position,
 
 glm::mat4 crash::math::transform(const glm::vec3& position,
  const glm::vec4& orientation) {
-   // glm::rotate takes degress, but we take radians.
-   float angle = orientation.w * degreesPerRadian;
-
    glm::mat4 translate = glm::translate(position);
-   glm::mat4 rotate = glm::rotate(angle, glm::vec3(orientation));
+   glm::mat4 rotate = glm::rotate(orientation.w, glm::vec3(orientation));
 
    return translate * rotate;
 }
 
-float const crash::math::pi = boost::math::constants::pi< double >();
-float const crash::math::degreesPerRadian = 180.0f / crash::math::pi;
-float const crash::math::radiansPerDegree = crash::math::pi / 180.0f;
+float const crash::math::pi = boost::math::constants::pi< float >();
 const glm::vec3 crash::math::origin = glm::vec3(0.0f);
 const glm::vec3 crash::math::xAxis = glm::vec3(1.0f, 0.0f, 0.0f);
 const glm::vec3 crash::math::yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
