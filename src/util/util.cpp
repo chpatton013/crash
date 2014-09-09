@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <cmath>
+#include <cstdlib>
 #include <glm/gtc/type_ptr.hpp>
 
 using namespace crash::util;
