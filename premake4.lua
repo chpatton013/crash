@@ -44,7 +44,10 @@ modules = {
    util = {
       links = {'boost_filesystem', 'boost_system'}
    },
-   math = {}
+   math = {},
+   space = {
+      links = {'crash_math', 'crash_util'}
+   }
 }
 
 -- Utility functions.
