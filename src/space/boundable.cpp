@@ -144,7 +144,7 @@ const std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS >&
 // Other methods
 ///////////////////////////////////////////////////////////////////////////////
 
-bool Boundable::isVisible(ViewFrustum& viewFrustum) {
+bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
    CAUTO corners = this->getCorners();
    CAUTO diagonals = this->getDiagonalDirections();
    CAUTO frustumPlanes = viewFrustum.getPlanes();

@@ -105,7 +105,7 @@ public:
     *
     * :param viewFrustum:  The ViewFrustum to test this Boundable against.
     */
-   bool isVisible(ViewFrustum& viewFrustum);
+   bool isVisible(const ViewFrustum& viewFrustum);
 
    /**
     * Determine if this Boundable is intersecting with the specified other
