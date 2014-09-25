@@ -1,0 +1,66 @@
+#include <crash/math/math.hpp>
+#include <crash/space/bounding_group.hpp>
+#include <crash/util/type.hpp>
+
+using namespace crash::space;
+
+BoundingGroup::BoundingGroup(const glm::vec3& position,
+ const glm::vec3& scale) :
+   Boundable(position, glm::vec4(crash::math::xAxis, 0.0f), scale)
+{}
+
+void BoundingGroup::add(Boundable* boundable) {
+   this->_boundables.insert(boundable);
+}
+
+bool BoundingGroup::remove(Boundable* boundable) {
+   CAUTO itr = this->_boundables.find(boundable);
+   if (itr != this->_boundables.end()) {
+      this->_boundables.erase(itr);
+      return true;
+   }
+
+   return false;
+}
+
+void BoundingGroup::clear() {
+   this->_boundables.clear();
+}
+
+const std::set< Boundable* >& BoundingGroup::getBoundables() const {
+   return this->_boundables;
+}
+
+std::vector< Collision > BoundingGroup::getCollidingElements() const {
+   std::vector< Collision > queue;
+   CAUTO begin = this->_boundables.begin();
+   CAUTO end = this->_boundables.end();
+
+   for (auto itrA = begin; itrA != end; ++itrA) {
+      auto itrB = itrA;
+
+      while (++itrB != end) {
+         CAUTO a = *itrA;
+         CAUTO b = *itrB;
+
+         if (a->intersect(*b)) {
+            queue.push_back(Collision::factory(a, b));
+         }
+      }
+   }
+
+   return queue;
+}
+
+std::vector< Boundable* > BoundingGroup::getVisibleElements(
+ const ViewFrustum& viewFrustum) const {
+   std::vector< Boundable* > queue;
+
+   for (CAUTO boundable : this->_boundables) {
+      if (boundable->isVisible(viewFrustum)) {
+         queue.push_back(boundable);
+      }
+   }
+
+   return queue;
+}
