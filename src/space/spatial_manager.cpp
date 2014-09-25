@@ -1,0 +1,191 @@
+#include <unordered_set>
+#include <crash/math/plane.hpp>
+#include <crash/space/spatial_manager.hpp>
+#include <crash/util/type.hpp>
+#include <crash/util/util.hpp>
+
+using namespace crash::space;
+
+SpatialManager::SpatialManager(const glm::vec3& dimensions,
+ const glm::ivec3& partitions) :
+   numBoundables(0)
+{
+   this->partition(dimensions, partitions);
+}
+
+SpatialManager::~SpatialManager() {
+   this->deleteGroups();
+}
+
+void SpatialManager::resize(const glm::vec3& dimensions,
+ const glm::ivec3& partitions) {
+   CAUTO boundables = this->getBoundables();
+
+   this->deleteGroups();
+   this->partition(dimensions, partitions);
+
+   for (CAUTO boundable : boundables) {
+      this->add(boundable);
+   }
+}
+
+bool SpatialManager::add(Boundable* boundable) {
+   bool added = false;
+
+   for (CAUTO group : this->boundingGroups) {
+      if (boundable->intersect(*group)) {
+         group->add(boundable);
+         added = true;
+      }
+   }
+
+   if (added) {
+      ++this->numBoundables;
+   }
+
+   return added;
+}
+
+bool SpatialManager::remove(Boundable* boundable) {
+   bool removed = false;
+
+   for (CAUTO group : this->boundingGroups) {
+      removed |= group->remove(boundable);
+   }
+
+   if (removed) {
+      --this->numBoundables;
+   }
+
+   return removed;
+}
+
+void SpatialManager::clear() {
+   for (CAUTO group : this->boundingGroups) {
+      group->clear();
+   }
+
+   this->numBoundables = 0;
+}
+
+const glm::vec3& SpatialManager::getDimensions() const {
+   return this->dimensions;
+}
+
+const glm::ivec3& SpatialManager::getPartitions() const {
+   return this->partitions;
+}
+
+int SpatialManager::getBoundableCount() const {
+   return this->numBoundables;
+}
+
+int SpatialManager::getBoundingGroupCount() const {
+   return this->boundingGroups.size();
+}
+
+std::vector< Boundable* > SpatialManager::getBoundables() const {
+   std::vector< Boundable* > accumulator;
+   std::set< Boundable* > mark;
+
+   accumulator.reserve(this->numBoundables);
+   for (CAUTO group : this->boundingGroups) {
+      for (CAUTO boundable : group->getBoundables()) {
+         auto itr = mark.find(boundable);
+         if (itr == mark.end()) {
+            accumulator.push_back(boundable);
+            mark.insert(boundable);
+         }
+      }
+   }
+
+   return accumulator;
+}
+
+std::vector< BoundingGroup* > SpatialManager::getBoundingGroups() const {
+   return this->boundingGroups;
+}
+
+std::vector< BoundingGroup* > SpatialManager::getContainingGroups(
+ Boundable* boundable) const {
+   std::vector< BoundingGroup* > groups;
+
+   for (CAUTO group : this->boundingGroups) {
+      if (boundable->intersect(*group)) {
+         groups.push_back(group);
+      }
+   }
+
+   return groups;
+}
+
+std::vector< Collision > SpatialManager::getCollisionQueue() const {
+   std::vector< Collision > accumulator;
+   std::unordered_set< Collision > mark;
+
+   for (CAUTO group : this->boundingGroups) {
+      for (CAUTO collision : group->getCollidingElements()) {
+         auto itr = mark.find(collision);
+         if (itr == mark.end()) {
+            accumulator.push_back(collision);
+            mark.insert(collision);
+         }
+      }
+   }
+
+   return accumulator;
+}
+
+std::vector< Boundable* > SpatialManager::getRenderQueue(
+ const ViewFrustum& viewFrustum) const {
+   std::vector< Boundable* > accumulator;
+   std::unordered_set< Boundable* > mark;
+
+   for (CAUTO group : this->boundingGroups) {
+      for (CAUTO boundable : group->getVisibleElements(viewFrustum)) {
+         CAUTO itr = mark.find(boundable);
+         if (itr == mark.end()) {
+            accumulator.push_back(boundable);
+            mark.insert(boundable);
+         }
+      }
+   }
+
+   return accumulator;
+}
+
+void SpatialManager::partition(const glm::vec3& dimensions,
+ const glm::ivec3& partitions) {
+   this->dimensions = dimensions;
+   this->partitions = partitions;
+
+   int totalPartitions = this->partitions.x * this->partitions.y *
+    this->partitions.z;
+   this->boundingGroups.reserve(totalPartitions);
+
+   glm::vec3 partDims = glm::vec3(
+      dimensions.x / (float)partitions.x,
+      dimensions.y / (float)partitions.y,
+      dimensions.z / (float)partitions.z
+   );
+   glm::vec3 partCenter = partDims * 0.5f;
+
+   for (int ndx = 0; ndx < totalPartitions; ++ndx) {
+      glm::ivec3 index = crash::util::vectorize_index(ndx, this->partitions);
+      glm::vec3 center = partCenter + glm::vec3(
+         index.x * partDims.x,
+         index.y * partDims.y,
+         index.z * partDims.z
+      );
+      this->boundingGroups.push_back(new BoundingGroup(center, partDims));
+   }
+}
+
+void SpatialManager::deleteGroups() {
+   for (CAUTO group : this->boundingGroups) {
+      delete group;
+   }
+
+   this->boundingGroups.clear();
+   this->numBoundables = 0;
+}
