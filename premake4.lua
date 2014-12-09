@@ -1,115 +1,23 @@
--- Define confirations here. Valid options are:
---    kind (ConsoleApp, WindowedApp, StaticLib, or SharedLib)
---    flags (list of premake flags)
---    includedirs (list of paths to search for header files)
---    buildoptions (list of literal options to pass to the compiler)
---    links (list of libraries to link in binary targets)
---    libdirs (list of paths to search for libraries)
---    linkoptions (list of literal options to pass to the linker)
-
-shared = {
-   flags = {},
-   defines = {'GLM_FORCE_RADIANS'},
-   includedirs = {'./include', './external/boost', './external/glm'},
-   buildoptions = {'--pipe', '--std=c++1y', '-Wno-unused-result'},
-   links = {},
-   libdirs = {'./lib', './external/boost/stage/lib'},
-   linkoptions = {},
-   headers = './include/crash'
-}
-
-primary = {
-   kind = 'SharedLib',
-   flags = {},
-   includedirs = {},
-   buildoptions = {},
-   links = {},
-   libdirs = {},
-   linkoptions = {},
-   sources = './src'
-}
-
-testing = {
-   kind = 'ConsoleApp',
-   flags = {},
-   includedirs = {'./external/Catch/single_include'},
-   buildoptions = {},
-   links = {},
-   libdirs = {},
-   linkoptions = {},
-   sources = './tests'
-}
-
-modules = {
-   util = {
-      links = {'boost_filesystem', 'boost_system'}
-   },
-   math = {},
-   space = {
-      links = {'crash_math', 'crash_util'}
-   }
-}
-
--- Utility functions.
-function set_join(first_table, second_table)
-   first_table = first_table or {}
-   second_table = second_table or {}
-
-   -- Merge values in first and second table into accumulator.
-   -- Use keys to ensure unique elements.
-   local accumulator = {}
-   for k,v in pairs(first_table) do
-      accumulator[v] = 1
-   end
-   for k,v in pairs(second_table) do
-      accumulator[v] = 1
-   end
-
-   -- Flatten accumulator into list.
-   local list = {}
-   for k,v in pairs(accumulator) do
-      table.insert(list, k)
-   end
-
-   return list
-end
-
-function config_merge(template, module_config, key)
-   return set_join(set_join(shared[key], template[key]), module_config[key]);
-end
-
-function configure_project(module_name, module_config, template)
-   language('C++')
-
-   local project_kind = module_config.kind or template.kind or 'SharedLib'
-   kind(project_kind)
-   if project_kind == 'SharedLib' or project_kind == 'StaticLib' then
-      targetdir('./lib')
-   else
-      targetdir('./bin')
-   end
-
-   local headers = module_config.headers or template.headers or shared.headers
-   local sources = module_config.sources or template.sources or shared.sources
-   files({
-      string.format('%s/%s/**.cpp', sources, module_name),
-      string.format('%s/%s/**.hpp', headers, module_name),
-      string.format('%s/%s/**.inl', headers, module_name)
-   })
-
-   flags(config_merge(template, module_config, 'flags'))
-   defines(config_merge(template, module_config, 'defines'))
-
-   includedirs(config_merge(template, module_config, 'includedirs'))
-   buildoptions(config_merge(template, module_config, 'buildoptions'))
-
-   links(config_merge(template, module_config, 'links'))
-   libdirs(config_merge(template, module_config, 'libdirs'))
-   linkoptions(config_merge(template, module_config, 'linkoptions'))
-end
-
--- Makefile generation.
 solution('crash')
+language('C++')
+
+defines({'GLM_FORCE_RADIANS'})
+includedirs({
+   'include',
+   'external/boost',
+   'external/glm',
+})
+libdirs({
+   'lib',
+   'external/boost/stage/lib',
+})
+buildoptions({
+   '--pipe',
+   '--std=c++1y',
+   '-Wno-unused-result',
+})
+linkoptions({})
+
 configurations('debug', 'profile', 'release')
 
 configuration('debug')
@@ -124,15 +32,71 @@ configuration('release')
 defines({'NDEBUG', 'NPROFILE', 'RELEASE'})
 flags({'OptimizeSpeed'})
 
-for module_name,module_config in pairs(modules) do
-   local target = 'crash_' .. module_name
-   -- primary target
-   project(target)
-   configure_project(module_name, module_config, primary)
+project('crash_util')
+kind('SharedLib')
+targetdir('lib')
+files({
+   'src/util/**.cpp',
+   'include/crash/util/**.hpp',
+   'include/crash/util/**.inl'
+})
+links({
+   'boost_filesystem',
+   'boost_system',
+})
+linkoptions({})
 
-   -- testing target
-   module_config.links = module_config.links or {}
-   table.insert(module_config.links, target)
-   project(string.format('%s_test', target))
-   configure_project(module_name, module_config, testing)
-end
+project('crash_math')
+kind('SharedLib')
+targetdir('lib')
+files({
+   'src/math/**.cpp',
+   'include/crash/math/**.hpp',
+   'include/crash/math/**.inl'
+})
+links({})
+linkoptions({})
+
+project('crash_space')
+kind('SharedLib')
+targetdir('lib')
+files({
+   'src/space/**.cpp',
+   'include/crash/space/**.hpp',
+   'include/crash/space/**.inl'
+})
+links({
+   'crash_math',
+   'crash_util',
+})
+linkoptions({})
+
+project('crash_window')
+kind('SharedLib')
+targetdir('lib')
+files({
+   'src/window/**.cpp',
+   'include/crash/window/**.hpp',
+   'include/crash/window/**.inl'
+})
+links({
+   'glfw3'
+})
+linkoptions({})
+
+project('crash_test')
+kind('ConsoleApp')
+targetdir('bin')
+files({
+   'tests/**.cpp',
+   'tests/**.hpp',
+   'tests/**.inl'
+})
+links({
+   'crash_util',
+   'crash_math',
+   'crash_space',
+   'boost_filesystem',
+   'boost_system',
+})
+linkoptions({})
