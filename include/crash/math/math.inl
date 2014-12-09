@@ -16,21 +16,21 @@ bool approxEqual(const T& a, const T& b) {
 }
 
 template<>
-bool approxEqual< glm::vec3 >(const glm::vec3& a, const glm::vec3& b) {
+/* inline */ bool approxEqual< glm::vec3 >(const glm::vec3& a, const glm::vec3& b) {
    static const float epsilon = std::numeric_limits< float >::epsilon();
 
    return glm::epsilonEqual(a, b, epsilon).x;
 }
 
 template<>
-bool approxEqual< glm::vec4 >(const glm::vec4& a, const glm::vec4& b) {
+/* inline */ bool approxEqual< glm::vec4 >(const glm::vec4& a, const glm::vec4& b) {
    static const float epsilon = std::numeric_limits< float >::epsilon();
 
    return glm::epsilonEqual(a, b, epsilon).x;
 }
 
 template<>
-bool approxEqual< glm::mat4 >(const glm::mat4& a, const glm::mat4& b) {
+/* inline */ bool approxEqual< glm::mat4 >(const glm::mat4& a, const glm::mat4& b) {
    const float* av = glm::value_ptr(a);
    const float* bv = glm::value_ptr(b);
 

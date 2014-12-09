@@ -8,9 +8,8 @@
 namespace crash {
 namespace util {
 
-// static
 template< typename T >
-boost::optional< std::shared_ptr< T > > File::New(const std::string& fileName,
+/* static */ boost::optional< std::shared_ptr< T > > File::New(const std::string& fileName,
  std::unordered_map< std::string, std::shared_ptr< T > >& instances) {
    static boost::optional< std::shared_ptr< T > > none;
 
@@ -64,9 +63,8 @@ boost::optional< std::shared_ptr< T > > File::New(const std::string& fileName,
    return instances[absoluteFileName] = file;
 }
 
-// static
 template< typename T >
-bool File::Delete(std::shared_ptr< T > file,
+/* static */ bool File::Delete(std::shared_ptr< T > file,
  std::unordered_map< std::string, std::shared_ptr< T > >& instances) {
    auto itr = instances.find(file->path().string());
    if (itr == instances.end()) {

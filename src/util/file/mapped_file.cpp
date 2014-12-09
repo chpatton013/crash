@@ -35,7 +35,7 @@ MappedFile::MappedFile(const std::string& path) :
    this->_valid = true;
 }
 
-MappedFile::~MappedFile() {
+/* virtual */ MappedFile::~MappedFile() {
    this->flush();
    ::munmap(this->_data, this->_size);
 }
@@ -77,35 +77,28 @@ bool MappedFile::flush() {
    return ::msync(this->_data, this->_size, MS_SYNC) == 0;
 }
 
-// static
-boost::optional< std::shared_ptr< MappedFile > >
+/* static */ boost::optional< std::shared_ptr< MappedFile > >
  MappedFile::New(const std::string& fileName) {
    std::lock_guard<std::mutex> lock(MappedFile::_instanceMutex);
 
    return File::New< MappedFile >(fileName, MappedFile::_instances);
 }
 
-// static
-bool MappedFile::Delete(std::shared_ptr< MappedFile > file) {
+/* static */ bool MappedFile::Delete(std::shared_ptr< MappedFile > file) {
    std::lock_guard<std::mutex> lock(MappedFile::_instanceMutex);
 
    return File::Delete< MappedFile >(file, MappedFile::_instances);
 }
 
-// static
-std::size_t MappedFile::bufferCeil(std::size_t size) {
+/* static */ std::size_t MappedFile::bufferCeil(std::size_t size) {
    static const std::size_t bufferSize = ::getpagesize();
 
    int buffers = std::max((int)std::ceil(size / (float)bufferSize), 1);
    return buffers * bufferSize;
 }
 
-// static
-std::unordered_map< std::string, std::shared_ptr< MappedFile > > MappedFile::_instances;
-// static
-std::mutex MappedFile::_instanceMutex;
+/* static */ std::unordered_map< std::string, std::shared_ptr< MappedFile > > MappedFile::_instances;
+/* static */ std::mutex MappedFile::_instanceMutex;
 
-// static
-const int MappedFile::_protFlags = PROT_READ | PROT_WRITE;
-// static
-const int MappedFile::_mapFlags = MAP_SHARED;
+/* static */ const int MappedFile::_protFlags = PROT_READ | PROT_WRITE;
+/* static */ const int MappedFile::_mapFlags = MAP_SHARED;

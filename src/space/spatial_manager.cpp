@@ -12,7 +12,7 @@ SpatialManager::SpatialManager(const glm::vec3& dimensions,
    this->partition(dimensions, partitions);
 }
 
-SpatialManager::~SpatialManager() {
+/* virtual */ SpatialManager::~SpatialManager() {
    this->deleteGroups();
 }
 

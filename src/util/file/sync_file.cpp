@@ -11,7 +11,7 @@ SyncFile::SyncFile(const std::string& path) :
    File(path)
 {}
 
-SyncFile::~SyncFile() {}
+/* virtual */ SyncFile::~SyncFile() {}
 
 off_t SyncFile::seek(off_t offset, int whence) {
    return ::lseek(this->_handle, offset, whence);
@@ -33,22 +33,18 @@ bool SyncFile::sync() {
    return ::fcntl(this->_handle, F_FULLFSYNC) == 0;
 }
 
-// static
-boost::optional< std::shared_ptr< SyncFile > >
+/* static */ boost::optional< std::shared_ptr< SyncFile > >
  SyncFile::New(const std::string& fileName) {
    std::lock_guard<std::mutex> lock(SyncFile::_instanceMutex);
 
    return File::New< SyncFile >(fileName, SyncFile::_instances);
 }
 
-// static
-bool SyncFile::Delete(std::shared_ptr< SyncFile > file) {
+/* static */ bool SyncFile::Delete(std::shared_ptr< SyncFile > file) {
    std::lock_guard<std::mutex> lock(SyncFile::_instanceMutex);
 
    return File::Delete< SyncFile >(file, SyncFile::_instances);
 }
 
-// static
-std::unordered_map< std::string, std::shared_ptr< SyncFile > > SyncFile::_instances;
-// static
-std::mutex SyncFile::_instanceMutex;
+/* static */ std::unordered_map< std::string, std::shared_ptr< SyncFile > > SyncFile::_instances;
+/* static */ std::mutex SyncFile::_instanceMutex;

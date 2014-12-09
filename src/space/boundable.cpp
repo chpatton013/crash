@@ -320,8 +320,7 @@ bool Boundable::intersectAsBoxes(Boundable& other) {
    return true;
 }
 
-// static
-std::tuple< boost::optional< Boundable::intersection_data_t >, bool >
+/* static */ std::tuple< boost::optional< Boundable::intersection_data_t >, bool >
  Boundable::initializeIntersectionData(Boundable& a, Boundable& b) {
    bool existsParallelPair = false;
 
@@ -391,8 +390,7 @@ std::tuple< boost::optional< Boundable::intersection_data_t >, bool >
    return intersection_data_generation_t(intersectionDataOpt, existsParallelPair);
 }
 
-// static
-float Boundable::centerDifferenceProjection(int aNdx, int bNdx,
+/* static */ float Boundable::centerDifferenceProjection(int aNdx, int bNdx,
  const glm::vec3& normalDots,
  std::array< std::array< float, 3 >, 3 > coefMatrix) {
    int aCoefXNdx, aCoefYNdx;
@@ -409,8 +407,7 @@ float Boundable::centerDifferenceProjection(int aNdx, int bNdx,
    return std::abs(normalDots[aDotNdx] * aCoef - normalDots[bDotNdx] * bCoef);
 }
 
-// static
-float Boundable::thisIntersectionRadiusProjection(int aNdx, int bNdx,
+/* static */ float Boundable::thisIntersectionRadiusProjection(int aNdx, int bNdx,
  const glm::vec3& aSize,
  std::array< std::array< float, 3 >, 3 > absCoefMatrix) {
    int aCoefXNdx, aCoefYNdx;
@@ -427,8 +424,7 @@ float Boundable::thisIntersectionRadiusProjection(int aNdx, int bNdx,
    return aSize[aSizeNdx] * aCoef + aSize[bSizeNdx] * bCoef;
 }
 
-// static
-float Boundable::otherIntersectionRadiusProjection(int aNdx, int bNdx,
+/* static */ float Boundable::otherIntersectionRadiusProjection(int aNdx, int bNdx,
  const glm::vec3& bSize,
  std::array< std::array< float, 3 >, 3 > absCoefMatrix) {
    int aCoefXNdx, aCoefYNdx;

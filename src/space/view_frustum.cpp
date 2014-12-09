@@ -12,8 +12,7 @@ const std::array< crash::math::Plane, NUM_VIEW_FRUSTUM_PLANES >
    return this->_planes;
 }
 
-// static
-ViewFrustum ViewFrustum::fromValues(float fieldOfView, float aspectRatio,
+/* static */ ViewFrustum ViewFrustum::fromValues(float fieldOfView, float aspectRatio,
  float nearPlane, float farPlane, const glm::mat4& transformMatrix) {
    float tanX = tan(fieldOfView * aspectRatio * 0.5f);
    float tanY = tan(fieldOfView * 0.5f);
@@ -36,8 +35,7 @@ ViewFrustum ViewFrustum::fromValues(float fieldOfView, float aspectRatio,
    return ViewFrustum::fromCorners(corners, transformMatrix);
 }
 
-// static
-ViewFrustum ViewFrustum::fromCorners(
+/* static */ ViewFrustum ViewFrustum::fromCorners(
  const std::array< glm::vec3, NUM_VIEW_FRUSTUM_CORNERS >& corners,
  const glm::mat4& transformMatrix) {
    std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS > wideCorners;
@@ -48,8 +46,7 @@ ViewFrustum ViewFrustum::fromCorners(
    return ViewFrustum::fromCorners(wideCorners, transformMatrix);
 }
 
-// static
-ViewFrustum ViewFrustum::fromCorners(
+/* static */ ViewFrustum ViewFrustum::fromCorners(
  const std::array< glm::vec3, NUM_VIEW_FRUSTUM_CORNERS >& corners) {
    std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS > wideCorners;
    for (int ndx = 0; ndx < NUM_VIEW_FRUSTUM_CORNERS; ++ndx) {
@@ -59,8 +56,7 @@ ViewFrustum ViewFrustum::fromCorners(
    return ViewFrustum::fromCorners(wideCorners);
 }
 
-// static
-ViewFrustum ViewFrustum::fromCorners(
+/* static */ ViewFrustum ViewFrustum::fromCorners(
  const std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS >& corners,
  const glm::mat4& transformMatrix) {
    std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS > transformedCorners;
@@ -71,8 +67,7 @@ ViewFrustum ViewFrustum::fromCorners(
    return ViewFrustum::fromCorners(transformedCorners);
 }
 
-// static
-ViewFrustum ViewFrustum::fromCorners(
+/* static */ ViewFrustum ViewFrustum::fromCorners(
  const std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS >& corners) {
    std::array< math::Plane, NUM_VIEW_FRUSTUM_PLANES > planes {{
       math::Plane::fromPoints(corners[0], corners[4], corners[6]), // 0:left
