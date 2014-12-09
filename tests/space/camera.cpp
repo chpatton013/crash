@@ -1,10 +1,10 @@
-#include <array>
+#include <catch.hpp>
 #include <cmath>
+#include <array>
 #include <vector>
 #include <crash/math/math.hpp>
 #include <crash/math/plane.hpp>
 #include <crash/space/camera.hpp>
-#include <catch.hpp>
 
 using namespace crash::space;
 

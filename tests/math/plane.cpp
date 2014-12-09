@@ -1,9 +1,8 @@
-#include <crash/math/plane.hpp>
 #include <catch.hpp>
-
 #include <cmath>
 #include <glm/glm.hpp>
-#include <crash/util/util.hpp>
+#include <crash/math/math.hpp>
+#include <crash/math/plane.hpp>
 
 using namespace crash::math;
 

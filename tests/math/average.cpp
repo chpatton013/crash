@@ -1,5 +1,5 @@
-#include <crash/math/math.hpp>
 #include <catch.hpp>
+#include <crash/math/math.hpp>
 
 using namespace crash::math;
 

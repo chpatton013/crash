@@ -1,3 +1,4 @@
+#include <catch.hpp>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -9,7 +10,6 @@
 #include <boost/optional/optional.hpp>
 #include <crash/util/file/sync_file.hpp>
 #include <crash/util/file/mapped_file.hpp>
-#include <catch.hpp>
 
 #ifndef TMPDIR
 #define TMPDIR "/tmp/crash"

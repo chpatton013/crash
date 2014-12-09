@@ -1,7 +1,7 @@
+#include <catch.hpp>
 #include <crash/math/math.hpp>
 #include <crash/space/boundable.hpp>
 #include <crash/space/spatial_manager.hpp>
-#include <catch.hpp>
 
 using namespace crash::space;
 

@@ -1,10 +1,8 @@
-#include <crash/math/math.hpp>
 #include <catch.hpp>
-#include <crash/util/util.hpp>
-
 #include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <crash/math/math.hpp>
 
 using namespace crash::math;
 

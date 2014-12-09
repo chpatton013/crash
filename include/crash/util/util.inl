@@ -1,7 +1,6 @@
 #pragma once
 
 #include <tuple>
-#include <crash/math/math.hpp>
 
 namespace crash {
 namespace util {

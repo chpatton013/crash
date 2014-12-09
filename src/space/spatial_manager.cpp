@@ -1,7 +1,7 @@
 #include <unordered_set>
+#include <crash/math/math.hpp>
 #include <crash/math/plane.hpp>
 #include <crash/space/spatial_manager.hpp>
-#include <crash/util/util.hpp>
 
 using namespace crash::space;
 
@@ -170,7 +170,7 @@ void SpatialManager::partition(const glm::vec3& dimensions,
    glm::vec3 partCenter = partDims * 0.5f;
 
    for (int ndx = 0; ndx < totalPartitions; ++ndx) {
-      glm::ivec3 index = crash::util::vectorize_index(ndx, this->partitions);
+      glm::ivec3 index = crash::math::vectorize_index(ndx, this->partitions);
       glm::vec3 center = partCenter + glm::vec3(
          index.x * partDims.x,
          index.y * partDims.y,

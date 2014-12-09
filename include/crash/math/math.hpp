@@ -6,6 +6,24 @@ namespace crash {
 namespace math {
 
 /**
+ * Linearizes a vector-index from a 3-dimensional vector space.
+ *
+ * :param index:  The vector index to linearize.
+ * :param bounds: The extents of the vector space.
+ * :return: The linearized index in the vector space.
+ */
+int linearize_index(const glm::ivec3& index, const glm::ivec3& bounds);
+
+/**
+ * Vectorizes a linear-index from a 3-dimensional vector space.
+ *
+ * :param index:  The linear index to vectorize.
+ * :param bounds: The extents of the vector space.
+ * :return: The vectorized index in the vector space.
+ */
+glm::ivec3 vectorize_index(int index, const glm::ivec3& bounds);
+
+/**
  * Generate a rotation vector from a given axis and rotation angle.
  *
  * :param axis:   The axis of rotation.

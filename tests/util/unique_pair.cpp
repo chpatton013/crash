@@ -1,6 +1,6 @@
+#include <catch.hpp>
 #include <tuple>
 #include <crash/util/util.hpp>
-#include <catch.hpp>
 
 using namespace crash::util;
 

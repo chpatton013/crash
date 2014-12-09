@@ -1,7 +1,7 @@
-#include <crash/util/util.hpp>
 #include <catch.hpp>
+#include <crash/math/math.hpp>
 
-using namespace crash::util;
+using namespace crash::math;
 
 TEST_CASE("util/linearize_index/linear") {
    glm::ivec3 x = glm::ivec3(2, 1, 1);
