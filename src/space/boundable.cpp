@@ -1,6 +1,6 @@
+#include <cmath>
 #include <crash/space/boundable.hpp>
 #include <crash/math/math.hpp>
-#include <crash/util/type.hpp>
 
 using namespace crash::space;
 
@@ -145,9 +145,9 @@ const std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS >&
 ///////////////////////////////////////////////////////////////////////////////
 
 bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
-   CAUTO corners = this->getCorners();
-   CAUTO diagonals = this->getDiagonalDirections();
-   CAUTO frustumPlanes = viewFrustum.getPlanes();
+   auto corners = this->getCorners();
+   auto diagonals = this->getDiagonalDirections();
+   auto frustumPlanes = viewFrustum.getPlanes();
 
    // Utilize temporal locality by starting at the last failing plane.
    for (int planeCount = 0; planeCount < NUM_VIEW_FRUSTUM_PLANES; ++planeCount) {
@@ -174,8 +174,8 @@ bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
 
       // Check distance of each extreme point.
       // This step involves 1 or 2 dot products.
-      CAUTO v1 = corners[closestDiagonal];
-      CAUTO v2 = corners[(NUM_BOUNDABLE_CORNERS - 1) - closestDiagonal];
+      auto v1 = corners[closestDiagonal];
+      auto v2 = corners[(NUM_BOUNDABLE_CORNERS - 1) - closestDiagonal];
       if (plane.distance(v1) < 0 && plane.distance(v2) < 0) {
          this->_frustumPlaneIndex = planeNdx;
          return false;
@@ -205,7 +205,7 @@ void Boundable::invalidate() {
 }
 
 void Boundable::generateRadius() {
-   float radius = math::fastSqrt(glm::dot(this->_size, this->_size));
+   float radius = std::sqrt(glm::dot(this->_size, this->_size));
    this->_radius = boost::optional< float >(radius);
 }
 
@@ -228,7 +228,7 @@ void Boundable::generateCorners() {
 
    std::array< glm::vec3, NUM_BOUNDABLE_CORNERS > corners;
 
-   CAUTO transform = this->getTransform();
+   auto transform = this->getTransform();
    for (int ndx = 0; ndx < NUM_BOUNDABLE_CORNERS; ++ndx) {
       corners[ndx] = glm::vec3(transform * unitCorners[ndx]);
    }
@@ -238,7 +238,7 @@ void Boundable::generateCorners() {
 }
 
 void Boundable::generateFaceNormals() {
-   CAUTO corners = this->getCorners();
+   auto corners = this->getCorners();
 
    std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS> normals {{
       math::Plane::fromPoints(corners[3], corners[1], corners[5]).normal, // 1:right
@@ -251,12 +251,12 @@ void Boundable::generateFaceNormals() {
 }
 
 void Boundable::generateDiagonalDirections() {
-   CAUTO corners = this->getCorners();
+   auto corners = this->getCorners();
 
    std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS > diagonals;
    for (int ndx = 0; ndx < NUM_BOUNDABLE_DIAGONALS; ++ndx) {
-      CAUTO v1 = corners[ndx];
-      CAUTO v2 = corners[(NUM_BOUNDABLE_CORNERS - 1) - ndx];
+      auto v1 = corners[ndx];
+      auto v2 = corners[(NUM_BOUNDABLE_CORNERS - 1) - ndx];
       diagonals[ndx] = glm::normalize(glm::vec3(v2 - v1));
    }
 
@@ -330,8 +330,8 @@ std::tuple< boost::optional< Boundable::intersection_data_t >, bool >
    glm::vec3 aSize = a.size() * 0.5f;
    glm::vec3 bSize = b.size() * 0.5f;
 
-   CAUTO aNormals = a.getFaceNormals();
-   CAUTO bNormals = b.getFaceNormals();
+   auto aNormals = a.getFaceNormals();
+   auto bNormals = b.getFaceNormals();
 
    glm::vec3 normalDots;
    std::array< std::array< float, 3 >, 3 > coefMatrix;

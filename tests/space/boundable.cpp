@@ -1,7 +1,6 @@
 #include <array>
 #include <cmath>
 #include <vector>
-#include <crash/util/type.hpp>
 #include <crash/math/math.hpp>
 #include <crash/space/boundable.hpp>
 #include <crash/space/camera.hpp>

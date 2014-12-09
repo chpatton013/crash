@@ -1,7 +1,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <crash/math/math.hpp>
 #include <crash/space/camera.hpp>
-#include <crash/util/type.hpp>
 
 using namespace crash::space;
 
@@ -89,7 +88,7 @@ const ViewFrustum& Camera::getViewFrustum() {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool Camera::isPointVisible(const glm::vec3& point) {
-   for (CAUTO plane : this->getViewFrustum().getPlanes()) {
+   for (auto plane : this->getViewFrustum().getPlanes()) {
       if (plane.distance(point) < 0) {
          return false;
       }

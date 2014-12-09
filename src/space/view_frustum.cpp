@@ -1,5 +1,4 @@
 #include <crash/space/view_frustum.hpp>
-#include <crash/util/type.hpp>
 
 using namespace crash::space;
 

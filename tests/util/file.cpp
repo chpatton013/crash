@@ -97,15 +97,15 @@ TEST_CASE("util/file/open/singleton") {
    std::string directory = mkDir();
    std::string fileName = mkFile(directory);
 
-   CAUTO syncFileOpt1 = SyncFile::New(fileName);
-   CAUTO syncFileOpt2 = SyncFile::New(fileName);
+   auto syncFileOpt1 = SyncFile::New(fileName);
+   auto syncFileOpt2 = SyncFile::New(fileName);
 
    REQUIRE(syncFileOpt1);
    REQUIRE(syncFileOpt2);
    REQUIRE(syncFileOpt1.get() == syncFileOpt2.get());
 
-   CAUTO mappedFileOpt1 = MappedFile::New(fileName);
-   CAUTO mappedFileOpt2 = MappedFile::New(fileName);
+   auto mappedFileOpt1 = MappedFile::New(fileName);
+   auto mappedFileOpt2 = MappedFile::New(fileName);
 
    REQUIRE(mappedFileOpt1);
    REQUIRE(mappedFileOpt2);
@@ -117,15 +117,15 @@ TEST_CASE("util/file/open/canonical") {
    std::string realFileName = mkFile(directory);
    std::string linkFileName = mkSymlink(realFileName, directory);
 
-   CAUTO syncRealFileOpt = SyncFile::New(realFileName);
-   CAUTO syncLinkFileOpt = SyncFile::New(linkFileName);
+   auto syncRealFileOpt = SyncFile::New(realFileName);
+   auto syncLinkFileOpt = SyncFile::New(linkFileName);
 
    REQUIRE(syncRealFileOpt);
    REQUIRE(syncLinkFileOpt);
    REQUIRE(syncRealFileOpt.get() == syncLinkFileOpt.get());
 
-   CAUTO mappedRealFileOpt = MappedFile::New(realFileName);
-   CAUTO mappedLinkFileOpt = MappedFile::New(linkFileName);
+   auto mappedRealFileOpt = MappedFile::New(realFileName);
+   auto mappedLinkFileOpt = MappedFile::New(linkFileName);
 
    REQUIRE(mappedRealFileOpt);
    REQUIRE(mappedLinkFileOpt);
@@ -139,17 +139,17 @@ TEST_CASE("util/file/empty/read") {
    int buffer[N];
    ::memset(buffer, -1, sizeof(int) * N);
 
-   CAUTO syncFileOpt = SyncFile::New(fileName);
+   auto syncFileOpt = SyncFile::New(fileName);
    REQUIRE(syncFileOpt);
-   AUTO syncFile = syncFileOpt.get();
+   auto syncFile = syncFileOpt.get();
 
    REQUIRE(bufferContains(buffer, -1, N));
    REQUIRE(syncFile->read(buffer, N) == 0);
    REQUIRE(bufferContains(buffer, -1, N));
 
-   CAUTO mappedFileOpt = MappedFile::New(fileName);
+   auto mappedFileOpt = MappedFile::New(fileName);
    REQUIRE(mappedFileOpt);
-   AUTO mappedFile = mappedFileOpt.get();
+   auto mappedFile = mappedFileOpt.get();
 
    mappedFile->resize(N);
    REQUIRE(bufferContains((char*)mappedFile->data(), '\0', N));
@@ -163,9 +163,9 @@ TEST_CASE("util/file/empty/write-read") {
    char readBuffer[N];
    ::memset(writeBuffer, 1, sizeof(char) * N);
 
-   CAUTO fileOpt = SyncFile::New(fileName);
+   auto fileOpt = SyncFile::New(fileName);
    REQUIRE(fileOpt);
-   AUTO file = fileOpt.get();
+   auto file = fileOpt.get();
 
    REQUIRE(file->write(writeBuffer, N) == N);
    file->seek(0, SEEK_SET);
@@ -178,16 +178,16 @@ TEST_CASE("util/file/size/new") {
    std::string directory = mkDir();
    std::string fileName = mkFile(directory);
 
-   CAUTO syncFileOpt = SyncFile::New(fileName);
+   auto syncFileOpt = SyncFile::New(fileName);
    REQUIRE(syncFileOpt);
 
-   AUTO syncFile = syncFileOpt.get();
+   auto syncFile = syncFileOpt.get();
    REQUIRE(syncFile->size() == 0);
 
-   CAUTO mappedFileOpt = MappedFile::New(fileName);
+   auto mappedFileOpt = MappedFile::New(fileName);
    REQUIRE(mappedFileOpt);
 
-   AUTO mappedFile = mappedFileOpt.get();
+   auto mappedFile = mappedFileOpt.get();
    REQUIRE(mappedFile->size() == ::getpagesize());
 }
 
@@ -220,9 +220,9 @@ TEST_CASE("util/file/sync/seek-tell") {
    std::string fileName = mkFile(directory);
    const off_t N = 100;
 
-   CAUTO fileOpt = SyncFile::New(fileName);
+   auto fileOpt = SyncFile::New(fileName);
    REQUIRE(fileOpt);
-   AUTO file = fileOpt.get();
+   auto file = fileOpt.get();
 
    file->seek(N, SEEK_CUR);
    REQUIRE(file->tell() == N);
@@ -234,9 +234,9 @@ TEST_CASE("util/file/sync/seek-read-write-tell") {
    const off_t N = 100;
    char buffer[N];
 
-   CAUTO fileOpt = SyncFile::New(fileName);
+   auto fileOpt = SyncFile::New(fileName);
    REQUIRE(fileOpt);
-   AUTO file = fileOpt.get();
+   auto file = fileOpt.get();
 
    file->write(buffer, N);
    REQUIRE(file->tell() == N);

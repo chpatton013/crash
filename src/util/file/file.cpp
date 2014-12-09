@@ -3,7 +3,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <crash/util/type.hpp>
 
 using namespace crash::util;
 

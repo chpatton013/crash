@@ -4,7 +4,6 @@
 #include <crash/math/math.hpp>
 #include <crash/math/plane.hpp>
 #include <crash/space/view_frustum.hpp>
-#include <crash/util/type.hpp>
 #include <catch.hpp>
 
 using namespace crash::space;
@@ -66,7 +65,7 @@ TEST_CASE("crash/space/view_frustum") {
 
    ViewFrustum vf = ViewFrustum::fromValues(fov, aspect, near.z, far.z, glm::mat4());
 
-   CAUTO planes = vf.getPlanes();
+   auto planes = vf.getPlanes();
    for (int ndx = 0; ndx < NUM_VIEW_FRUSTUM_PLANES; ++ndx) {
       assertPlaneLocation(planes[ndx], pointSets[ndx]);
    }

@@ -12,7 +12,7 @@ Plane::Plane(const glm::vec3& point, const glm::vec3& normal) :
 {}
 
 float Plane::distance(const glm::vec3& target) const {
-   // Projection of this->normal onto (this->point - target).
+   // Projection of this->normal onto (target - this->point).
    // Normally, the projection of two vectors requires a division:
    //    |proj(v,w)| = |v dot w| / |v|
    // But normal vectors in planes are expected to be normalized, so |v| = 1.

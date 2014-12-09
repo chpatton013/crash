@@ -4,7 +4,6 @@
 #include <crash/math/math.hpp>
 #include <crash/math/plane.hpp>
 #include <crash/space/camera.hpp>
-#include <crash/util/type.hpp>
 #include <catch.hpp>
 
 using namespace crash::space;

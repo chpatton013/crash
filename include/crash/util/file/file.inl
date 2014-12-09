@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <boost/filesystem.hpp>
 #include <boost/optional/optional.hpp>
-#include <crash/util/type.hpp>
 
 namespace crash {
 namespace util {
@@ -47,7 +46,7 @@ boost::optional< std::shared_ptr< T > > File::New(const std::string& fileName,
    fs::path absoluteFilePath = fs::absolute(filePath);
    std::string absoluteFileName = absoluteFilePath.string();
 
-   CAUTO itr = instances.find(absoluteFileName);
+   auto itr = instances.find(absoluteFileName);
    if (itr != instances.end()) {
       return itr->second;
    }
@@ -69,7 +68,7 @@ boost::optional< std::shared_ptr< T > > File::New(const std::string& fileName,
 template< typename T >
 bool File::Delete(std::shared_ptr< T > file,
  std::unordered_map< std::string, std::shared_ptr< T > >& instances) {
-   CAUTO itr = instances.find(file->path().string());
+   auto itr = instances.find(file->path().string());
    if (itr == instances.end()) {
       return false;
    }

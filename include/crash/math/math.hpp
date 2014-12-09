@@ -6,22 +6,6 @@ namespace crash {
 namespace math {
 
 /**
- * Compute the approximate inverse square root of the given value.
- *
- * :param x:   The value to compute the inverse square root of.
- * :return:    The approximate inverse sqare root of the given value.
- */
-float fastInvSqrt(float x);
-
-/**
- * Compute the approximate square root of the given value.
- *
- * :param x:   The value to compute the square root of.
- * :return:    The approximate sqare root of the given value.
- */
-float fastSqrt(float x);
-
-/**
  * Generate a rotation vector from a given axis and rotation angle.
  *
  * :param axis:   The axis of rotation.
