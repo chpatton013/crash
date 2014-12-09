@@ -2,14 +2,23 @@ solution('crash')
 language('C++')
 
 defines({'GLM_FORCE_RADIANS'})
+flags({
+   'ExtraWarnings',
+   'FatalWarnings',
+   'FloatFast',
+   'NoPCH',
+   'OptimizeSpeed',
+})
 includedirs({
    'include',
    'external/boost',
    'external/glm',
+   'external/glfw/include',
 })
 libdirs({
    'lib',
    'external/boost/stage/lib',
+   'external/glfw/src',
 })
 buildoptions({
    '--pipe',
@@ -22,15 +31,15 @@ configurations('debug', 'profile', 'release')
 
 configuration('debug')
 defines({'DEBUG', 'NPROFILE', 'NRELEASE'})
-flags({'ExtraWarnings', 'Optimize', 'Symbols'})
+flags({'Symbols'})
 
 configuration('profile')
 defines({'NDEBUG', 'PROFILE', 'NRELEASE'})
-flags({'OptimizeSpeed', 'Symbols'})
+flags({'Symbols'})
 
 configuration('release')
 defines({'NDEBUG', 'NPROFILE', 'RELEASE'})
-flags({'OptimizeSpeed'})
+flags({'NoFramePointer'})
 
 project('crash_util')
 kind('SharedLib')
