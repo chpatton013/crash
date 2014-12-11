@@ -8,15 +8,39 @@
 using namespace crash::util;
 
 void crash::util::print(float f) {
-   printf("%.4f\n", f);
+   print(f, true);
+}
+
+void crash::util::print(float f, bool newline) {
+   if (newline) {
+      printf("%.4f\n", f);
+   } else {
+      printf("%.4f", f);
+   }
 }
 
 void crash::util::print(const glm::vec3& v) {
-   printf("%.4f %.4f %.4f\n", v.x, v.y, v.z);
+   print(v, true);
+}
+
+void crash::util::print(const glm::vec3& v, bool newline) {
+   if (newline) {
+      printf("%.4f %.4f %.4f\n", v.x, v.y, v.z);
+   } else {
+      printf("%.4f %.4f %.4f", v.x, v.y, v.z);
+   }
 }
 
 void crash::util::print(const glm::vec4& v) {
-   printf("%.4f %.4f %.4f %.4f\n", v.x, v.y, v.z, v.w);
+   print(v, true);
+}
+
+void crash::util::print(const glm::vec4& v, bool newline) {
+   if (newline) {
+      printf("%.4f %.4f %.4f %.4f\n", v.x, v.y, v.z, v.w);
+   } else {
+      printf("%.4f %.4f %.4f %.4f", v.x, v.y, v.z, v.w);
+   }
 }
 
 void crash::util::print(const glm::mat4& m) {

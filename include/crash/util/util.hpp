@@ -25,6 +25,14 @@ std::tuple< T, T > unique_pair(T a, T b);
 void print(float f);
 
 /**
+ * Print the given float to stdout.
+ *
+ * :param f:         The float to print.
+ * :param newline:   Should a trailing newline be printed.
+ */
+void print(float f, bool newline);
+
+/**
  * Print the given vector to stdout.
  *
  * :param v:   The vector to print.
@@ -34,9 +42,25 @@ void print(const glm::vec3& v);
 /**
  * Print the given vector to stdout.
  *
+ * :param v:         The vector to print.
+ * :param newline:   Should a trailing newline be printed.
+ */
+void print(const glm::vec3& v, bool newline);
+
+/**
+ * Print the given vector to stdout.
+ *
  * :param v:   The vector to print.
  */
 void print(const glm::vec4& v);
+
+/**
+ * Print the given vector to stdout.
+ *
+ * :param v:         The vector to print.
+ * :param newline:   Should a trailing newline be printed.
+ */
+void print(const glm::vec4& v, bool newline);
 
 /**
  * Print the given matrix to stdout.
