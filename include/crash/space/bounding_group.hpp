@@ -11,7 +11,10 @@ namespace space {
 
 class BoundingGroup : public Boundable {
 public:
-   BoundingGroup(const glm::vec3& position, const glm::vec3& scale);
+   BoundingGroup(const glm::vec3& size);
+   BoundingGroup(const glm::vec3& position, const glm::vec3& size);
+   BoundingGroup(const glm::vec3& position, const glm::vec4& orientation,
+    const glm::vec3& size);
 
    void add(Boundable* boundable);
    bool remove(Boundable* boundable);

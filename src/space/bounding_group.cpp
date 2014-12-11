@@ -3,9 +3,18 @@
 
 using namespace crash::space;
 
+BoundingGroup::BoundingGroup(const glm::vec3& size) :
+   BoundingGroup(crash::math::origin, glm::vec4(crash::math::xAxis, 0.0f), size)
+{}
+
 BoundingGroup::BoundingGroup(const glm::vec3& position,
- const glm::vec3& scale) :
-   Boundable(position, glm::vec4(crash::math::xAxis, 0.0f), scale)
+ const glm::vec3& size) :
+   BoundingGroup(position, glm::vec4(crash::math::xAxis, 0.0f), size)
+{}
+
+BoundingGroup::BoundingGroup(const glm::vec3& position,
+ const glm::vec4& orientation, const glm::vec3& size) :
+   Boundable(position, orientation, size)
 {}
 
 void BoundingGroup::add(Boundable* boundable) {

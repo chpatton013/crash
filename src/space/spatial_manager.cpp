@@ -4,23 +4,43 @@
 
 using namespace crash::space;
 
-SpatialManager::SpatialManager(const glm::vec3& dimensions,
+SpatialManager::SpatialManager(const glm::vec3& size,
+ const glm::ivec3& partitions) :
+   SpatialManager(crash::math::origin, size, partitions)
+{}
+
+SpatialManager::SpatialManager(const glm::vec3& position, const glm::vec3& size,
+ const glm::ivec3& partitions) :
+   SpatialManager(position, glm::vec4(crash::math::xAxis, 0.0f), size,
+    partitions)
+{}
+
+SpatialManager::SpatialManager(const glm::vec3& position,
+ const glm::vec4& orientation, const glm::vec3& size,
  const glm::ivec3& partitions) :
    numBoundables(0)
 {
-   this->partition(dimensions, partitions);
+   this->partition(position, orientation, size, partitions);
 }
 
-/* virtual */ SpatialManager::~SpatialManager() {
-   this->deleteGroups();
+void SpatialManager::resize(const glm::vec3& size,
+ const glm::ivec3& partitions) {
+   this->resize(crash::math::origin, size, partitions);
 }
 
-void SpatialManager::resize(const glm::vec3& dimensions,
+void SpatialManager::resize(const glm::vec3& position, const glm::vec3& size,
+ const glm::ivec3& partitions) {
+   this->resize(position, glm::vec4(crash::math::xAxis, 0.0f), size,
+    partitions);
+}
+
+void SpatialManager::resize(const glm::vec3& position,
+ const glm::vec4& orientation, const glm::vec3& size,
  const glm::ivec3& partitions) {
    auto boundables = this->getBoundables();
 
    this->deleteGroups();
-   this->partition(dimensions, partitions);
+   this->partition(position, orientation, size, partitions);
 
    for (auto boundable : boundables) {
       this->add(boundable);
@@ -74,8 +94,8 @@ void SpatialManager::clear() {
    this->numBoundables = 0;
 }
 
-const glm::vec3& SpatialManager::getDimensions() const {
-   return this->dimensions;
+const glm::vec3& SpatialManager::getSize() const {
+   return this->size;
 }
 
 const glm::ivec3& SpatialManager::getPartitions() const {
@@ -160,30 +180,33 @@ std::vector< Boundable* > SpatialManager::getRenderQueue(
    return accumulator;
 }
 
-void SpatialManager::partition(const glm::vec3& dimensions,
+void SpatialManager::partition(const glm::vec3& position,
+ const glm::vec4& orientation, const glm::vec3& size,
  const glm::ivec3& partitions) {
-   this->dimensions = dimensions;
+   this->position = position;
+   this->orientation = orientation;
+   this->size = size;
    this->partitions = partitions;
 
    int totalPartitions = this->partitions.x * this->partitions.y *
     this->partitions.z;
    this->boundingGroups.reserve(totalPartitions);
 
-   glm::vec3 partDims = glm::vec3(
-      dimensions.x / (float)partitions.x,
-      dimensions.y / (float)partitions.y,
-      dimensions.z / (float)partitions.z
+   glm::vec3 dimensions = glm::vec3(
+      size.x / (float)partitions.x,
+      size.y / (float)partitions.y,
+      size.z / (float)partitions.z
    );
-   glm::vec3 partCenter = partDims * 0.5f;
 
    for (int ndx = 0; ndx < totalPartitions; ++ndx) {
       glm::ivec3 index = crash::math::vectorize_index(ndx, this->partitions);
-      glm::vec3 center = partCenter + glm::vec3(
-         index.x * partDims.x,
-         index.y * partDims.y,
-         index.z * partDims.z
+      glm::vec3 center = position + glm::vec3(
+         index.x * dimensions.x,
+         index.y * dimensions.y,
+         index.z * dimensions.z
       );
-      this->boundingGroups.push_back(new BoundingGroup(center, partDims));
+      this->boundingGroups.push_back(BoundingGroup(center, orientation,
+       dimensions));
    }
 }
 
