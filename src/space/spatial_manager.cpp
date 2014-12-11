@@ -18,7 +18,8 @@ SpatialManager::SpatialManager(const glm::vec3& position, const glm::vec3& size,
 SpatialManager::SpatialManager(const glm::vec3& position,
  const glm::vec4& orientation, const glm::vec3& size,
  const glm::ivec3& partitions) :
-   numBoundables(0)
+   Boundable(position, orientation, size), _partitions(partitions),
+    _numBoundables(0)
 {
    this->partition(position, orientation, size, partitions);
 }
@@ -49,15 +50,14 @@ void SpatialManager::resize(const glm::vec3& position,
 bool SpatialManager::add(Boundable* boundable) {
    bool added = false;
 
-   for (auto& group : this->boundingGroups) {
+   for (auto& group : this->_boundingGroups) {
       if (boundable->intersect(group)) {
-         group.add(boundable);
-         added = true;
+         added = group.add(boundable);
       }
    }
 
    if (added) {
-      ++this->numBoundables;
+      ++this->_numBoundables;
    }
 
    return added;
@@ -66,12 +66,12 @@ bool SpatialManager::add(Boundable* boundable) {
 bool SpatialManager::remove(Boundable* boundable) {
    bool removed = false;
 
-   for (auto& group : this->boundingGroups) {
+   for (auto& group : this->_boundingGroups) {
       removed |= group.remove(boundable);
    }
 
    if (removed) {
-      --this->numBoundables;
+      --this->_numBoundables;
    }
 
    return removed;
@@ -86,35 +86,31 @@ bool SpatialManager::update(Boundable* boundable) {
 }
 
 void SpatialManager::clear() {
-   for (auto& group : this->boundingGroups) {
+   for (auto& group : this->_boundingGroups) {
       group.clear();
    }
 
-   this->numBoundables = 0;
-}
-
-const glm::vec3& SpatialManager::getSize() const {
-   return this->size;
+   this->_numBoundables = 0;
 }
 
 const glm::ivec3& SpatialManager::getPartitions() const {
-   return this->partitions;
+   return this->_partitions;
 }
 
 unsigned int SpatialManager::getBoundableCount() const {
-   return this->numBoundables;
+   return this->_numBoundables;
 }
 
 unsigned int SpatialManager::getBoundingGroupCount() const {
-   return this->boundingGroups.size();
+   return this->_boundingGroups.size();
 }
 
 std::vector< Boundable* > SpatialManager::getBoundables() const {
    std::vector< Boundable* > accumulator;
    std::set< Boundable* > mark;
 
-   accumulator.reserve(this->numBoundables);
-   for (auto group : this->boundingGroups) {
+   accumulator.reserve(this->_numBoundables);
+   for (auto group : this->_boundingGroups) {
       for (auto boundable : group.getBoundables()) {
          auto itr = mark.find(boundable);
          if (itr == mark.end()) {
@@ -128,14 +124,14 @@ std::vector< Boundable* > SpatialManager::getBoundables() const {
 }
 
 std::vector< BoundingGroup > SpatialManager::getBoundingGroups() const {
-   return this->boundingGroups;
+   return this->_boundingGroups;
 }
 
 std::vector< BoundingGroup > SpatialManager::getContainingGroups(
  Boundable* boundable) const {
    std::vector< BoundingGroup > groups;
 
-   for (auto group : this->boundingGroups) {
+   for (auto group : this->_boundingGroups) {
       if (boundable->intersect(group)) {
          groups.push_back(group);
       }
@@ -148,7 +144,7 @@ std::vector< Collision > SpatialManager::getCollisionQueue() const {
    std::vector< Collision > accumulator;
    std::set< Collision > mark;
 
-   for (auto group : this->boundingGroups) {
+   for (auto group : this->_boundingGroups) {
       for (auto collision : group.getCollidingElements()) {
          auto itr = mark.find(collision);
          if (itr == mark.end()) {
@@ -166,7 +162,7 @@ std::vector< Boundable* > SpatialManager::getRenderQueue(
    std::vector< Boundable* > accumulator;
    std::set< Boundable* > mark;
 
-   for (auto group : this->boundingGroups) {
+   for (auto group : this->_boundingGroups) {
       for (auto boundable : group.getVisibleElements(viewFrustum)) {
          auto itr = mark.find(boundable);
          if (itr == mark.end()) {
@@ -182,17 +178,17 @@ std::vector< Boundable* > SpatialManager::getRenderQueue(
 void SpatialManager::partition(const glm::vec3& position,
  const glm::vec4& orientation, const glm::vec3& size,
  const glm::ivec3& partitions) {
-   this->numBoundables = 0;
+   this->_numBoundables = 0;
 
-   this->position = position;
-   this->orientation = orientation;
-   this->size = size;
-   this->partitions = partitions;
+   this->position(position);
+   this->orientation(orientation);
+   this->size(size);
+   this->_partitions = partitions;
 
-   int totalPartitions = this->partitions.x * this->partitions.y *
-    this->partitions.z;
-   this->boundingGroups.clear();
-   this->boundingGroups.reserve(totalPartitions);
+   int totalPartitions = this->_partitions.x * this->_partitions.y *
+    this->_partitions.z;
+   this->_boundingGroups.clear();
+   this->_boundingGroups.reserve(totalPartitions);
 
    glm::vec3 dimensions = glm::vec3(
       size.x / (float)partitions.x,
@@ -201,13 +197,13 @@ void SpatialManager::partition(const glm::vec3& position,
    );
 
    for (int ndx = 0; ndx < totalPartitions; ++ndx) {
-      glm::ivec3 index = crash::math::vectorize_index(ndx, this->partitions);
+      glm::ivec3 index = crash::math::vectorize_index(ndx, this->_partitions);
       glm::vec3 center = position + glm::vec3(
          index.x * dimensions.x * 0.5f,
          index.y * dimensions.y * 0.5f,
          index.z * dimensions.z * 0.5f
       );
-      this->boundingGroups.push_back(BoundingGroup(center, orientation,
+      this->_boundingGroups.push_back(BoundingGroup(center, orientation,
        dimensions));
    }
 }

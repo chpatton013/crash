@@ -10,14 +10,14 @@ TEST_CASE("crash/space/spatial_manager/size") {
    glm::ivec3 partitions = glm::ivec3(1);
    SpatialManager mgr = SpatialManager(size, partitions);
 
-   REQUIRE(mgr.getSize() == size);
+   REQUIRE(mgr.size() == size);
    REQUIRE(mgr.getPartitions() == partitions);
 
    size = glm::vec3(16.0f);
    partitions = glm::ivec3(4);
    mgr.resize(size, partitions);
 
-   REQUIRE(mgr.getSize() == size);
+   REQUIRE(mgr.size() == size);
    REQUIRE(mgr.getPartitions() == partitions);
 }
 

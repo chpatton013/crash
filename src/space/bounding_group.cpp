@@ -17,8 +17,8 @@ BoundingGroup::BoundingGroup(const glm::vec3& position,
    Boundable(position, orientation, size)
 {}
 
-void BoundingGroup::add(Boundable* boundable) {
-   this->_boundables.insert(boundable);
+bool BoundingGroup::add(Boundable* boundable) {
+   return this->_boundables.insert(boundable).second;
 }
 
 bool BoundingGroup::remove(Boundable* boundable) {

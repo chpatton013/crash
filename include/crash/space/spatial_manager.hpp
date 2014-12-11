@@ -10,7 +10,7 @@
 namespace crash {
 namespace space {
 
-class SpatialManager {
+class SpatialManager : public Boundable {
 public:
    SpatialManager(const glm::vec3& size, const glm::ivec3& partitions);
    SpatialManager(const glm::vec3& position, const glm::vec3& size,
@@ -29,7 +29,6 @@ public:
    bool update(Boundable* boundable);
    void clear();
 
-   const glm::vec3& getSize() const;
    const glm::ivec3& getPartitions() const;
 
    unsigned int getBoundableCount() const;
@@ -42,17 +41,13 @@ public:
    std::vector< Collision > getCollisionQueue() const;
    std::vector< Boundable* > getRenderQueue(const ViewFrustum& viewFrustum) const;
 
-protected:
+private:
    void partition(const glm::vec3& position, const glm::vec4& orientation,
     const glm::vec3& size, const glm::ivec3& partitions);
-   void deleteGroups();
 
-   glm::vec3 position;
-   glm::vec4 orientation;
-   glm::vec3 size;
-   glm::ivec3 partitions;
-   std::vector< BoundingGroup > boundingGroups;
-   unsigned int numBoundables;
+   glm::ivec3 _partitions;
+   std::vector< BoundingGroup > _boundingGroups;
+   unsigned int _numBoundables;
 };
 
 } // namespace space

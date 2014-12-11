@@ -16,7 +16,7 @@ public:
    BoundingGroup(const glm::vec3& position, const glm::vec4& orientation,
     const glm::vec3& size);
 
-   void add(Boundable* boundable);
+   bool add(Boundable* boundable);
    bool remove(Boundable* boundable);
    void clear();
    const std::set< Boundable* >& getBoundables() const;
