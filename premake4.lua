@@ -3,8 +3,6 @@ language('C++')
 
 defines({'GLM_FORCE_RADIANS'})
 flags({
-   'ExtraWarnings',
-   'FatalWarnings',
    'FloatFast',
    'NoPCH',
    'OptimizeSpeed',
@@ -22,7 +20,10 @@ libdirs({
 })
 buildoptions({
    '--pipe',
-   '--std=c++1y',
+   '--std=c++11',
+   '-Wall',
+   '-Wextra',
+   '-Werror',
    '-Wno-unused-result',
 })
 linkoptions({})
