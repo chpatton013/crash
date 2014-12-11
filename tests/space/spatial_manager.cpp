@@ -25,10 +25,17 @@ TEST_CASE("crash/space/spatial_manager/boundables") {
    glm::vec3 size = glm::vec3(4.0f);
    SpatialManager mgr = SpatialManager(size, glm::ivec3(1));
 
-   unsigned int numBoundables = 4;
+   const unsigned int numBoundables = 4;
    for (unsigned int ndx = 0; ndx < numBoundables; ++ndx) {
-      mgr.add(new Boundable(crash::math::average(crash::math::origin, size)));
+      REQUIRE(mgr.add(new Boundable()));
    }
+
+   REQUIRE(mgr.getBoundingGroupCount() == 1);
+   REQUIRE(mgr.getBoundingGroups().size() == 1);
+   REQUIRE(mgr.getBoundableCount() == numBoundables);
+   REQUIRE(mgr.getBoundables().size() == numBoundables);
+
+   mgr.resize(size, glm::ivec3(1));
 
    REQUIRE(mgr.getBoundingGroupCount() == 1);
    REQUIRE(mgr.getBoundingGroups().size() == 1);
@@ -71,34 +78,39 @@ TEST_CASE("crash/space/spatial_manager/render_queue") {
    Camera c = Camera(/* position */ crash::math::origin,
     /* orientation */ glm::vec4(crash::math::xAxis, 0.0f),
     /* fov */ glm::radians(60.0f), /* aspect */ 1.0f,
-    /* near */ 3.0f, /* far */ 30.0f);
+    /* near */ 3.0f, /* far */ 32.0f);
 
-   std::set< Boundable* > inView = {
-      new Boundable(size * 0.5f)
-   };
+   std::set< Boundable* > inView = {{
+      new Boundable(glm::vec3( 0.0f,  0.0f, size.z * 0.5f)),
+      new Boundable(glm::vec3( 0.0f,  0.0f, size.z * 0.5f)),
+      new Boundable(glm::vec3( 1.0f,  1.0f,          5.0f)),
+      new Boundable(glm::vec3( 1.0f, -1.0f,          5.0f)),
+      new Boundable(glm::vec3(-1.0f,  1.0f,          5.0f)),
+      new Boundable(glm::vec3(-1.0f, -1.0f,          5.0f)),
+   }};
 
    std::set< Boundable* > outOfView = {{
-      new Boundable(glm::vec3(  0.0f,   0.0f,   0.0f)),
-      new Boundable(glm::vec3(  0.0f,   0.0f, size.z)),
-      new Boundable(glm::vec3(  0.0f, size.y,   0.0f)),
-      new Boundable(glm::vec3(  0.0f, size.y, size.z)),
-      new Boundable(glm::vec3(size.x,   0.0f,   0.0f)),
-      new Boundable(glm::vec3(size.x,   0.0f, size.z)),
-      new Boundable(glm::vec3(size.x, size.y,   0.0f)),
-      new Boundable(glm::vec3(size.x, size.y, size.z))
+      new Boundable(glm::vec3(         0.0f,          0.0f,           0.0f)),
+      new Boundable(glm::vec3(         0.0f,          0.0f, -size.z * 0.05)),
+      new Boundable(glm::vec3(         0.0f, size.y * 0.5f,           0.0f)),
+      new Boundable(glm::vec3(         0.0f, size.y * 0.5f, -size.z * 0.05)),
+      new Boundable(glm::vec3(size.x * 0.5f,          0.0f,           0.0f)),
+      new Boundable(glm::vec3(size.x * 0.5f,          0.0f, -size.z * 0.05)),
+      new Boundable(glm::vec3(size.x * 0.5f, size.y * 0.5f,           0.0f)),
+      new Boundable(glm::vec3(size.x * 0.5f, size.y * 0.5f, -size.z * 0.05)),
    }};
 
    for (auto boundable : inView) {
-      mgr.add(boundable);
+      REQUIRE(mgr.add(boundable));
    }
    for (auto boundable : outOfView) {
-      mgr.add(boundable);
+      REQUIRE(mgr.add(boundable));
    }
 
    std::vector< Boundable* > visibleBoundables = mgr.getRenderQueue(c.getViewFrustum());
    for (auto boundable : visibleBoundables) {
       REQUIRE(inView.find(boundable) != inView.end());
-      REQUIRE(outOfView.find(boundable) == inView.end());
+      REQUIRE(outOfView.find(boundable) == outOfView.end());
    }
 
    for (auto boundable : inView) {
