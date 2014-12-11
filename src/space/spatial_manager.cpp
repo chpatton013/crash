@@ -58,6 +58,14 @@ bool SpatialManager::remove(Boundable* boundable) {
    return removed;
 }
 
+bool SpatialManager::update(Boundable* boundable) {
+   if (!this->remove(boundable)) {
+      return false;
+   }
+
+   return this->add(boundable);
+}
+
 void SpatialManager::clear() {
    for (auto group : this->boundingGroups) {
       group.clear();

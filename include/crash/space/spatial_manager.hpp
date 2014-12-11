@@ -18,6 +18,7 @@ public:
    void resize(const glm::vec3& dimensions, const glm::ivec3& partitions);
    bool add(Boundable* boundable);
    bool remove(Boundable* boundable);
+   bool update(Boundable* boundable);
    void clear();
 
    const glm::vec3& getDimensions() const;
