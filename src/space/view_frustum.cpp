@@ -29,7 +29,7 @@ const std::array< crash::math::Plane, NUM_VIEW_FRUSTUM_PLANES >
       glm::vec4( -farX,  -farY,  farPlane, 1.0f), // 4:fbl
       glm::vec4(  farX,  -farY,  farPlane, 1.0f), // 5:fbr
       glm::vec4( -farX,   farY,  farPlane, 1.0f), // 6:ftl
-      glm::vec4(  farX,   farY,  farPlane, 1.0f)  // 7:ftr
+      glm::vec4(  farX,   farY,  farPlane, 1.0f), // 7:ftr
    }};
 
    return ViewFrustum::fromCorners(corners, transformMatrix);
@@ -75,7 +75,7 @@ const std::array< crash::math::Plane, NUM_VIEW_FRUSTUM_PLANES >
       math::Plane::fromPoints(corners[2], corners[6], corners[7]), // 2:top
       math::Plane::fromPoints(corners[1], corners[5], corners[4]), // 3:bottom
       math::Plane::fromPoints(corners[1], corners[0], corners[2]), // 4:near
-      math::Plane::fromPoints(corners[4], corners[5], corners[7])  // 5:far
+      math::Plane::fromPoints(corners[4], corners[5], corners[7]), // 5:far
    }};
    return ViewFrustum(planes);
 }

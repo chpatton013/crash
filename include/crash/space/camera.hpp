@@ -1,8 +1,7 @@
 #pragma once
 
-#include <array>
-#include <glm/glm.hpp>
 #include <boost/optional/optional.hpp>
+#include <glm/glm.hpp>
 #include <crash/space/view_frustum.hpp>
 
 namespace crash {
