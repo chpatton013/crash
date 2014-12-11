@@ -64,7 +64,7 @@ std::string mkSymlink(const std::string& source, const std::string& dir) {
 
 template < typename T >
 bool bufferContains(T* buffer, T value, std::size_t length) {
-   for (int ndx = 0; ndx < length; ++ndx) {
+   for (std::size_t ndx = 0; ndx < length; ++ndx) {
       if (buffer[ndx] != value) {
          return false;
       }
@@ -243,13 +243,13 @@ TEST_CASE("util/file/sync/seek-read-write-tell") {
 
    file->seek(N, SEEK_CUR);
    file->write(buffer, 1);
-   REQUIRE(file->size() == 2 * N + 1);
+   REQUIRE(file->size() == (std::size_t)(2 * N + 1));
 
    file->seek(-N, SEEK_CUR);
-   REQUIRE(file->tell() == N + 1);
+   REQUIRE(file->tell() == (off_t)(N + 1));
 
    file->read(buffer, N);
-   REQUIRE(file->tell() == 2 * N + 1);
+   REQUIRE(file->tell() == (off_t)(2 * N + 1));
 }
 
 TEST_CASE("util/file/mapped/size/existent") {

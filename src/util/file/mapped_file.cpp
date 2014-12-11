@@ -22,7 +22,7 @@ MappedFile::MappedFile(const std::string& path) :
    std::size_t size = MappedFile::bufferCeil(fileStat.st_size);
    ::ftruncate(this->_handle, size);
 
-   void* data = ::mmap(NULL, size, MappedFile::_protFlags,
+   void* data = ::mmap(nullptr, size, MappedFile::_protFlags,
     MappedFile::_mapFlags, this->_handle, 0);
    if (data == MAP_FAILED) {
       this->_valid = false;
@@ -54,7 +54,7 @@ std::size_t MappedFile::resize(std::size_t size) {
    ::munmap(this->_data, this->_size);
    ::ftruncate(this->_handle, size);
 
-   this->_data = ::mmap(NULL, size, MappedFile::_protFlags,
+   this->_data = ::mmap(nullptr, size, MappedFile::_protFlags,
     MappedFile::_mapFlags, this->_handle, 0);
    if (this->_data == MAP_FAILED) {
       this->_valid = false;

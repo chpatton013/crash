@@ -17,7 +17,7 @@ public:
    bool valid() const;
    const boost::filesystem::path& path() const;
    int handle() const;
-   virtual size_t size() const;
+   virtual std::size_t size() const;
 
 protected:
    template< typename T >

@@ -21,7 +21,7 @@ bool File::valid() const { return this->_valid; }
 const boost::filesystem::path& File::path() const { return this->_path; }
 int File::handle() const { return this->_handle; }
 
-/* virtual */ size_t File::size() const {
+/* virtual */ std::size_t File::size() const {
    struct stat fileStat;
    if (::fstat(this->_handle, &fileStat) == -1) {
       return 0;
