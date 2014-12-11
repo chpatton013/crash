@@ -52,7 +52,7 @@ protected:
    glm::vec3 size;
    glm::ivec3 partitions;
    std::vector< BoundingGroup > boundingGroups;
-   int numBoundables;
+   unsigned int numBoundables;
 };
 
 } // namespace space
