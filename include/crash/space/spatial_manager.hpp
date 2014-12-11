@@ -23,12 +23,12 @@ public:
    const glm::vec3& getDimensions() const;
    const glm::ivec3& getPartitions() const;
 
-   int getBoundableCount() const;
-   int getBoundingGroupCount() const;
+   unsigned int getBoundableCount() const;
+   unsigned int getBoundingGroupCount() const;
 
    std::vector< Boundable* > getBoundables() const;
-   std::vector< BoundingGroup* > getBoundingGroups() const;
-   std::vector< BoundingGroup* > getContainingGroups(Boundable* boundable) const;
+   std::vector< BoundingGroup > getBoundingGroups() const;
+   std::vector< BoundingGroup > getContainingGroups(Boundable* boundable) const;
 
    std::vector< Collision > getCollisionQueue() const;
    std::vector< Boundable* > getRenderQueue(const ViewFrustum& viewFrustum) const;
@@ -39,7 +39,7 @@ protected:
 
    glm::vec3 dimensions;
    glm::ivec3 partitions;
-   std::vector< BoundingGroup* > boundingGroups;
+   std::vector< BoundingGroup > boundingGroups;
    int numBoundables;
 };
 

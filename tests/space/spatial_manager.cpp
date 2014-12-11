@@ -48,7 +48,7 @@ TEST_CASE("crash/space/spatial_manager/boundables") {
    }
    for (auto group : mgr.getBoundingGroups()) {
       std::set< Boundable* > groupBoundables;
-      for (auto boundable : group->getBoundables()) {
+      for (auto boundable : group.getBoundables()) {
          groupBoundables.insert(boundable);
       }
 

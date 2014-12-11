@@ -1,4 +1,3 @@
-#include <unordered_set>
 #include <crash/math/math.hpp>
 #include <crash/math/plane.hpp>
 #include <crash/space/spatial_manager.hpp>
@@ -32,8 +31,8 @@ bool SpatialManager::add(Boundable* boundable) {
    bool added = false;
 
    for (auto group : this->boundingGroups) {
-      if (boundable->intersect(*group)) {
-         group->add(boundable);
+      if (boundable->intersect(group)) {
+         group.add(boundable);
          added = true;
       }
    }
@@ -49,7 +48,7 @@ bool SpatialManager::remove(Boundable* boundable) {
    bool removed = false;
 
    for (auto group : this->boundingGroups) {
-      removed |= group->remove(boundable);
+      removed |= group.remove(boundable);
    }
 
    if (removed) {
@@ -61,7 +60,7 @@ bool SpatialManager::remove(Boundable* boundable) {
 
 void SpatialManager::clear() {
    for (auto group : this->boundingGroups) {
-      group->clear();
+      group.clear();
    }
 
    this->numBoundables = 0;
@@ -75,11 +74,11 @@ const glm::ivec3& SpatialManager::getPartitions() const {
    return this->partitions;
 }
 
-int SpatialManager::getBoundableCount() const {
+unsigned int SpatialManager::getBoundableCount() const {
    return this->numBoundables;
 }
 
-int SpatialManager::getBoundingGroupCount() const {
+unsigned int SpatialManager::getBoundingGroupCount() const {
    return this->boundingGroups.size();
 }
 
@@ -89,7 +88,7 @@ std::vector< Boundable* > SpatialManager::getBoundables() const {
 
    accumulator.reserve(this->numBoundables);
    for (auto group : this->boundingGroups) {
-      for (auto boundable : group->getBoundables()) {
+      for (auto boundable : group.getBoundables()) {
          auto itr = mark.find(boundable);
          if (itr == mark.end()) {
             accumulator.push_back(boundable);
@@ -101,16 +100,16 @@ std::vector< Boundable* > SpatialManager::getBoundables() const {
    return accumulator;
 }
 
-std::vector< BoundingGroup* > SpatialManager::getBoundingGroups() const {
+std::vector< BoundingGroup > SpatialManager::getBoundingGroups() const {
    return this->boundingGroups;
 }
 
-std::vector< BoundingGroup* > SpatialManager::getContainingGroups(
+std::vector< BoundingGroup > SpatialManager::getContainingGroups(
  Boundable* boundable) const {
-   std::vector< BoundingGroup* > groups;
+   std::vector< BoundingGroup > groups;
 
    for (auto group : this->boundingGroups) {
-      if (boundable->intersect(*group)) {
+      if (boundable->intersect(group)) {
          groups.push_back(group);
       }
    }
@@ -120,10 +119,10 @@ std::vector< BoundingGroup* > SpatialManager::getContainingGroups(
 
 std::vector< Collision > SpatialManager::getCollisionQueue() const {
    std::vector< Collision > accumulator;
-   std::unordered_set< Collision > mark;
+   std::set< Collision > mark;
 
    for (auto group : this->boundingGroups) {
-      for (auto collision : group->getCollidingElements()) {
+      for (auto collision : group.getCollidingElements()) {
          auto itr = mark.find(collision);
          if (itr == mark.end()) {
             accumulator.push_back(collision);
@@ -138,10 +137,10 @@ std::vector< Collision > SpatialManager::getCollisionQueue() const {
 std::vector< Boundable* > SpatialManager::getRenderQueue(
  const ViewFrustum& viewFrustum) const {
    std::vector< Boundable* > accumulator;
-   std::unordered_set< Boundable* > mark;
+   std::set< Boundable* > mark;
 
    for (auto group : this->boundingGroups) {
-      for (auto boundable : group->getVisibleElements(viewFrustum)) {
+      for (auto boundable : group.getVisibleElements(viewFrustum)) {
          auto itr = mark.find(boundable);
          if (itr == mark.end()) {
             accumulator.push_back(boundable);
@@ -181,10 +180,6 @@ void SpatialManager::partition(const glm::vec3& dimensions,
 }
 
 void SpatialManager::deleteGroups() {
-   for (auto group : this->boundingGroups) {
-      delete group;
-   }
-
    this->boundingGroups.clear();
    this->numBoundables = 0;
 }
