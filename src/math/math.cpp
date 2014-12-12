@@ -6,9 +6,21 @@
 
 using namespace crash::math;
 
+int crash::math::linearize_index(const glm::ivec2& index,
+ const glm::ivec2& bounds) {
+   return (index.y * bounds.x) + index.x;
+}
+
 int crash::math::linearize_index(const glm::ivec3& index,
  const glm::ivec3& bounds) {
    return (index.z * bounds.x * bounds.y) + (index.y * bounds.x) + index.x;
+}
+
+glm::ivec2 crash::math::vectorize_index(int index, const glm::ivec2& bounds) {
+   // x: index % bounds.x
+   // y: index / bounds.x
+   std::div_t q = std::div(index, bounds.x);
+   return glm::ivec2(q.rem, q.quot);
 }
 
 glm::ivec3 crash::math::vectorize_index(int index, const glm::ivec3& bounds) {
