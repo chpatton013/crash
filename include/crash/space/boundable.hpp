@@ -7,10 +7,6 @@
 namespace crash {
 namespace space {
 
-const int NUM_BOUNDABLE_CORNERS = 8;
-const int NUM_BOUNDABLE_FACE_NORMALS = 3;
-const int NUM_BOUNDABLE_DIAGONALS = 4;
-
 /**
  * The data type used to represent a drawable and/or intersectable object.
  *
@@ -21,6 +17,14 @@ const int NUM_BOUNDABLE_DIAGONALS = 4;
  */
 class Boundable {
 public:
+   static const int NUM_CORNERS = 8;
+   static const int NUM_FACE_NORMALS = 3;
+   static const int NUM_DIAGONALS = 4;
+
+   typedef std::array< glm::vec3, Boundable::NUM_CORNERS > Corners;
+   typedef std::array< glm::vec3, Boundable::NUM_FACE_NORMALS > FaceNormals;
+   typedef std::array< glm::vec3, Boundable::NUM_DIAGONALS > DiagonalDirections;
+
    Boundable();
    Boundable(const glm::vec3& position);
    Boundable(const glm::vec3& position, const glm::vec4& orientation);
@@ -73,7 +77,7 @@ public:
     *    6:  far    top  left (ftl)
     *    7:  far    top right (ftr)
     */
-   const std::array< glm::vec3, NUM_BOUNDABLE_CORNERS >& getCorners();
+   const Boundable::Corners& getCorners();
 
    /**
     * Calculate the normal vectors of the faces of the box enclosing this
@@ -83,7 +87,7 @@ public:
     *    1: top
     *    2: far
     */
-   const std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS >& getFaceNormals();
+   const Boundable::FaceNormals& getFaceNormals();
 
    /**
     * Calculate the diagonal direction vectors of this Boundable.
@@ -93,11 +97,10 @@ public:
     *    2: ntl -> fbr
     *    3: ntr -> fbl
     */
-   const std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS >&
-    getDiagonalDirections();
+   const Boundable::DiagonalDirections& getDiagonalDirections();
 
    ////////////////////////////////////////////////////////////////////////////
-   // Other methods
+   // Spatial queries
    ////////////////////////////////////////////////////////////////////////////
 
    /**
@@ -134,23 +137,14 @@ private:
    // Memoization members
    boost::optional< float > _radius;
    boost::optional< glm::mat4 > _transform;
-   boost::optional< std::array< glm::vec3, NUM_BOUNDABLE_CORNERS > > _corners;
-   boost::optional< std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS > >
-    _faceNormals;
-   boost::optional< std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS > >
-    _diagonalDirections;
+   boost::optional< Boundable::Corners > _corners;
+   boost::optional< Boundable::FaceNormals > _faceNormals;
+   boost::optional< Boundable::DiagonalDirections > _diagonalDirections;
 
-   struct intersection_data_t {
-      glm::vec3 aSize;
-      glm::vec3 bSize;
-      glm::vec3 normalDots;
-      std::array< std::array< float, 3 >, 3 > coefMatrix;
-      std::array< std::array< float, 3 >, 3 > absCoefMatrix;
-   };
-   typedef std::tuple< boost::optional< intersection_data_t >, bool >
-    intersection_data_generation_t;
+   // Spatial query datatypes
+   typedef std::array< float, 9 > CoefficientMatrix;
 
-   // Utility methods
+   // Spatial query methods
 
    /**
     * Calculate intersection between this Boundable and the other specified
@@ -165,37 +159,27 @@ private:
    bool intersectAsBoxes(Boundable& other);
 
    /**
-    * Generate data needed for intersection calculations. Look for conditions
-    * to short-circuit intersection calculation early.
-    */
-   static intersection_data_generation_t
-    initializeIntersectionData(Boundable& a, Boundable& b);
-
-   /**
     * Calculate the projection of the difference in box centers onto the
     * current axis.
     */
    static float centerDifferenceProjection(int aNdx, int bNdx,
-    const glm::vec3& normalDots,
-    std::array< std::array< float, 3 >, 3 > coefMatrix);
+    const glm::vec3& normalDots, CoefficientMatrix coefMatrix);
 
    /**
     * Calculate the projection of the intersection radius of this Boundable
     * onto the current axis.
     */
    static float thisIntersectionRadiusProjection(int aNdx, int bNdx,
-    const glm::vec3& aSize,
-    std::array< std::array< float, 3 >, 3 > absCoefMatrix);
+    const glm::vec3& aSize, CoefficientMatrix absCoefMatrix);
 
    /**
     * Calculate the projection of the intersection radius of other Boundable
     * onto the current axis.
     */
    static float otherIntersectionRadiusProjection(int aNdx, int bNdx,
-    const glm::vec3& bSize,
-    std::array< std::array< float, 3 >, 3 > absCoefMatrix);
+    const glm::vec3& bSize, CoefficientMatrix absCoefMatrix);
 
-   // Utility members
+   // Spatial query members
    int _frustumPlaneIndex;
 };
 

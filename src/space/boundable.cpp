@@ -98,7 +98,7 @@ const glm::mat4& Boundable::getTransform() {
  *    6:  far    top  left (ftl)
  *    7:  far    top right (ftr)
  */
-const std::array< glm::vec3, NUM_BOUNDABLE_CORNERS >& Boundable::getCorners() {
+const Boundable::Corners& Boundable::getCorners() {
    if (!this->_corners) {
       this->generateCorners();
    }
@@ -114,8 +114,7 @@ const std::array< glm::vec3, NUM_BOUNDABLE_CORNERS >& Boundable::getCorners() {
  *    1: top
  *    2: far
  */
-const std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS >&
- Boundable::getFaceNormals() {
+const Boundable::FaceNormals& Boundable::getFaceNormals() {
    if (!this->_faceNormals) {
       this->generateFaceNormals();
    }
@@ -131,8 +130,7 @@ const std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS >&
  *    2: ntl -> fbr
  *    3: ntr -> fbl
  */
-const std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS >&
- Boundable::getDiagonalDirections() {
+const Boundable::DiagonalDirections& Boundable::getDiagonalDirections() {
    if (!this->_diagonalDirections) {
       this->generateDiagonalDirections();
    }
@@ -141,7 +139,7 @@ const std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS >&
  }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Other methods
+// Spatial queries
 ///////////////////////////////////////////////////////////////////////////////
 
 bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
@@ -149,8 +147,8 @@ bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
    auto diagonals = this->getDiagonalDirections();
    auto frustumPlanes = viewFrustum.getPlanes();
 
-   // Utilize temporal locality by starting at the last failing plane.
    for (int planeCount = 0; planeCount < NUM_VIEW_FRUSTUM_PLANES; ++planeCount) {
+      // Utilize temporal locality by starting at the last failing plane.
       int planeNdx = (this->_frustumPlaneIndex + planeCount) %
        NUM_VIEW_FRUSTUM_PLANES;
       const math::Plane& plane = frustumPlanes[planeNdx];
@@ -162,9 +160,9 @@ bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
       // when most Boundables are out of the viewing frustum - as is the norm
       // in large scenes where performance may start to suffer.
       // This step involves 4 dot products.
-      int closestDiagonal = -1;
-      float closestProjection = -1.0f;
-      for (int diagNdx = 0; diagNdx < NUM_BOUNDABLE_DIAGONALS; ++diagNdx) {
+      int closestDiagonal = 0;
+      float closestProjection = std::abs(glm::dot(diagonals[0], plane.normal));
+      for (int diagNdx = 1; diagNdx < NUM_DIAGONALS; ++diagNdx) {
          float projection = std::abs(glm::dot(diagonals[diagNdx], plane.normal));
          if (projection > closestProjection) {
             closestDiagonal = diagNdx;
@@ -174,9 +172,9 @@ bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
 
       // Check distance of each extreme point.
       // This step involves 1 or 2 dot products.
-      auto v1 = corners[closestDiagonal];
-      auto v2 = corners[(NUM_BOUNDABLE_CORNERS - 1) - closestDiagonal];
-      if (plane.distance(v1) < 0 && plane.distance(v2) < 0) {
+      auto c1 = corners[closestDiagonal];
+      auto c2 = corners[(NUM_CORNERS - 1) - closestDiagonal];
+      if (plane.distance(c1) < 0 && plane.distance(c2) < 0) {
          this->_frustumPlaneIndex = planeNdx;
          return false;
       }
@@ -210,21 +208,21 @@ void Boundable::generateTransform() {
 }
 
 void Boundable::generateCorners() {
-   static const std::array< glm::vec4, NUM_BOUNDABLE_CORNERS > unitCorners {{
-      glm::vec4(-0.5f, -0.5f, -0.5f, 1.0f),
-      glm::vec4( 0.5f, -0.5f, -0.5f, 1.0f),
-      glm::vec4(-0.5f,  0.5f, -0.5f, 1.0f),
-      glm::vec4( 0.5f,  0.5f, -0.5f, 1.0f),
-      glm::vec4(-0.5f, -0.5f,  0.5f, 1.0f),
-      glm::vec4( 0.5f, -0.5f,  0.5f, 1.0f),
-      glm::vec4(-0.5f,  0.5f,  0.5f, 1.0f),
-      glm::vec4( 0.5f,  0.5f,  0.5f, 1.0f)
+   static const std::array< glm::vec4, NUM_CORNERS > unitCorners {{
+      glm::vec4(-0.5f, -0.5f, -0.5f, 1.0f), // 0:nbl
+      glm::vec4( 0.5f, -0.5f, -0.5f, 1.0f), // 1:nbr
+      glm::vec4(-0.5f,  0.5f, -0.5f, 1.0f), // 2:ntl
+      glm::vec4( 0.5f,  0.5f, -0.5f, 1.0f), // 3:ntr
+      glm::vec4(-0.5f, -0.5f,  0.5f, 1.0f), // 4:fbl
+      glm::vec4( 0.5f, -0.5f,  0.5f, 1.0f), // 5:fbr
+      glm::vec4(-0.5f,  0.5f,  0.5f, 1.0f), // 6:ftl
+      glm::vec4( 0.5f,  0.5f,  0.5f, 1.0f), // 7:ftr
    }};
 
-   std::array< glm::vec3, NUM_BOUNDABLE_CORNERS > corners;
-
    auto transform = this->getTransform();
-   for (int ndx = 0; ndx < NUM_BOUNDABLE_CORNERS; ++ndx) {
+
+   Boundable::Corners corners;
+   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       corners[ndx] = glm::vec3(transform * unitCorners[ndx]);
    }
 
@@ -234,10 +232,10 @@ void Boundable::generateCorners() {
 void Boundable::generateFaceNormals() {
    auto corners = this->getCorners();
 
-   std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS> normals {{
-      math::Plane::fromPoints(corners[3], corners[1], corners[5]).normal, // 1:right
-      math::Plane::fromPoints(corners[2], corners[3], corners[7]).normal, // 2:top
-      math::Plane::fromPoints(corners[4], corners[6], corners[7]).normal, // 5:far
+   Boundable::FaceNormals normals {{
+      math::Plane::fromPoints(corners[5], corners[7], corners[3]).normal, // 0:right: fbr ftr ntr
+      math::Plane::fromPoints(corners[3], corners[7], corners[6]).normal, // 1:top:   ntr ftr ftl
+      math::Plane::fromPoints(corners[6], corners[7], corners[5]).normal, // 2:far:   ftl ftr fbr
    }};
 
    this->_faceNormals = normals;
@@ -246,10 +244,10 @@ void Boundable::generateFaceNormals() {
 void Boundable::generateDiagonalDirections() {
    auto corners = this->getCorners();
 
-   std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS > diagonals;
-   for (int ndx = 0; ndx < NUM_BOUNDABLE_DIAGONALS; ++ndx) {
+   Boundable::DiagonalDirections diagonals;
+   for (int ndx = 0; ndx < NUM_DIAGONALS; ++ndx) {
       auto v1 = corners[ndx];
-      auto v2 = corners[(NUM_BOUNDABLE_CORNERS - 1) - ndx];
+      auto v2 = corners[(NUM_CORNERS - 1) - ndx];
       diagonals[ndx] = glm::normalize(glm::vec3(v2 - v1));
    }
 
@@ -257,47 +255,98 @@ void Boundable::generateDiagonalDirections() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Utility methods
+// Intersection methods
 ///////////////////////////////////////////////////////////////////////////////
 
 bool Boundable::intersectAsSpheres(Boundable& other) {
-   float interval = this->getRadius() + other.getRadius();
+   float minimumDistance = this->getRadius() + other.getRadius();
    glm::vec3 centerDistance = this->_position - other._position;
 
-   return math::approxGreaterThan(interval * interval,
+   return math::approxGreaterThan(minimumDistance * minimumDistance,
     glm::dot(centerDistance, centerDistance));
 }
 
 bool Boundable::intersectAsBoxes(Boundable& other) {
-   intersection_data_generation_t intersectionDataGen =
-    Boundable::initializeIntersectionData(*this, other);
+   Boundable& a = *this;
+   Boundable& b = other;
 
-   boost::optional< Boundable::intersection_data_t > intersectionDataOpt =
-    std::get<0>(intersectionDataGen);
-   if (!intersectionDataOpt) {
-      return false;
+   bool parallelPairExists = false;
+
+   glm::vec3 centerDistance = b.position() - a.position();
+
+   glm::vec3 aSize = a.size() * 0.5f;
+   glm::vec3 bSize = b.size() * 0.5f;
+
+   auto aNormals = a.getFaceNormals();
+   auto bNormals = b.getFaceNormals();
+
+   glm::vec3 normalDots;
+   CoefficientMatrix coefMatrix;
+   CoefficientMatrix absCoefMatrix;
+
+   // Assess face normals from this Boundable.
+   // If a set of parallel axes exist we can avoid checking normal cross
+   // products later on.
+   for (int aNdx = 0; aNdx < 3; ++aNdx) {
+      for (int bNdx = 0; bNdx < 3; ++bNdx) {
+         float c = glm::dot(aNormals[aNdx], bNormals[bNdx]);
+         float absC = std::abs(c);
+
+         int index = crash::math::linearize_index(glm::ivec2(aNdx, bNdx),
+          glm::ivec2(3, 3));
+
+         coefMatrix[index] = c;
+         absCoefMatrix[index] = absC;
+         if (crash::math::approxGreaterThan(absC, 1.0f)) {
+            parallelPairExists = true;
+         }
+      }
+
+      float aDotD = glm::dot(aNormals[aNdx], centerDistance);
+      normalDots[aNdx] = aDotD;
+
+      float interval = std::abs(aDotD);
+      float aRadius = aSize[aNdx];
+      float bRadius = 0.0f;
+      for (int bNdx = 0; bNdx < 3; ++bNdx) {
+         int index = crash::math::linearize_index(glm::ivec2(aNdx, bNdx),
+          glm::ivec2(3, 3));
+
+         bRadius += bSize[bNdx] * absCoefMatrix[index];
+      }
+
+      if (crash::math::approxGreaterThan(interval, aRadius + bRadius)) {
+         return parallelPairExists;
+      }
    }
 
-   bool existsParallelPair = std::get<1>(intersectionDataGen);
-   if (existsParallelPair) {
+   // Assess face normals from other Boundable.
+   // We don't need to look for parallel axes anymore.
+   for (int bNdx = 0; bNdx < 3; ++bNdx) {
+      float interval = std::abs(glm::dot(bNormals[bNdx], centerDistance));
+      float aRadius = 0.0f;
+      for (int aNdx = 0; aNdx < 3; ++aNdx) {
+         int index = crash::math::linearize_index(glm::ivec2(aNdx, bNdx),
+          glm::ivec2(3, 3));
+
+         aRadius += aSize[aNdx] * absCoefMatrix[index];
+      }
+      float bRadius = bSize[bNdx];
+
+      if (crash::math::approxGreaterThan(interval, aRadius + bRadius)) {
+         return parallelPairExists;
+      }
+   }
+
+   if (parallelPairExists) {
       return true;
    }
-
-   // Unpack generated data.
-   Boundable::intersection_data_t intersectionData = intersectionDataOpt.get();
-   glm::vec3 aSize = intersectionData.aSize;
-   glm::vec3 bSize = intersectionData.bSize;
-   glm::vec3 normalDots = intersectionData.normalDots;
-   std::array< std::array< float, 3 >, 3 > coefMatrix =
-    intersectionData.coefMatrix;
-   std::array< std::array< float, 3 >, 3 > absCoefMatrix =
-    intersectionData.absCoefMatrix;
 
    // Assess axes generated from face normal cross products.
    for (int aNdx = 0; aNdx < 3; ++aNdx) {
       for (int bNdx = 0; bNdx < 3; ++bNdx) {
-         float interval = Boundable::centerDifferenceProjection(aNdx, bNdx,
-          normalDots, coefMatrix);
+         float interval = Boundable::centerDifferenceProjection(
+          aNdx, bNdx, normalDots, coefMatrix);
          float aRadius = Boundable::thisIntersectionRadiusProjection(
           aNdx, bNdx, aSize, absCoefMatrix);
          float bRadius = Boundable::otherIntersectionRadiusProjection(
@@ -312,123 +361,50 @@ bool Boundable::intersectAsBoxes(Boundable& other) {
    return true;
 }
 
-/* static */ std::tuple< boost::optional< Boundable::intersection_data_t >, bool >
- Boundable::initializeIntersectionData(Boundable& a, Boundable& b) {
-   bool existsParallelPair = false;
-
-   glm::vec3 centerDistance = b.position() - a.position();
-
-   glm::vec3 aSize = a.size() * 0.5f;
-   glm::vec3 bSize = b.size() * 0.5f;
-
-   auto aNormals = a.getFaceNormals();
-   auto bNormals = b.getFaceNormals();
-
-   glm::vec3 normalDots;
-   std::array< std::array< float, 3 >, 3 > coefMatrix;
-   std::array< std::array< float, 3 >, 3 > absCoefMatrix;
-
-   // Assess face normals from this Boundable.
-   // If a set of parallel axes exist we can avoid checking normal cross
-   // products later on.
-   for (int aNdx = 0; aNdx < 3; ++aNdx) {
-      for (int bNdx = 0; bNdx < 3; ++bNdx) {
-         float c = glm::dot(aNormals[aNdx], bNormals[bNdx]);
-         float absC = std::abs(c);
-
-         coefMatrix[aNdx][bNdx] = c;
-         absCoefMatrix[aNdx][bNdx] = absC;
-         if (crash::math::approxGreaterThan(absC, 1.0f)) {
-            existsParallelPair = true;
-         }
-      }
-
-      float aDotD = glm::dot(aNormals[aNdx], centerDistance);
-      normalDots[aNdx] = aDotD;
-
-      float interval = std::abs(aDotD);
-      float aRadius = aSize[aNdx];
-      float bRadius = 0.0f;
-      for (int bNdx = 0; bNdx < 3; ++bNdx) {
-         bRadius += bSize[bNdx] * absCoefMatrix[aNdx][bNdx];
-      }
-
-      if (crash::math::approxGreaterThan(interval, aRadius + bRadius)) {
-         boost::optional< intersection_data_t > none;
-         return intersection_data_generation_t(none, existsParallelPair);
-      }
-   }
-
-   // Assess face normals from other Boundable.
-   // We don't need to look for parallel axes anymore.
-   for (int bNdx = 0; bNdx < 3; ++bNdx) {
-      float interval = std::abs(glm::dot(bNormals[bNdx], centerDistance));
-      float aRadius = 0.0f;
-      for (int aNdx = 0; aNdx < 3; ++aNdx) {
-         aRadius += aSize[aNdx] * absCoefMatrix[aNdx][bNdx];
-      }
-      float bRadius = bSize[bNdx];
-
-      if (crash::math::approxGreaterThan(interval, aRadius + bRadius)) {
-         boost::optional< intersection_data_t > none;
-         return intersection_data_generation_t(none, existsParallelPair);
-      }
-   }
-
-   boost::optional< intersection_data_t > intersectionDataOpt =
-    boost::optional< intersection_data_t >({
-      aSize, bSize, normalDots, coefMatrix, absCoefMatrix,
-   });
-   return intersection_data_generation_t(intersectionDataOpt, existsParallelPair);
-}
-
 /* static */ float Boundable::centerDifferenceProjection(int aNdx, int bNdx,
- const glm::vec3& normalDots,
- std::array< std::array< float, 3 >, 3 > coefMatrix) {
-   int aCoefXNdx, aCoefYNdx;
-   int bCoefXNdx, bCoefYNdx;
-   int aDotNdx, bDotNdx;
+ const glm::vec3& normalDots, CoefficientMatrix coefMatrix) {
+   int aDotNdx = (aNdx + 2) % 3;
+   int bDotNdx = (aNdx + 1) % 3;
 
-   aDotNdx = bCoefXNdx = (aNdx + 2) % 3;
-   bDotNdx = aCoefXNdx = (aNdx + 1) % 3;
-   aCoefYNdx = bCoefYNdx = bNdx;
+   int aCoefIndex = crash::math::linearize_index(glm::ivec2(bDotNdx, bNdx),
+    glm::ivec2(3, 3));
+   int bCoefIndex = crash::math::linearize_index(glm::ivec2(aDotNdx, bNdx),
+    glm::ivec2(3, 3));
 
-   float aCoef = coefMatrix[aCoefXNdx][aCoefYNdx];
-   float bCoef = coefMatrix[bCoefXNdx][bCoefYNdx];
+   float aCoef = coefMatrix[aCoefIndex];
+   float bCoef = coefMatrix[bCoefIndex];
 
    return std::abs(normalDots[aDotNdx] * aCoef - normalDots[bDotNdx] * bCoef);
 }
 
-/* static */ float Boundable::thisIntersectionRadiusProjection(int aNdx, int bNdx,
- const glm::vec3& aSize,
- std::array< std::array< float, 3 >, 3 > absCoefMatrix) {
-   int aCoefXNdx, aCoefYNdx;
-   int bCoefXNdx, bCoefYNdx;
-   int aSizeNdx, bSizeNdx;
+/* static */ float Boundable::thisIntersectionRadiusProjection(
+ int aNdx, int bNdx, const glm::vec3& aSize, CoefficientMatrix absCoefMatrix) {
+   int aSizeNdx = (aNdx + 1) % 3;
+   int bSizeNdx = (aNdx + 2) % 3;
 
-   aSizeNdx = bCoefXNdx = (aNdx + 1) % 3;
-   bSizeNdx = aCoefXNdx = (aNdx + 2) % 3;
-   aCoefYNdx = bCoefYNdx = bNdx;
+   int aCoefIndex = crash::math::linearize_index(glm::ivec2(bSizeNdx, bNdx),
+    glm::ivec2(3, 3));
+   int bCoefIndex = crash::math::linearize_index(glm::ivec2(aSizeNdx, bNdx),
+    glm::ivec2(3, 3));
 
-   float aCoef = absCoefMatrix[aCoefXNdx][aCoefYNdx];
-   float bCoef = absCoefMatrix[bCoefXNdx][bCoefYNdx];
+   float aCoef = absCoefMatrix[aCoefIndex];
+   float bCoef = absCoefMatrix[bCoefIndex];
 
    return aSize[aSizeNdx] * aCoef + aSize[bSizeNdx] * bCoef;
 }
 
-/* static */ float Boundable::otherIntersectionRadiusProjection(int aNdx, int bNdx,
- const glm::vec3& bSize,
- std::array< std::array< float, 3 >, 3 > absCoefMatrix) {
-   int aCoefXNdx, aCoefYNdx;
-   int bCoefXNdx, bCoefYNdx;
-   int aSizeNdx, bSizeNdx;
+/* static */ float Boundable::otherIntersectionRadiusProjection(
+ int aNdx, int bNdx, const glm::vec3& bSize, CoefficientMatrix absCoefMatrix) {
+   int aSizeNdx = bNdx ? 0 : 1;
+   int bSizeNdx = (bNdx == 2) ? 1 : 2;
 
-   aSizeNdx = bCoefYNdx = bNdx ? 0 : 1;
-   bSizeNdx = aCoefYNdx = (bNdx == 2) ? 1 : 2;
-   aCoefXNdx = bCoefXNdx = aNdx;
+   int aCoefIndex = crash::math::linearize_index(glm::ivec2(aNdx, bSizeNdx),
+    glm::ivec2(3, 3));
+   int bCoefIndex = crash::math::linearize_index(glm::ivec2(aNdx, aSizeNdx),
+    glm::ivec2(3, 3));
 
-   float aCoef = absCoefMatrix[aCoefXNdx][aCoefYNdx];
-   float bCoef = absCoefMatrix[bCoefXNdx][bCoefYNdx];
+   float aCoef = absCoefMatrix[aCoefIndex];
+   float bCoef = absCoefMatrix[bCoefIndex];
 
    return bSize[aSizeNdx] * aCoef + bSize[aSizeNdx] * bCoef;
 }
