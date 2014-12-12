@@ -194,24 +194,19 @@ bool Boundable::intersect(Boundable& other) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void Boundable::invalidate() {
-   this->_radius = boost::optional< float >();
-   this->_transform = boost::optional< glm::mat4 >();
-   this->_corners = boost::optional<
-    std::array< glm::vec3, NUM_BOUNDABLE_CORNERS > >();
-   this->_faceNormals = boost::optional<
-    std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS > >();
-   this->_diagonalDirections = boost::optional<
-    std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS > >();
+   this->_radius = boost::none;
+   this->_transform = boost::none;
+   this->_corners = boost::none;
+   this->_faceNormals = boost::none;
+   this->_diagonalDirections = boost::none;
 }
 
 void Boundable::generateRadius() {
-   float radius = std::sqrt(glm::dot(this->_size, this->_size));
-   this->_radius = boost::optional< float >(radius);
+   this->_radius = std::sqrt(glm::dot(this->_size, this->_size));
 }
 
 void Boundable::generateTransform() {
-   glm::mat4 transform = math::transform(this->_position, this->_orientation);
-   this->_transform = boost::optional< glm::mat4 >(transform);
+   this->_transform = math::transform(this->_position, this->_orientation);
 }
 
 void Boundable::generateCorners() {
@@ -233,8 +228,7 @@ void Boundable::generateCorners() {
       corners[ndx] = glm::vec3(transform * unitCorners[ndx]);
    }
 
-   this->_corners = boost::optional<
-    std::array< glm::vec3, NUM_BOUNDABLE_CORNERS > >(corners);
+   this->_corners = corners;
 }
 
 void Boundable::generateFaceNormals() {
@@ -246,8 +240,7 @@ void Boundable::generateFaceNormals() {
       math::Plane::fromPoints(corners[4], corners[6], corners[7]).normal, // 5:far
    }};
 
-   this->_faceNormals = boost::optional<
-    std::array< glm::vec3, NUM_BOUNDABLE_FACE_NORMALS > >(normals);
+   this->_faceNormals = normals;
 }
 
 void Boundable::generateDiagonalDirections() {
@@ -260,8 +253,7 @@ void Boundable::generateDiagonalDirections() {
       diagonals[ndx] = glm::normalize(glm::vec3(v2 - v1));
    }
 
-   this->_diagonalDirections = boost::optional<
-    std::array< glm::vec3, NUM_BOUNDABLE_DIAGONALS > >(diagonals);
+   this->_diagonalDirections = diagonals;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

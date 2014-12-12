@@ -102,27 +102,21 @@ bool Camera::isPointVisible(const glm::vec3& point) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void Camera::invalidate() {
-   this->_transform = boost::optional< glm::mat4 >();
-   this->_perspective = boost::optional< glm::mat4 >();
-   this->_viewFrustum = boost::optional< ViewFrustum >();
+   this->_transform = boost::none;
+   this->_perspective = boost::none;
+   this->_viewFrustum = boost::none;
 }
 
 void Camera::generateTransform() {
-   glm::mat4 transform = math::transform(this->_position, this->_orientation);
-
-   this->_transform = boost::optional< glm::mat4 >(transform);
+   this->_transform = math::transform(this->_position, this->_orientation);
 }
 
 void Camera::generatePerspective() {
-   glm::mat4 perspective = glm::perspective(this->_fieldOfView,
+   this->_perspective = glm::perspective(this->_fieldOfView,
     this->_aspectRatio, this->_nearPlane, this->_farPlane);
-
-   this->_perspective = boost::optional< glm::mat4 >(perspective);
 }
 
 void Camera::generateViewFrustum() {
-   ViewFrustum viewFrustum = ViewFrustum::fromValues(this->_fieldOfView,
+   this->_viewFrustum = ViewFrustum::fromValues(this->_fieldOfView,
     this->_aspectRatio, this->_nearPlane, this->_farPlane, this->getTransform());
-
-   this->_viewFrustum = boost::optional< ViewFrustum >(viewFrustum);
 }

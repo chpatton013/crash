@@ -11,8 +11,6 @@ namespace util {
 template< typename T >
 /* static */ boost::optional< std::shared_ptr< T > > File::New(const std::string& fileName,
  std::unordered_map< std::string, std::shared_ptr< T > >& instances) {
-   static boost::optional< std::shared_ptr< T > > none;
-
    namespace fs = boost::filesystem;
    namespace sys = boost::system;
 
@@ -22,7 +20,7 @@ template< typename T >
    if (!fs::exists(filePath, errorCode)) {
       std::shared_ptr< T > file = std::make_shared< T >(fileName);
       if (!file->valid()) {
-         return none;
+         return boost::none;
       }
 
       return instances[fileName] = file;
@@ -30,13 +28,13 @@ template< typename T >
 
    bool isSymLink = fs::is_symlink(filePath, errorCode);
    if (errorCode.value() != 0) {
-      return none;
+      return boost::none;
    }
 
    if (isSymLink) {
       filePath = fs::read_symlink(filePath, errorCode);
       if (errorCode.value() != 0) {
-         return none;
+         return boost::none;
       }
 
       return File::New(filePath.string(), instances);
@@ -52,12 +50,12 @@ template< typename T >
 
    bool isRegularFile = fs::is_regular_file(absoluteFilePath, errorCode);
    if (errorCode.value() != 0 || !isRegularFile) {
-      return none;
+      return boost::none;
    }
 
    std::shared_ptr< T > file = std::make_shared< T >(absoluteFileName);
    if (!file->valid()) {
-      return none;
+      return boost::none;
    }
 
    return instances[absoluteFileName] = file;
