@@ -77,7 +77,6 @@ files({
 })
 links({
    'crash_math',
-   'crash_util',
 })
 linkoptions({})
 
@@ -104,7 +103,6 @@ files({
    'tests/*/**.inl'
 })
 links({
-   'crash_util',
    'crash_math',
    'crash_space',
    'boost_filesystem',
