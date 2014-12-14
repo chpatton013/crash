@@ -94,13 +94,14 @@ links({
 })
 linkoptions({})
 
-project('crash_test')
+project('crash_unit_test')
 kind('ConsoleApp')
 targetdir('bin')
 files({
-   'tests/**.cpp',
-   'tests/**.hpp',
-   'tests/**.inl'
+   'tests/unit_driver.cpp',
+   'tests/*/**.cpp',
+   'tests/*/**.hpp',
+   'tests/*/**.inl'
 })
 links({
    'crash_util',
