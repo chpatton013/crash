@@ -339,7 +339,7 @@ Monitor::Monitor(GLFWmonitor* handle) :
 
 /* static */ Monitor::monitorCallback Monitor::_monitorCb;
 
-/* static */ std::unordered_map< GLFWmonitor*, Monitor* > Monitor::_instances;
+/* static */ std::map< GLFWmonitor*, Monitor* > Monitor::_instances;
 
 /* static */ bool Monitor::_initialized = false;
 

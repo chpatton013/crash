@@ -1,7 +1,7 @@
 #pragma once
 
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include <boost/optional/optional.hpp>
 #include <GLFW/glfw3.h>
@@ -107,7 +107,7 @@ private:
    /////////////////////////////////////////////////////////////////////////////
 
    static monitorCallback _monitorCb;
-   static std::unordered_map< GLFWmonitor*, Monitor* > _instances;
+   static std::map< GLFWmonitor*, Monitor* > _instances;
 
    static bool _initialized;
 

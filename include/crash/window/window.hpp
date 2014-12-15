@@ -1,7 +1,7 @@
 #pragma once
 
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <boost/optional/optional.hpp>
@@ -153,7 +153,7 @@ private:
    // Static members.
    /////////////////////////////////////////////////////////////////////////////
 
-   static std::unordered_map< GLFWwindow*, Window* > _instances;
+   static std::map< GLFWwindow*, Window* > _instances;
 };
 
 } // namespace window

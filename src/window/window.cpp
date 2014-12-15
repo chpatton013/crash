@@ -676,4 +676,4 @@ void Window::destroy() {
 
 /* static */ Window::DestroyedWindow Window::_destroyedWindow;
 
-/* static */ std::unordered_map< GLFWwindow*, Window* > Window::_instances;
+/* static */ std::map< GLFWwindow*, Window* > Window::_instances;
