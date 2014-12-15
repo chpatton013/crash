@@ -109,6 +109,19 @@ links({
    'crash_window',
    'boost_filesystem',
    'boost_system',
+})
+linkoptions({})
+
+project('crash_window_test')
+kind('ConsoleApp')
+targetdir('bin')
+files({
+   'tests/window_driver.cpp',
+})
+links({
+   'crash_math',
+   'crash_window',
+   'glfw3',
    'boost_filesystem',
    'boost_system',
 })
