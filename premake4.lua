@@ -98,9 +98,9 @@ kind('ConsoleApp')
 targetdir('bin')
 files({
    'tests/unit_driver.cpp',
-   'tests/*/**.cpp',
-   'tests/*/**.hpp',
-   'tests/*/**.inl'
+   'tests/unit/**.cpp',
+   'tests/unit/**.hpp',
+   'tests/unit/**.inl'
 })
 links({
    'crash_math',
@@ -119,10 +119,7 @@ files({
    'tests/window_driver.cpp',
 })
 links({
-   'crash_math',
    'crash_window',
    'glfw3',
-   'boost_filesystem',
-   'boost_system',
 })
 linkoptions({})

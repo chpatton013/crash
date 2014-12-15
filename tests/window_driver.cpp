@@ -1,4 +1,3 @@
-#include <crash/math/math.hpp>
 #include <crash/window/keyboard.hpp>
 #include <crash/window/monitor.hpp>
 #include <crash/window/mouse.hpp>
