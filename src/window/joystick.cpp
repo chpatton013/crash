@@ -17,7 +17,7 @@ boost::optional< std::vector< float > > Joystick::axes() const {
    const float* axes = glfwGetJoystickAxes(this->_handle, &count);
 
    if (axes == nullptr || count <= 0) {
-      return boost::optional< std::vector< float > >();
+      return boost::none;
    }
 
    std::vector< float > axesVector;
@@ -32,7 +32,7 @@ boost::optional< std::vector< unsigned char > > Joystick::buttons() const {
    const unsigned char* buttons = glfwGetJoystickButtons(this->_handle, &count);
 
    if (buttons == nullptr || count <= 0) {
-      return boost::optional< std::vector< unsigned char > >();
+      return boost::none;
    }
 
    std::vector< unsigned char > buttonsVector;
@@ -45,7 +45,7 @@ boost::optional< std::vector< unsigned char > > Joystick::buttons() const {
 boost::optional< std::string > Joystick::name() const {
    const char* name = glfwGetJoystickName(this->_handle);
    if (name == nullptr) {
-      return boost::optional< std::string >();
+      return boost::none;
    }
 
    return std::string(name);

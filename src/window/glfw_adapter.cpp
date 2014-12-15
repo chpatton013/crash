@@ -17,7 +17,7 @@ GlfwAdapter::GlfwAdapter() {}
 
 /* static */ boost::optional< GlfwAdapter::errorCallback > GlfwAdapter::getErrorCallback() {
    if (GlfwAdapter::_errorCb == nullptr) {
-      return boost::optional< GlfwAdapter::errorCallback >();
+      return boost::none;
    } else {
       return GlfwAdapter::_errorCb;
    }
@@ -34,7 +34,7 @@ GlfwAdapter::GlfwAdapter() {}
    GlfwAdapter::_errorCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< GlfwAdapter::errorCallback >();
+      return boost::none;
    } else {
       return oldCallback;
    }

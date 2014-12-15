@@ -163,7 +163,7 @@ boost::optional< Monitor* > Monitor::factory() {
    if (handle == nullptr) {
       auto handleOpt = Monitor::primaryHandle();
       if (!handleOpt) {
-         return boost::optional< Monitor* >();
+         return boost::none;
       }
 
       handle = handleOpt.get();
@@ -190,7 +190,7 @@ boost::optional< Monitor* > Monitor::factory() {
 /* static */ boost::optional< GLFWmonitor* > Monitor::primaryHandle() {
    GLFWmonitor* handle = glfwGetPrimaryMonitor();
    if (handle == nullptr) {
-      return boost::optional< GLFWmonitor* >();
+      return boost::none;
    } else {
       return handle;
    }
@@ -201,7 +201,7 @@ boost::optional< Monitor* > Monitor::factory() {
    GLFWmonitor** handles = glfwGetMonitors(&count);
 
    if (handles == nullptr || count <= 0) {
-      return boost::optional< std::vector< GLFWmonitor* > >();
+      return boost::none;
    }
 
    std::vector< GLFWmonitor* > availableHandles;
@@ -215,7 +215,7 @@ boost::optional< Monitor* > Monitor::factory() {
 /* static */ boost::optional< Monitor* > Monitor::primaryMonitor() {
    auto handle = Monitor::primaryHandle();
    if (!handle) {
-      return boost::optional< Monitor* >();
+      return boost::none;
    }
 
    auto itr = Monitor::_instances.find(handle.get());
@@ -229,7 +229,7 @@ boost::optional< Monitor* > Monitor::factory() {
 /* static */ boost::optional< std::vector< Monitor* > > Monitor::availableMonitors() {
    auto handles = Monitor::availableHandles();
    if (!handles) {
-      return boost::optional< std::vector< Monitor* > >();
+      return boost::none;
    }
 
    std::vector< Monitor* > availableMonitors;
@@ -299,7 +299,7 @@ boost::optional< Monitor* > Monitor::factory() {
    Monitor::_monitorCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Monitor::monitorCallback >();
+      return boost::none;
    } else {
       return oldCallback;
    }

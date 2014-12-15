@@ -369,9 +369,9 @@ boost::optional< Window::positionCallback >
    this->_positionCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Window::positionCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::positionCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -385,9 +385,9 @@ boost::optional< Window::windowSizeCallback >
    this->_windowSizeCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Window::windowSizeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::windowSizeCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -401,9 +401,9 @@ boost::optional< Window::closeCallback >
    this->_closeCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Window::closeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::closeCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -417,9 +417,9 @@ boost::optional< Window::refreshCallback >
    this->_refreshCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Window::refreshCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::refreshCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -433,9 +433,9 @@ boost::optional< Window::focusCallback >
    this->_focusCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Window::focusCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::focusCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -449,9 +449,9 @@ boost::optional< Window::minimizeCallback >
    this->_minimizeCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Window::minimizeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::minimizeCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -465,9 +465,9 @@ boost::optional< Window::frameBufferSizeCallback >
    this->_frameBufferSizeCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Window::frameBufferSizeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::frameBufferSizeCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -527,12 +527,12 @@ void Window::destroy() {
 /* static */ boost::optional< Window* > Window::getCurrentContext() {
    auto handle = glfwGetCurrentContext();
    if (handle == nullptr) {
-      return boost::optional< Window* >();
+      return boost::none;
    }
 
    auto itr = Window::_instances.find(handle);
    if (itr == Window::_instances.end()) {
-      return boost::optional< Window* >();
+      return boost::none;
    }
 
    return itr->second;

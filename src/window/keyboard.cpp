@@ -37,9 +37,9 @@ boost::optional< Keyboard::keyCallback > Keyboard::setKeyCallback(keyCallback ca
    this->_keyCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Keyboard::keyCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Keyboard::keyCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -48,9 +48,9 @@ boost::optional< Keyboard::charCallback > Keyboard::setCharCallback(charCallback
    this->_charCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Keyboard::charCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Keyboard::charCallback >(oldCallback);
+      return oldCallback;
    }
 }
 

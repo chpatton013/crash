@@ -63,9 +63,9 @@ boost::optional< Mouse::buttonCallback > Mouse::setButtonCallback(buttonCallback
    this->_buttonCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Mouse::buttonCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Mouse::buttonCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -74,9 +74,9 @@ boost::optional< Mouse::positionCallback > Mouse::setPositionCallback(positionCa
    this->_positionCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Mouse::positionCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Mouse::positionCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -85,9 +85,9 @@ boost::optional< Mouse::enterCallback > Mouse::setEnterCallback(enterCallback ca
    this->_enterCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Mouse::enterCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Mouse::enterCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
@@ -96,9 +96,9 @@ boost::optional< Mouse::scrollCallback > Mouse::setScrollCallback(scrollCallback
    this->_scrollCb = callback;
 
    if (oldCallback == nullptr) {
-      return boost::optional< Mouse::scrollCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Mouse::scrollCallback >(oldCallback);
+      return oldCallback;
    }
 }
 
