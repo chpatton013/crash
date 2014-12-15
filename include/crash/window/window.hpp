@@ -18,13 +18,13 @@ public:
    // Type definitions.
    /////////////////////////////////////////////////////////////////////////////
 
-   typedef void (*positionCallback)(const Window&, int, int);
-   typedef void (*windowSizeCallback)(const Window&, int, int);
-   typedef void (*frameBufferSizeCallback)(const Window&, int, int);
-   typedef void (*closeCallback)(const Window&);
-   typedef void (*refreshCallback)(const Window&);
+   typedef void (*positionCallback)(const Window&, const glm::ivec2&);
+   typedef void (*windowSizeCallback)(const Window&, const glm::ivec2&);
+   typedef void (*frameBufferSizeCallback)(const Window&, const glm::ivec2&);
    typedef void (*focusCallback)(const Window&, int);
    typedef void (*minimizeCallback)(const Window&, int);
+   typedef void (*refreshCallback)(const Window&);
+   typedef void (*closeCallback)(Window&);
 
    static struct DestroyedWindow {} _destroyedWindow;
 
@@ -32,11 +32,12 @@ public:
    // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
+   Window(const glm::ivec2& size);
    Window(const glm::ivec2& size, const std::string& title);
    Window(const glm::ivec2& size, const std::string& title,
     boost::optional< Monitor* > monitor);
    Window(const glm::ivec2& size, const std::string& title,
-    boost::optional< Monitor* > monitor, boost::optional< Window* > share);
+    boost::optional< Monitor* > monitor, boost::optional< Window > share);
    virtual ~Window();
 
    /////////////////////////////////////////////////////////////////////////////

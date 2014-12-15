@@ -1,3 +1,4 @@
+#include <glm/glm.hpp>
 #include <crash/window/keyboard.hpp>
 #include <crash/window/monitor.hpp>
 #include <crash/window/mouse.hpp>
@@ -9,23 +10,27 @@ using namespace crash::window;
 // Constructors.
 ////////////////////////////////////////////////////////////////////////////////
 
+Window::Window(const glm::ivec2& size) :
+   Window(size, "")
+{}
+
 Window::Window(const glm::ivec2& size, const std::string& title) :
-   Window(size, title, boost::optional< Monitor* >())
+   Window(size, title, boost::none)
 {}
 
 Window::Window(const glm::ivec2& size, const std::string& title,
  boost::optional< Monitor* > monitor) :
-   Window(size, title, monitor, boost::optional< Window* >())
+   Window(size, title, monitor, boost::none)
 {}
 
 Window::Window(const glm::ivec2& size, const std::string& title,
- boost::optional< Monitor* > monitor, boost::optional< Window* > share) :
+ boost::optional< Monitor* > monitor, boost::optional< Window > share) :
    _destroyed(false), _title(title), _positionCb(nullptr), _windowSizeCb(nullptr),
    _closeCb(nullptr), _refreshCb(nullptr), _focusCb(nullptr), _minimizeCb(nullptr),
    _frameBufferSizeCb(nullptr)
 {
    GLFWmonitor* monitorHandle = !monitor ? nullptr : monitor.get()->handle();
-   GLFWwindow* shareHandle = !share ? nullptr : share.get()->handle();
+   GLFWwindow* shareHandle = !share ? nullptr : share.get().handle();
 
    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
    GLFWwindow* handle = glfwCreateWindow(size.x, size.y, title.data(),
@@ -66,7 +71,7 @@ boost::optional< Monitor* > Window::monitor() const {
 
    auto monitorHandle = glfwGetWindowMonitor(this->_handle);
    if (monitorHandle == nullptr) {
-      return boost::optional< Monitor* >();
+      return boost::none;
    }
 
    return Monitor::factory(monitorHandle);
@@ -170,9 +175,9 @@ boost::optional< Window::positionCallback > Window::getPositionCallback() const 
    }
 
    if (this->_positionCb == nullptr) {
-      return boost::optional< Window::positionCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::positionCallback >(this->_positionCb);
+      return this->_positionCb;
    }
 }
 
@@ -182,9 +187,9 @@ boost::optional< Window::windowSizeCallback > Window::getWindowSizeCallback() co
    }
 
    if (this->_windowSizeCb == nullptr) {
-      return boost::optional< Window::windowSizeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::windowSizeCallback >(this->_windowSizeCb);
+      return this->_windowSizeCb;
    }
 }
 
@@ -194,9 +199,9 @@ boost::optional< Window::closeCallback > Window::getCloseCallback() const {
    }
 
    if (this->_closeCb == nullptr) {
-      return boost::optional< Window::closeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::closeCallback >(this->_closeCb);
+      return this->_closeCb;
    }
 }
 
@@ -206,9 +211,9 @@ boost::optional< Window::refreshCallback > Window::getRefreshCallback() const {
    }
 
    if (this->_refreshCb == nullptr) {
-      return boost::optional< Window::refreshCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::refreshCallback >(this->_refreshCb);
+      return this->_refreshCb;
    }
 }
 
@@ -218,9 +223,9 @@ boost::optional< Window::focusCallback > Window::getFocusCallback() const {
    }
 
    if (this->_focusCb == nullptr) {
-      return boost::optional< Window::focusCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::focusCallback >(this->_focusCb);
+      return this->_focusCb;
    }
 }
 
@@ -230,9 +235,9 @@ boost::optional< Window::minimizeCallback > Window::getMinimizeCallback() const 
    }
 
    if (this->_minimizeCb == nullptr) {
-      return boost::optional< Window::minimizeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::minimizeCallback >(this->_minimizeCb);
+      return this->_minimizeCb;
    }
 }
 
@@ -242,9 +247,9 @@ boost::optional< Window::frameBufferSizeCallback > Window::getFrameBufferCallbac
    }
 
    if (this->_frameBufferSizeCb == nullptr) {
-      return boost::optional< Window::frameBufferSizeCallback >();
+      return boost::none;
    } else {
-      return boost::optional< Window::frameBufferSizeCallback >(this->_frameBufferSizeCb);
+      return this->_frameBufferSizeCb;
    }
 }
 
@@ -553,7 +558,7 @@ void Window::destroy() {
       return;
    }
 
-   window->_positionCb(*window, x, y);
+   window->_positionCb(*window, glm::ivec2(x, y));
 }
 
 /* static */ void Window::windowSizeCallbackAdapter(GLFWwindow* handle, int w, int h) {
@@ -572,10 +577,10 @@ void Window::destroy() {
       return;
    }
 
-   window->_windowSizeCb(*window, w, h);
+   window->_windowSizeCb(*window, glm::ivec2(w, h));
 }
 
-/* static */ void Window::closeCallbackAdapter(GLFWwindow* handle) {
+/* static */ void Window::frameBufferSizeCallbackAdapter(GLFWwindow* handle, int w, int h) {
    auto itr = Window::_instances.find(handle);
    if (itr == Window::_instances.end()) {
       return;
@@ -587,30 +592,11 @@ void Window::destroy() {
       throw Window::_destroyedWindow;
    }
 
-   if (window->_closeCb == nullptr) {
+   if (window->_frameBufferSizeCb == nullptr) {
       return;
    }
 
-   window->_closeCb(*window);
-}
-
-/* static */ void Window::refreshCallbackAdapter(GLFWwindow* handle) {
-   auto itr = Window::_instances.find(handle);
-   if (itr == Window::_instances.end()) {
-      return;
-   }
-
-   auto window = itr->second;
-
-   if (window->_destroyed) {
-      throw Window::_destroyedWindow;
-   }
-
-   if (window->_refreshCb == nullptr) {
-      return;
-   }
-
-   window->_refreshCb(*window);
+   window->_frameBufferSizeCb(*window, glm::ivec2(w, h));
 }
 
 /* static */ void Window::focusCallbackAdapter(GLFWwindow* handle, int f) {
@@ -651,7 +637,7 @@ void Window::destroy() {
    window->_minimizeCb(*window, m);
 }
 
-/* static */ void Window::frameBufferSizeCallbackAdapter(GLFWwindow* handle, int w, int h) {
+/* static */ void Window::refreshCallbackAdapter(GLFWwindow* handle) {
    auto itr = Window::_instances.find(handle);
    if (itr == Window::_instances.end()) {
       return;
@@ -663,11 +649,30 @@ void Window::destroy() {
       throw Window::_destroyedWindow;
    }
 
-   if (window->_frameBufferSizeCb == nullptr) {
+   if (window->_refreshCb == nullptr) {
       return;
    }
 
-   window->_frameBufferSizeCb(*window, w, h);
+   window->_refreshCb(*window);
+}
+
+/* static */ void Window::closeCallbackAdapter(GLFWwindow* handle) {
+   auto itr = Window::_instances.find(handle);
+   if (itr == Window::_instances.end()) {
+      return;
+   }
+
+   auto window = itr->second;
+
+   if (window->_destroyed) {
+      throw Window::_destroyedWindow;
+   }
+
+   if (window->_closeCb == nullptr) {
+      return;
+   }
+
+   window->_closeCb(*window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
