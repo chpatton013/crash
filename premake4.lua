@@ -105,6 +105,10 @@ files({
 links({
    'crash_math',
    'crash_space',
+   'crash_util',
+   'crash_window',
+   'boost_filesystem',
+   'boost_system',
    'boost_filesystem',
    'boost_system',
 })
