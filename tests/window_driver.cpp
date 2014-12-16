@@ -25,15 +25,15 @@ static int lastKey = GLFW_KEY_UNKNOWN;
 static std::string spelledWord;
 
 static void positionCallback(const Window&, const glm::ivec2& position) {
-   boost::optional< Monitor* > monitorOpt = Monitor::primaryMonitor();
+   auto monitorOpt = Monitor::primaryMonitor();
    if (!monitorOpt) {
       printf("No primary monitor detected!\n");
       return;
    }
 
-   Monitor* monitor = monitorOpt.get();
+   auto monitor = monitorOpt.get();
 
-   const GLFWvidmode* mode = monitor->mode();
+   const GLFWvidmode* mode = monitor.mode();
    glm::ivec2 size = glm::ivec2(mode->width, mode->height);
    glm::ivec2 topLeft = glm::ivec2(200, 200);
    glm::ivec2 bottomRight = size - glm::ivec2(200, 200);
@@ -165,16 +165,16 @@ static void demoMonitors() {
    printf("Listing information about all detected monitors:\n");
    for (auto monitor : monitors) {
       printf("   ");
-      print(*monitor);
+      print(monitor);
 
       printf("   Available color modes:\n");
-      for (auto mode : monitor->availableModes()) {
+      for (auto mode : monitor.availableModes()) {
          printf("      ");
          print(mode);
       }
 
       printf("   Current color mode:\n      ");
-      print(monitor->mode());
+      print(monitor.mode());
 
       printf("\n");
    }
@@ -187,7 +187,7 @@ static void demoMonitors() {
 
    auto primaryMonitor = primaryMonitorOpt.get();
    printf("Primary monitor:\n   ");
-   print(*primaryMonitor);
+   print(primaryMonitor);
 
    printf("\n");
 }

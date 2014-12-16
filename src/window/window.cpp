@@ -19,17 +19,17 @@ Window::Window(const glm::ivec2& size, const std::string& title) :
 {}
 
 Window::Window(const glm::ivec2& size, const std::string& title,
- boost::optional< Monitor* > monitor) :
+ boost::optional< Monitor > monitor) :
    Window(size, title, monitor, boost::none)
 {}
 
 Window::Window(const glm::ivec2& size, const std::string& title,
- boost::optional< Monitor* > monitor, boost::optional< Window > share) :
+ boost::optional< Monitor > monitor, boost::optional< Window > share) :
    _destroyed(false), _title(title), _positionCb(nullptr), _windowSizeCb(nullptr),
    _closeCb(nullptr), _refreshCb(nullptr), _focusCb(nullptr), _minimizeCb(nullptr),
    _frameBufferSizeCb(nullptr)
 {
-   GLFWmonitor* monitorHandle = !monitor ? nullptr : monitor.get()->handle();
+   GLFWmonitor* monitorHandle = !monitor ? nullptr : monitor.get().handle();
    GLFWwindow* shareHandle = !share ? nullptr : share.get().handle();
 
    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
@@ -64,7 +64,7 @@ GLFWwindow* Window::handle() const {
    return this->_handle;
 }
 
-boost::optional< Monitor* > Window::monitor() const {
+boost::optional< Monitor > Window::monitor() const {
    if (this->_destroyed) {
       throw Window::_destroyedWindow;
    }

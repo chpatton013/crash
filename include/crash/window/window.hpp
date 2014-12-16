@@ -35,9 +35,9 @@ public:
    Window(const glm::ivec2& size);
    Window(const glm::ivec2& size, const std::string& title);
    Window(const glm::ivec2& size, const std::string& title,
-    boost::optional< Monitor* > monitor);
+    boost::optional< Monitor > monitor);
    Window(const glm::ivec2& size, const std::string& title,
-    boost::optional< Monitor* > monitor, boost::optional< Window > share);
+    boost::optional< Monitor > monitor, boost::optional< Window > share);
    virtual ~Window();
 
    /////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ public:
    /////////////////////////////////////////////////////////////////////////////
 
    GLFWwindow* handle() const;
-   boost::optional< Monitor* > monitor() const;
+   boost::optional< Monitor > monitor() const;
 
    std::string title() const;
    glm::ivec2 position() const;

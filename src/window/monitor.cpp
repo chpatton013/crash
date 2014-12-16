@@ -155,11 +155,11 @@ void Monitor::gamma(const GLFWgammaramp* gammaRamp) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 //static
-boost::optional< Monitor* > Monitor::factory() {
+boost::optional< Monitor > Monitor::factory() {
    return Monitor::factory(nullptr);
 }
 
-/* static */ boost::optional< Monitor* > Monitor::factory(GLFWmonitor* handle) {
+/* static */ boost::optional< Monitor > Monitor::factory(GLFWmonitor* handle) {
    if (handle == nullptr) {
       auto handleOpt = Monitor::primaryHandle();
       if (!handleOpt) {
@@ -171,16 +171,16 @@ boost::optional< Monitor* > Monitor::factory() {
 
    auto itr = Monitor::_instances.find(handle);
    if (itr != Monitor::_instances.end()) {
-      return itr->second;
+      return *itr->second;
    }
 
-   return Monitor::_instances[handle] = new Monitor(handle);
+   Monitor* monitor = new Monitor(handle);
+   Monitor::_instances[handle] = monitor;
+   return *monitor;
 }
 
-/* static */ bool Monitor::release(Monitor* monitor) {
-   bool found = Monitor::_instances.erase(monitor->_handle);
-   delete monitor;
-   return found;
+/* static */ bool Monitor::release(Monitor monitor) {
+   return Monitor::_instances.erase(monitor._handle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +212,7 @@ boost::optional< Monitor* > Monitor::factory() {
    return availableHandles;
 }
 
-/* static */ boost::optional< Monitor* > Monitor::primaryMonitor() {
+/* static */ boost::optional< Monitor > Monitor::primaryMonitor() {
    auto handle = Monitor::primaryHandle();
    if (!handle) {
       return boost::none;
@@ -223,24 +223,23 @@ boost::optional< Monitor* > Monitor::factory() {
       throw GlfwAdapter::_invalidInternalState;
    }
 
-   return itr->second;
+   return *itr->second;
 }
 
-/* static */ boost::optional< std::vector< Monitor* > > Monitor::availableMonitors() {
+/* static */ boost::optional< std::vector< Monitor > > Monitor::availableMonitors() {
    auto handles = Monitor::availableHandles();
    if (!handles) {
       return boost::none;
    }
 
-   std::vector< Monitor* > availableMonitors;
+   std::vector< Monitor > availableMonitors;
    for (auto handle : handles.get()) {
       auto itr = Monitor::_instances.find(handle);
       if (itr == Monitor::_instances.end()) {
          throw GlfwAdapter::_invalidInternalState;
       }
 
-      auto monitor = itr->second;
-      availableMonitors.push_back(monitor);
+      availableMonitors.push_back(*itr->second);
    }
 
    return availableMonitors;
@@ -275,7 +274,7 @@ boost::optional< Monitor* > Monitor::factory() {
    Monitor::_monitorCb = nullptr;
 
    for (auto itr : Monitor::_instances) {
-      Monitor::release(itr.second);
+      Monitor::release(*itr.second);
    }
 
    Monitor::_initialized = false;

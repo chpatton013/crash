@@ -34,6 +34,12 @@ public:
    typedef void (*monitorCallback)(const Monitor&, int);
 
    /////////////////////////////////////////////////////////////////////////////
+   // Constructors.
+   /////////////////////////////////////////////////////////////////////////////
+
+   virtual ~Monitor();
+
+   /////////////////////////////////////////////////////////////////////////////
    // Getters.
    /////////////////////////////////////////////////////////////////////////////
 
@@ -56,9 +62,9 @@ public:
    // Static constructors.
    /////////////////////////////////////////////////////////////////////////////
 
-   static boost::optional< Monitor* > factory();
-   static boost::optional< Monitor* > factory(GLFWmonitor* handle);
-   static bool release(Monitor* monitor);
+   static boost::optional< Monitor > factory();
+   static boost::optional< Monitor > factory(GLFWmonitor* handle);
+   static bool release(Monitor monitor);
 
    /////////////////////////////////////////////////////////////////////////////
    // Static getters.
@@ -67,8 +73,8 @@ public:
    static boost::optional< GLFWmonitor* > primaryHandle();
    static boost::optional< std::vector< GLFWmonitor* > > availableHandles();
 
-   static boost::optional< Monitor* > primaryMonitor();
-   static boost::optional< std::vector< Monitor* > > availableMonitors();
+   static boost::optional< Monitor > primaryMonitor();
+   static boost::optional< std::vector< Monitor > > availableMonitors();
 
    /////////////////////////////////////////////////////////////////////////////
    // Static initializers.
@@ -94,7 +100,6 @@ private:
 
    Monitor();
    Monitor(GLFWmonitor* handle);
-   virtual ~Monitor();
 
    /////////////////////////////////////////////////////////////////////////////
    // Members.
