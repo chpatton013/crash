@@ -5,46 +5,67 @@
 #include <crash/space/boundable.hpp>
 #include <crash/space/bounding_group.hpp>
 #include <crash/space/collision.hpp>
-#include <crash/space/view_frustum.hpp>
 
 namespace crash {
 namespace space {
 
-class SpatialManager : public Boundable {
-public:
-   SpatialManager(const glm::vec3& size, const glm::ivec3& partitions);
-   SpatialManager(const glm::vec3& position, const glm::vec3& size,
-    const glm::ivec3& partitions);
-   SpatialManager(const glm::vec3& position, const glm::vec4& orientation,
-    const glm::vec3& size, const glm::ivec3& partitions);
+class ViewFrustum;
 
-   void resize(const glm::vec3& size, const glm::ivec3& partitions);
-   void resize(const glm::vec3& position, const glm::vec3& size,
+class SpatialManager {
+public:
+   SpatialManager(const SpatialManager& manager);
+   SpatialManager(const math::Transformer& transformer,
     const glm::ivec3& partitions);
-   void resize(const glm::vec3& position, const glm::vec4& orientation,
-    const glm::vec3& size, const glm::ivec3& partitions);
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Data access
+   ////////////////////////////////////////////////////////////////////////////
+
+   const Boundable& boundable() const;
+   const glm::vec3& position() const;
+   const glm::vec4& orientation() const;
+   const glm::vec3& size() const;
+
+   void position(const glm::vec3& position);
+   void orientation(const glm::vec4& orientation);
+   void size(const glm::vec3& size);
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Grouping
+   ////////////////////////////////////////////////////////////////////////////
 
    bool add(Boundable* boundable);
    bool remove(Boundable* boundable);
    bool update(Boundable* boundable);
    void clear();
 
-   const glm::ivec3& getPartitions() const;
-
    unsigned int getBoundableCount() const;
    unsigned int getBoundingGroupCount() const;
 
-   std::vector< Boundable* > getBoundables() const;
-   std::vector< BoundingGroup > getBoundingGroups() const;
-   std::vector< BoundingGroup > getContainingGroups(Boundable* boundable) const;
+   const glm::ivec3& getPartitions() const;
+   void resize(const math::Transformer& transformer,
+    const glm::ivec3& partitions);
 
-   std::vector< Collision > getCollisionQueue() const;
-   std::vector< Boundable* > getRenderQueue(const ViewFrustum& viewFrustum) const;
+   std::vector< Boundable* > getBoundables() const;
+   const std::vector< BoundingGroup >& getBoundingGroups() const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Spatial queries
+   ////////////////////////////////////////////////////////////////////////////
+
+   bool isVisible(const ViewFrustum& viewFrustum);
+   bool intersect(Boundable& other);
+
+   std::vector< BoundingGroup > getContainingGroups(Boundable* boundable) const;
+   std::vector< Collision > getCollidingElements() const;
+   std::vector< Boundable* > getVisibleElements(const ViewFrustum& viewFrustum)
+    const;
 
 private:
-   void partition(const glm::vec3& position, const glm::vec4& orientation,
-    const glm::vec3& size, const glm::ivec3& partitions);
+   void rePartition(const math::Transformer& transformer,
+    const glm::ivec3& partitions);
 
+   Boundable _boundable;
    glm::ivec3 _partitions;
    std::vector< BoundingGroup > _boundingGroups;
    unsigned int _numBoundables;

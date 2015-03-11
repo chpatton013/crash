@@ -2,18 +2,21 @@
 
 using namespace crash::space;
 
-ViewFrustum::ViewFrustum(
- const std::array< math::Plane, NUM_VIEW_FRUSTUM_PLANES > planes) :
+ViewFrustum::ViewFrustum(const ViewFrustum& viewFrustum) :
+   ViewFrustum(viewFrustum._planes)
+{}
+
+ViewFrustum::ViewFrustum(const Planes& planes) :
    _planes(planes)
 {}
 
-const std::array< crash::math::Plane, NUM_VIEW_FRUSTUM_PLANES >
- ViewFrustum::getPlanes() const {
+const ViewFrustum::Planes& ViewFrustum::getPlanes() const {
    return this->_planes;
 }
 
-/* static */ ViewFrustum ViewFrustum::fromValues(float fieldOfView, float aspectRatio,
- float nearPlane, float farPlane, const glm::mat4& transformMatrix) {
+/* static */ ViewFrustum ViewFrustum::fromValues(float fieldOfView,
+ float aspectRatio, float nearPlane, float farPlane,
+ const glm::mat4& transformMatrix) {
    float tanX = tan(fieldOfView * aspectRatio * 0.5f);
    float tanY = tan(fieldOfView * 0.5f);
    float nearX = tanX * nearPlane;
@@ -21,7 +24,7 @@ const std::array< crash::math::Plane, NUM_VIEW_FRUSTUM_PLANES >
    float farX = tanX * farPlane;
    float farY = tanY * farPlane;
 
-   std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS > corners = {{
+   Corners4 corners = {{
       glm::vec4(-nearX, -nearY, nearPlane, 1.0f), // 0:nbl
       glm::vec4( nearX, -nearY, nearPlane, 1.0f), // 1:nbr
       glm::vec4(-nearX,  nearY, nearPlane, 1.0f), // 2:ntl
@@ -36,40 +39,36 @@ const std::array< crash::math::Plane, NUM_VIEW_FRUSTUM_PLANES >
 }
 
 /* static */ ViewFrustum ViewFrustum::fromCorners(
- const std::array< glm::vec3, NUM_VIEW_FRUSTUM_CORNERS >& corners,
- const glm::mat4& transformMatrix) {
-   std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS > wideCorners;
-   for (int ndx = 0; ndx < NUM_VIEW_FRUSTUM_CORNERS; ++ndx) {
+ const Corners3& corners, const glm::mat4& transformMatrix) {
+   Corners4 wideCorners;
+   for (int ndx = 0; ndx < ViewFrustum::NUM_CORNERS; ++ndx) {
       wideCorners[ndx] = glm::vec4(corners[ndx], 1.0f);
    }
 
    return ViewFrustum::fromCorners(wideCorners, transformMatrix);
 }
 
-/* static */ ViewFrustum ViewFrustum::fromCorners(
- const std::array< glm::vec3, NUM_VIEW_FRUSTUM_CORNERS >& corners) {
-   std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS > wideCorners;
-   for (int ndx = 0; ndx < NUM_VIEW_FRUSTUM_CORNERS; ++ndx) {
+/* static */ ViewFrustum ViewFrustum::fromCorners(const Corners3& corners) {
+   Corners4 wideCorners;
+   for (int ndx = 0; ndx < ViewFrustum::NUM_CORNERS; ++ndx) {
       wideCorners[ndx] = glm::vec4(corners[ndx], 1.0f);
    }
 
    return ViewFrustum::fromCorners(wideCorners);
 }
 
-/* static */ ViewFrustum ViewFrustum::fromCorners(
- const std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS >& corners,
+/* static */ ViewFrustum ViewFrustum::fromCorners(const Corners4& corners,
  const glm::mat4& transformMatrix) {
-   std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS > transformedCorners;
-   for (int ndx = 0; ndx < NUM_VIEW_FRUSTUM_CORNERS; ++ndx) {
+   Corners4 transformedCorners;
+   for (int ndx = 0; ndx < ViewFrustum::NUM_CORNERS; ++ndx) {
       transformedCorners[ndx] = transformMatrix * corners[ndx];
    }
 
    return ViewFrustum::fromCorners(transformedCorners);
 }
 
-/* static */ ViewFrustum ViewFrustum::fromCorners(
- const std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS >& corners) {
-   std::array< math::Plane, NUM_VIEW_FRUSTUM_PLANES > planes {{
+/* static */ ViewFrustum ViewFrustum::fromCorners(const Corners4& corners) {
+   Planes planes {{
       math::Plane::fromPoints(corners[0], corners[4], corners[6]), // 0:left
       math::Plane::fromPoints(corners[3], corners[7], corners[5]), // 1:right
       math::Plane::fromPoints(corners[2], corners[6], corners[7]), // 2:top

@@ -2,10 +2,13 @@
 
 #include <array>
 #include <glm/glm.hpp>
-#include <crash/space/camera.hpp>
+#include <boost/optional.hpp>
+#include <crash/math/transformer.hpp>
 
 namespace crash {
 namespace space {
+
+class ViewFrustum;
 
 /**
  * The data type used to represent a drawable and/or intersectable object.
@@ -25,26 +28,18 @@ public:
    typedef std::array< glm::vec3, Boundable::NUM_FACE_NORMALS > FaceNormals;
    typedef std::array< glm::vec3, Boundable::NUM_DIAGONALS > DiagonalDirections;
 
-   Boundable();
-   Boundable(const glm::vec3& position);
-   Boundable(const glm::vec3& position, const glm::vec4& orientation);
-   Boundable(const glm::vec3& position, const glm::vec4& orientation,
-    const glm::vec3& size);
-   Boundable(const glm::vec3& position, const glm::vec4& orientation,
-    const glm::vec3& size, const glm::vec3& velocity);
+   Boundable(const Boundable& boundable);
+   Boundable(const math::Transformer& transformer, const glm::vec3& velocity);
 
    ////////////////////////////////////////////////////////////////////////////
-   // Data getters
+   // Data access
    ////////////////////////////////////////////////////////////////////////////
 
+   const math::Transformer& transformer() const;
    const glm::vec3& position() const;
    const glm::vec4& orientation() const;
    const glm::vec3& size() const;
    const glm::vec3& velocity() const;
-
-   ////////////////////////////////////////////////////////////////////////////
-   // Data setters
-   ////////////////////////////////////////////////////////////////////////////
 
    void position(const glm::vec3& position);
    void orientation(const glm::vec4& orientation);
@@ -52,8 +47,10 @@ public:
    void velocity(const glm::vec3& velocity);
 
    ////////////////////////////////////////////////////////////////////////////
-   // Memoized getters
+   // Memoization
    ////////////////////////////////////////////////////////////////////////////
+
+   void invalidate();
 
    /**
     * Calculate the radius of the sphere that circumscribes this Boundable.
@@ -121,30 +118,22 @@ public:
 
 private:
    // Data members
-   glm::vec3 _position;
-   glm::vec4 _orientation;
-   glm::vec3 _size;
+   math::Transformer _transformer;
    glm::vec3 _velocity;
 
-   // Memoization generators
-   void invalidate();
+   // Memoization
    void generateRadius();
-   void generateTransform();
    void generateCorners();
    void generateFaceNormals();
    void generateDiagonalDirections();
 
-   // Memoization members
    boost::optional< float > _radius;
-   boost::optional< glm::mat4 > _transform;
    boost::optional< Boundable::Corners > _corners;
    boost::optional< Boundable::FaceNormals > _faceNormals;
    boost::optional< Boundable::DiagonalDirections > _diagonalDirections;
 
-   // Spatial query datatypes
+   // Spatial queries
    typedef std::array< float, 9 > CoefficientMatrix;
-
-   // Spatial query methods
 
    /**
     * Calculate intersection between this Boundable and the other specified
@@ -179,7 +168,6 @@ private:
    static float otherIntersectionRadiusProjection(int aNdx, int bNdx,
     const glm::vec3& bSize, CoefficientMatrix absCoefMatrix);
 
-   // Spatial query members
    int _frustumPlaneIndex;
 };
 

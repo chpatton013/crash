@@ -1,21 +1,52 @@
 #include <crash/math/math.hpp>
 #include <crash/space/bounding_group.hpp>
+#include <crash/space/view_frustum.hpp>
 
 using namespace crash::space;
 
-BoundingGroup::BoundingGroup(const glm::vec3& size) :
-   BoundingGroup(crash::math::origin, glm::vec4(crash::math::xAxis, 0.0f), size)
+BoundingGroup::BoundingGroup(const BoundingGroup& boundingGroup) :
+   BoundingGroup(boundingGroup._boundable.transformer())
 {}
 
-BoundingGroup::BoundingGroup(const glm::vec3& position,
- const glm::vec3& size) :
-   BoundingGroup(position, glm::vec4(crash::math::xAxis, 0.0f), size)
+BoundingGroup::BoundingGroup(const math::Transformer& transformer) :
+   _boundable(transformer, glm::vec3())
 {}
 
-BoundingGroup::BoundingGroup(const glm::vec3& position,
- const glm::vec4& orientation, const glm::vec3& size) :
-   Boundable(position, orientation, size)
-{}
+///////////////////////////////////////////////////////////////////////////////
+// Data access
+///////////////////////////////////////////////////////////////////////////////
+
+const Boundable& BoundingGroup::boundable() const {
+   return this->_boundable;
+}
+
+const glm::vec3& BoundingGroup::position() const {
+   return this->_boundable.position();
+}
+
+const glm::vec4& BoundingGroup::orientation() const {
+   return this->_boundable.orientation();
+}
+
+const glm::vec3& BoundingGroup::size() const {
+   return this->_boundable.size();
+}
+
+void BoundingGroup::position(const glm::vec3& position) {
+   this->_boundable.position(position);
+}
+
+void BoundingGroup::orientation(const glm::vec4& orientation) {
+   this->_boundable.orientation(orientation);
+}
+
+void BoundingGroup::size(const glm::vec3& size) {
+   this->_boundable.size(size);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Grouping
+///////////////////////////////////////////////////////////////////////////////
 
 bool BoundingGroup::add(Boundable* boundable) {
    return this->_boundables.insert(boundable).second;
@@ -37,6 +68,18 @@ void BoundingGroup::clear() {
 
 const std::set< Boundable* >& BoundingGroup::getBoundables() const {
    return this->_boundables;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Spatial queries
+///////////////////////////////////////////////////////////////////////////////
+
+bool BoundingGroup::isVisible(const ViewFrustum& viewFrustum) {
+   return this->_boundable.isVisible(viewFrustum);
+}
+
+bool BoundingGroup::intersect(Boundable& other) {
+   return this->_boundable.intersect(other);
 }
 
 std::vector< Collision > BoundingGroup::getCollidingElements() const {

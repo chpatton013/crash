@@ -3,9 +3,11 @@
 #include <array>
 #include <vector>
 #include <crash/math/math.hpp>
+#include <crash/math/transformer.hpp>
 #include <crash/space/boundable.hpp>
 #include <crash/space/camera.hpp>
 
+using namespace crash::math;
 using namespace crash::space;
 
 static std::array< glm::vec3, 9 > buildPointSet(const glm::vec3& nearPos,
@@ -96,8 +98,10 @@ TEST_CASE("crash/space/boundable/is_visible") {
          glm::vec3 transformedPosition = glm::vec3(transformMatrix *
           glm::vec4(pointSet[pointNdx] + pointSetOffsets[setNdx], 1.0f));
 
-         inView.push_back(Boundable(position));
-         outOfView.push_back(Boundable(transformedPosition));
+         inView.push_back(Boundable(Transformer(position,
+          glm::vec4(crash::math::zAxis, 0.0f), glm::vec3(1.0f)), glm::vec3()));
+         outOfView.push_back(Boundable(Transformer(transformedPosition,
+          glm::vec4(crash::math::zAxis, 0.0f), glm::vec3(1.0f)), glm::vec3()));
       }
    }
 
@@ -105,7 +109,7 @@ TEST_CASE("crash/space/boundable/is_visible") {
 }
 
 TEST_CASE("crash/space/boundable/intersect") {
-   Boundable reference = Boundable();
+   Boundable reference = Boundable(Transformer(glm::vec3(), glm::vec4(), glm::vec3()), glm::vec3());
 
    glm::vec3 xPosition = glm::vec3(1.0f, 0.0f, 0.0f);
    glm::vec3 yPosition = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -121,81 +125,81 @@ TEST_CASE("crash/space/boundable/intersect") {
    glm::vec3 bigSize = glm::vec3(2.0f);
 
    std::vector< Boundable > intersecting = {{
-      Boundable(xPosition, nOrientation, mediumSize),
-      Boundable(yPosition, nOrientation, mediumSize),
-      Boundable(zPosition, nOrientation, mediumSize),
-      Boundable(xPosition, xOrientation, mediumSize),
-      Boundable(yPosition, xOrientation, mediumSize),
-      Boundable(zPosition, xOrientation, mediumSize),
-      Boundable(xPosition, yOrientation, mediumSize),
-      Boundable(yPosition, yOrientation, mediumSize),
-      Boundable(zPosition, yOrientation, mediumSize),
-      Boundable(xPosition, zOrientation, mediumSize),
-      Boundable(yPosition, zOrientation, mediumSize),
-      Boundable(zPosition, zOrientation, mediumSize),
-      Boundable(xPosition, nOrientation, bigSize),
-      Boundable(yPosition, nOrientation, bigSize),
-      Boundable(zPosition, nOrientation, bigSize),
-      Boundable(xPosition, xOrientation, bigSize),
-      Boundable(yPosition, xOrientation, bigSize),
-      Boundable(zPosition, xOrientation, bigSize),
-      Boundable(xPosition, yOrientation, bigSize),
-      Boundable(yPosition, yOrientation, bigSize),
-      Boundable(zPosition, yOrientation, bigSize),
-      Boundable(xPosition, zOrientation, bigSize),
-      Boundable(yPosition, zOrientation, bigSize),
-      Boundable(zPosition, zOrientation, bigSize),
-      Boundable(xPosition * -1.0f, nOrientation, mediumSize),
-      Boundable(yPosition * -1.0f, nOrientation, mediumSize),
-      Boundable(zPosition * -1.0f, nOrientation, mediumSize),
-      Boundable(xPosition * -1.0f, xOrientation, mediumSize),
-      Boundable(yPosition * -1.0f, xOrientation, mediumSize),
-      Boundable(zPosition * -1.0f, xOrientation, mediumSize),
-      Boundable(xPosition * -1.0f, yOrientation, mediumSize),
-      Boundable(yPosition * -1.0f, yOrientation, mediumSize),
-      Boundable(zPosition * -1.0f, yOrientation, mediumSize),
-      Boundable(xPosition * -1.0f, zOrientation, mediumSize),
-      Boundable(yPosition * -1.0f, zOrientation, mediumSize),
-      Boundable(zPosition * -1.0f, zOrientation, mediumSize),
-      Boundable(xPosition * -1.0f, nOrientation, bigSize),
-      Boundable(yPosition * -1.0f, nOrientation, bigSize),
-      Boundable(zPosition * -1.0f, nOrientation, bigSize),
-      Boundable(xPosition * -1.0f, xOrientation, bigSize),
-      Boundable(yPosition * -1.0f, xOrientation, bigSize),
-      Boundable(zPosition * -1.0f, xOrientation, bigSize),
-      Boundable(xPosition * -1.0f, yOrientation, bigSize),
-      Boundable(yPosition * -1.0f, yOrientation, bigSize),
-      Boundable(zPosition * -1.0f, yOrientation, bigSize),
-      Boundable(xPosition * -1.0f, zOrientation, bigSize),
-      Boundable(yPosition * -1.0f, zOrientation, bigSize),
-      Boundable(zPosition * -1.0f, zOrientation, bigSize),
+      Boundable(Transformer(xPosition, nOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition, nOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition, nOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition, xOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition, xOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition, xOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition, yOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition, yOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition, yOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition, zOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition, zOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition, zOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition, nOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition, nOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition, nOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(xPosition, xOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition, xOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition, xOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(xPosition, yOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition, yOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition, yOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(xPosition, zOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition, zOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition, zOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, nOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, nOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, nOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, xOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, xOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, xOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, yOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, yOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, yOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, zOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, zOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, zOrientation, mediumSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, nOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, nOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, nOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, xOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, xOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, xOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, yOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, yOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, yOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, zOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, zOrientation, bigSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, zOrientation, bigSize), glm::vec3()),
    }};
 
    std::vector< Boundable > notIntersecting = {{
-      Boundable(xPosition, nOrientation, smallSize),
-      Boundable(yPosition, nOrientation, smallSize),
-      Boundable(zPosition, nOrientation, smallSize),
-      Boundable(xPosition, xOrientation, smallSize),
-      Boundable(yPosition, xOrientation, smallSize),
-      Boundable(zPosition, xOrientation, smallSize),
-      Boundable(xPosition, yOrientation, smallSize),
-      Boundable(yPosition, yOrientation, smallSize),
-      Boundable(zPosition, yOrientation, smallSize),
-      Boundable(xPosition, zOrientation, smallSize),
-      Boundable(yPosition, zOrientation, smallSize),
-      Boundable(zPosition, zOrientation, smallSize),
-      Boundable(xPosition * -1.0f, nOrientation, smallSize),
-      Boundable(yPosition * -1.0f, nOrientation, smallSize),
-      Boundable(zPosition * -1.0f, nOrientation, smallSize),
-      Boundable(xPosition * -1.0f, xOrientation, smallSize),
-      Boundable(yPosition * -1.0f, xOrientation, smallSize),
-      Boundable(zPosition * -1.0f, xOrientation, smallSize),
-      Boundable(xPosition * -1.0f, yOrientation, smallSize),
-      Boundable(yPosition * -1.0f, yOrientation, smallSize),
-      Boundable(zPosition * -1.0f, yOrientation, smallSize),
-      Boundable(xPosition * -1.0f, zOrientation, smallSize),
-      Boundable(yPosition * -1.0f, zOrientation, smallSize),
-      Boundable(zPosition * -1.0f, zOrientation, smallSize),
+      Boundable(Transformer(xPosition, nOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition, nOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition, nOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(xPosition, xOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition, xOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition, xOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(xPosition, yOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition, yOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition, yOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(xPosition, zOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition, zOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition, zOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, nOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, nOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, nOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, xOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, xOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, xOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, yOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, yOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, yOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(xPosition * -1.0f, zOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(yPosition * -1.0f, zOrientation, smallSize), glm::vec3()),
+      Boundable(Transformer(zPosition * -1.0f, zOrientation, smallSize), glm::vec3()),
    }};
 
    assertIntersection(reference, intersecting, notIntersecting);

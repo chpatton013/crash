@@ -66,7 +66,7 @@ TEST_CASE("crash/space/view_frustum") {
    ViewFrustum vf = ViewFrustum::fromValues(fov, aspect, near.z, far.z, glm::mat4());
 
    auto planes = vf.getPlanes();
-   for (int ndx = 0; ndx < NUM_VIEW_FRUSTUM_PLANES; ++ndx) {
+   for (int ndx = 0; ndx < ViewFrustum::NUM_PLANES; ++ndx) {
       assertPlaneLocation(planes[ndx], pointSets[ndx]);
    }
 }

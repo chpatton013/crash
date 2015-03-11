@@ -7,34 +7,35 @@
 namespace crash {
 namespace space {
 
-const int NUM_VIEW_FRUSTUM_PLANES = 6;
-const int NUM_VIEW_FRUSTUM_CORNERS = 8;
-
 class ViewFrustum {
 public:
-   ViewFrustum(const std::array< math::Plane, NUM_VIEW_FRUSTUM_PLANES > planes);
+   static const int NUM_PLANES = 6;
+   static const int NUM_CORNERS = 8;
 
-   const std::array< math::Plane, NUM_VIEW_FRUSTUM_PLANES > getPlanes() const;
+   typedef std::array< math::Plane, NUM_PLANES > Planes;
+   typedef std::array< glm::vec3, NUM_CORNERS > Corners3;
+   typedef std::array< glm::vec4, NUM_CORNERS > Corners4;
+
+   ViewFrustum(const ViewFrustum& viewFrustum);
+   ViewFrustum(const Planes& planes);
+
+   const Planes& getPlanes() const;
 
    static ViewFrustum fromValues(float fieldOfView, float aspectRatio,
     float nearPlane, float farPlane, const glm::mat4& transformMatrix);
 
-   static ViewFrustum fromCorners(
-    const std::array< glm::vec3, NUM_VIEW_FRUSTUM_CORNERS >& corners,
+   static ViewFrustum fromCorners(const Corners3& corners,
     const glm::mat4& transformMatrix);
 
-   static ViewFrustum fromCorners(
-    const std::array< glm::vec3, NUM_VIEW_FRUSTUM_CORNERS >& corners);
+   static ViewFrustum fromCorners(const Corners3& corners);
 
-   static ViewFrustum fromCorners(
-    const std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS >& corners,
+   static ViewFrustum fromCorners(const Corners4& corners,
     const glm::mat4& transformMatrix);
 
-   static ViewFrustum fromCorners(
-    const std::array< glm::vec4, NUM_VIEW_FRUSTUM_CORNERS >& corners);
+   static ViewFrustum fromCorners(const Corners4& corners);
 
 private:
-   std::array< math::Plane, NUM_VIEW_FRUSTUM_PLANES > _planes;
+   Planes _planes;
 };
 
 } // namespace space
