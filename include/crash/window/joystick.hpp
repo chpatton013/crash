@@ -1,9 +1,7 @@
 #pragma once
 
-#include <array>
 #include <vector>
 #include <boost/optional/optional.hpp>
-#include <GLFW/glfw3.h>
 #include <crash/window/glfw_adapter.hpp>
 
 namespace crash {
@@ -11,55 +9,20 @@ namespace window {
 
 class Joystick : public GlfwAdapter {
 public:
-   /////////////////////////////////////////////////////////////////////////////
-   // Getters.
-   /////////////////////////////////////////////////////////////////////////////
+   Joystick(const Joystick& joystick);
+   Joystick(int handle);
 
-   int handle() const;
-   bool present() const;
-   boost::optional< std::vector< float > > axes() const;
-   boost::optional< std::vector< unsigned char > > buttons() const;
-   boost::optional< std::string > name() const;
+   int getHandle() const;
+   bool isPresent() const;
+   boost::optional< std::vector< float > > getAxes() const;
+   boost::optional< std::vector< unsigned char > > getButtons() const;
+   boost::optional< std::string > getName() const;
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Static constructors.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static boost::optional< Joystick* > factory(int joy);
-   static void release(Joystick* joystick);
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Static initializers.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static void initialize();
-   static void teardown();
+   static std::vector< Joystick > getAllJoysticks();
+   static std::vector< Joystick > getConnectedJoysticks();
 
 private:
-   /////////////////////////////////////////////////////////////////////////////
-   // Constructors.
-   /////////////////////////////////////////////////////////////////////////////
-
-   Joystick(int handle);
-   virtual ~Joystick();
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Members.
-   /////////////////////////////////////////////////////////////////////////////
-
    int _handle;
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Static members.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static std::array< Joystick*, GLFW_JOYSTICK_LAST > _instances;
-
-   static bool _initialized;
-
-   static struct initializer {
-      initializer();
-   } _initializer;
 };
 
 } // namespace window

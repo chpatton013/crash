@@ -20,6 +20,7 @@ public:
    ViewFrustum(const Planes& planes);
 
    const Planes& getPlanes() const;
+   bool isPointVisible(const glm::vec3& point) const;
 
    static ViewFrustum fromValues(float fieldOfView, float aspectRatio,
     float nearPlane, float farPlane, const glm::mat4& transformMatrix);

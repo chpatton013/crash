@@ -2,20 +2,23 @@
 #include <cmath>
 #include <array>
 #include <vector>
-#include <crash/math/math.hpp>
+#include <crash/math/arithmetic.hpp>
+#include <crash/math/symbols.hpp>
 #include <crash/math/plane.hpp>
 #include <crash/space/camera.hpp>
 
+using namespace crash::math;
 using namespace crash::space;
 
 static void assertPointVisibility(Camera& camera,
  const std::vector< glm::vec3 >& inView,
  const std::vector< glm::vec3 >& outOfView) {
+   auto& vf = camera.getViewFrustum();
    for (auto point : inView) {
-      REQUIRE(camera.isPointVisible(point));
+      REQUIRE(vf.isPointVisible(point));
    }
    for (auto point : outOfView) {
-      REQUIRE(!camera.isPointVisible(point));
+      REQUIRE(!vf.isPointVisible(point));
    }
 }
 
@@ -25,10 +28,11 @@ static void assertCamera(const glm::vec3& position,
    float tanY = tan(fov * 0.5f);
    glm::vec3 near = glm::vec3(tanX, tanY, 1.0f);
    glm::vec3 far = 10.0f * near;
-   glm::vec3 mid = crash::math::average(near, far);
+   glm::vec3 mid = average(near, far);
    glm::vec3 buffer = glm::vec3(tanX * 1.5f, tanY * 1.5f, 1.0f);
 
-   Camera c = Camera(position, orientation, fov, aspect, near.z, far.z);
+   Camera c = Camera(Transformer(position, orientation, glm::vec3(1.0f)),
+    fov, aspect, near.z, far.z);
 
    std::vector< glm::vec3 > inView = {{
       // Behind near plane.
@@ -113,12 +117,12 @@ static void assertCamera(const glm::vec3& position,
 }
 
 TEST_CASE("crash/space/camera/simple") {
-   assertCamera(crash::math::origin, glm::vec4(crash::math::xAxis, 0.0f),
+   assertCamera(origin, glm::vec4(xAxis, 0.0f),
     /* fov */ glm::radians(60.0f), /* aspect ratio */ 1.0f);
 }
 
 TEST_CASE("crash/space/camera/wide") {
-   assertCamera(crash::math::origin, glm::vec4(crash::math::xAxis, 0.0f),
+   assertCamera(origin, glm::vec4(xAxis, 0.0f),
     /* fov */ glm::radians(60.0f), /* aspect ratio */ 2.0f);
 }
 

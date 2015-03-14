@@ -1,10 +1,9 @@
 #include <crash/math/line.hpp>
-#include <crash/math/math.hpp>
 
 using namespace crash::math;
 
-Line::Line(const glm::vec3& direction) :
-   Line(math::origin, direction)
+Line::Line(const Line& line) :
+   Line(line.point, line.direction)
 {}
 
 Line::Line(const glm::vec3& point, const glm::vec3& direction) :

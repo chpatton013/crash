@@ -2,14 +2,16 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <crash/math/math.hpp>
+#include <crash/math/arithmetic.hpp>
+#include <crash/math/transformer.hpp>
+#include <crash/math/symbols.hpp>
 
 using namespace crash::math;
 
 static void testTransformation(const glm::vec3& position,
  const glm::vec4& orientation, const glm::vec3& size,
  const glm::mat4& expectedMatrix, const glm::vec4& expectedPoint) {
-   glm::mat4 transformMatrix = transform(position, orientation, size);
+   glm::mat4 transformMatrix = Transformer(position, orientation, size).getTransform();
    REQUIRE(approxEqual(transformMatrix, expectedMatrix));
 
    glm::vec4 point = glm::vec4(1.0f);
@@ -67,7 +69,7 @@ TEST_CASE("math/transform/scale") {
    glm::vec4 orientation = glm::vec4(xAxis, 0.0f);
    glm::vec3 size = glm::vec3(2.0f, 3.0f, 4.0f);
 
-   glm::mat4 trans = transform(position, orientation, size);
+   glm::mat4 trans = Transformer(position, orientation, size).getTransform();
    float expectedArray[16] = {
       2.0f, 0.0f, 0.0f, 0.0f,
       0.0f, 3.0f, 0.0f, 0.0f,

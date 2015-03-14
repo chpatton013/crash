@@ -6,7 +6,7 @@ namespace crash {
 namespace math {
 
 struct Plane {
-   Plane(const glm::vec3& normal);
+   Plane(const Plane& plane);
    Plane(const glm::vec3& point, const glm::vec3& normal);
 
    glm::vec3 point;

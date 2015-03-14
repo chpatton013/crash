@@ -1,81 +1,22 @@
 #pragma once
 
-#include <unordered_map>
-#include <boost/optional/optional.hpp>
-#include <GLFW/glfw3.h>
 #include <crash/window/glfw_adapter.hpp>
-#include <crash/window/window.hpp>
 
 namespace crash {
 namespace window {
 
+class Window;
+
 class Keyboard : public GlfwAdapter {
 public:
-   /////////////////////////////////////////////////////////////////////////////
-   // Type definitions.
-   /////////////////////////////////////////////////////////////////////////////
+   Keyboard(const Keyboard& keyboard);
+   Keyboard(const Window& window);
 
-   typedef void (*keyCallback)(const Keyboard&, int, int, int, int);
-   typedef void (*charCallback)(const Keyboard&, unsigned int);
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Getters.
-   /////////////////////////////////////////////////////////////////////////////
-
-   const Window& window() const;
-
-   int key(int k) const;
-
-   boost::optional< keyCallback > getKeyCallback() const;
-   boost::optional< charCallback > getCharCallback() const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Setters.
-   /////////////////////////////////////////////////////////////////////////////
-
-   boost::optional< keyCallback > removeKeyCallback();
-   boost::optional< charCallback > removeCharCallback();
-
-   boost::optional< keyCallback > setKeyCallback(keyCallback callback);
-   boost::optional< charCallback > setCharCallback(charCallback callback);
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Static constructors.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static Keyboard* factory(const Window& window);
-   static bool release(Keyboard* keyboard);
-   static bool release(const Window& window);
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Callback management.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static void keyCallbackAdapter(GLFWwindow* handle, int key, int scancode, int action, int mods);
-   static void charCallbackAdapter(GLFWwindow* handle, unsigned int character);
+   const Window& getWindow() const;
+   int getKey(int key) const;
 
 private:
-   /////////////////////////////////////////////////////////////////////////////
-   // Constructors.
-   /////////////////////////////////////////////////////////////////////////////
-
-   Keyboard(const Window& window);
-   virtual ~Keyboard();
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Members.
-   /////////////////////////////////////////////////////////////////////////////
-
    const Window& _window;
-
-   keyCallback _keyCb;
-   charCallback _charCb;
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Static members.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static std::unordered_map< GLFWwindow*, Keyboard* > _instances;
 };
 
 } // namespace window

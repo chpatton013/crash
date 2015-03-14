@@ -2,25 +2,27 @@
 
 using namespace crash::space;
 
-Collision::Collision(Boundable* first, Boundable* second) :
+Collision::Collision(BoundingBox* first, BoundingBox* second) :
    _first(first), _second(second)
 {}
 
 /* virtual */ Collision::~Collision() {}
 
-Boundable* Collision::first() const { return this->_first; }
-Boundable* Collision::second() const { return this->_second; }
+BoundingBox* Collision::getFirst() const {
+   return this->_first;
+}
+
+BoundingBox* Collision::getSecond() const {
+   return this->_second;
+}
 
 bool Collision::operator<(const Collision& other) const {
    return (this->_first == other._first) ? (this->_second < other._second) :
     (this->_first < other._first);
 }
 
-bool Collision::operator==(const Collision& other) const {
-   return this->_first == other._first && this->_second == other._second;
-}
-
-/* static */ Collision Collision::factory(Boundable* first, Boundable* second) {
+/* static */ Collision Collision::factory(BoundingBox* first,
+ BoundingBox* second) {
    if (first < second) {
       return Collision(first, second);
    } else {

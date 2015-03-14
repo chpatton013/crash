@@ -1,29 +1,17 @@
 #pragma once
 
-#include <map>
 #include <string>
 #include <vector>
 #include <boost/optional/optional.hpp>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <crash/window/glfw_adapter.hpp>
 
+struct GLFWgammaramp;
+struct GLFWmonitor;
+struct GLFWvidmode;
+
 namespace crash {
 namespace window {
-
-class Monitor;
-
-void print(const Monitor& monitor);
-
-void print(const Monitor& monitor, bool newline);
-
-void print(const GLFWvidmode* mode);
-
-void print(const GLFWvidmode* mode, bool newline);
-
-void print(const GLFWgammaramp* gamma);
-
-void print(const GLFWgammaramp* gamma, bool newline);
 
 class Monitor : public GlfwAdapter {
 public:
@@ -37,44 +25,34 @@ public:
    // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
-   virtual ~Monitor();
+   Monitor();
+   Monitor(const Monitor& monitor);
+   Monitor(GLFWmonitor* handle);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Getters.
+   // GLFW callthroughs.
    /////////////////////////////////////////////////////////////////////////////
 
-   GLFWmonitor* handle() const;
-   std::string name() const;
-   glm::ivec2 position() const;
-   glm::ivec2 size() const;
-   std::vector< const GLFWvidmode* > availableModes() const;
-   const GLFWvidmode* mode() const;
-   const GLFWgammaramp* gamma() const;
+   GLFWmonitor* getHandle() const;
+   std::string getName() const;
+   glm::ivec2 getPosition() const;
+   glm::ivec2 getSize() const;
+   std::vector< const GLFWvidmode* > getAvailableModes() const;
+   const GLFWvidmode* getMode() const;
+   const GLFWgammaramp* getGamma() const;
+
+   void setGammaExponent(float gammaExponent) const;
+   void setGammaRamp(const GLFWgammaramp* gammaRamp) const;
 
    /////////////////////////////////////////////////////////////////////////////
-   // Setters.
+   // Static accessors.
    /////////////////////////////////////////////////////////////////////////////
 
-   void gamma(float gammaExponent) const;
-   void gamma(const GLFWgammaramp* gammaRamp) const;
+   static GLFWmonitor* getPrimaryHandle();
+   static std::vector< GLFWmonitor* > getAvailableHandles();
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Static constructors.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static boost::optional< Monitor > factory();
-   static boost::optional< Monitor > factory(GLFWmonitor* handle);
-   static bool release(Monitor monitor);
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Static getters.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static boost::optional< GLFWmonitor* > primaryHandle();
-   static boost::optional< std::vector< GLFWmonitor* > > availableHandles();
-
-   static boost::optional< Monitor > primaryMonitor();
-   static boost::optional< std::vector< Monitor > > availableMonitors();
+   static boost::optional< Monitor > getPrimaryMonitor();
+   static boost::optional< std::vector< Monitor > > getAvailableMonitors();
 
    /////////////////////////////////////////////////////////////////////////////
    // Static initializers.
@@ -89,33 +67,16 @@ public:
 
    static boost::optional< monitorCallback > getMonitorCallback();
    static boost::optional< monitorCallback > removeMonitorCallback();
-   static boost::optional< monitorCallback >
-    setMonitorCallback(monitorCallback callback);
+   static boost::optional< monitorCallback > setMonitorCallback(
+    monitorCallback callback);
    static void monitorCallbackAdapter(GLFWmonitor* handle, int state);
 
 private:
-   /////////////////////////////////////////////////////////////////////////////
-   // Constructors.
-   /////////////////////////////////////////////////////////////////////////////
-
-   Monitor();
-   Monitor(GLFWmonitor* handle);
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Members.
-   /////////////////////////////////////////////////////////////////////////////
-
    GLFWmonitor* _handle;
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Static members.
-   /////////////////////////////////////////////////////////////////////////////
-
    static monitorCallback _monitorCb;
-   static std::map< GLFWmonitor*, Monitor* > _instances;
 
    static bool _initialized;
-
    static struct initializer {
       initializer();
    } _initializer;

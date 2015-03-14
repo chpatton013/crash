@@ -1,8 +1,8 @@
 #include <catch.hpp>
 #include <cmath>
 #include <glm/glm.hpp>
-#include <crash/math/math.hpp>
 #include <crash/math/plane.hpp>
+#include <crash/math/symbols.hpp>
 
 using namespace crash::math;
 
@@ -21,9 +21,9 @@ TEST_CASE("math/plane/fromPoints") {
 }
 
 TEST_CASE("math/plane/distance") {
-   Plane xyPlane = Plane(zAxis);
-   Plane xzPlane = Plane(yAxis);
-   Plane yzPlane = Plane(xAxis);
+   Plane xyPlane = Plane(origin, zAxis);
+   Plane xzPlane = Plane(origin, yAxis);
+   Plane yzPlane = Plane(origin, xAxis);
 
    glm::vec3 xPoint = glm::vec3(1.0f, 0.0f, 0.0f);
    glm::vec3 yPoint = glm::vec3(0.0f, 1.0f, 0.0f);

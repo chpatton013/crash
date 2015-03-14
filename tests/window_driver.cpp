@@ -1,7 +1,9 @@
+#include <GLFW/glfw3.h>
 #include <crash/window/keyboard.hpp>
 #include <crash/window/monitor.hpp>
 #include <crash/window/mouse.hpp>
 #include <crash/window/window.hpp>
+#include <crash/window/util.hpp>
 
 using namespace crash::window;
 
@@ -25,7 +27,7 @@ static int lastKey = GLFW_KEY_UNKNOWN;
 static std::string spelledWord;
 
 static void positionCallback(const Window&, const glm::ivec2& position) {
-   auto monitorOpt = Monitor::primaryMonitor();
+   auto monitorOpt = Monitor::getPrimaryMonitor();
    if (!monitorOpt) {
       printf("No primary monitor detected!\n");
       return;
@@ -33,7 +35,7 @@ static void positionCallback(const Window&, const glm::ivec2& position) {
 
    auto monitor = monitorOpt.get();
 
-   const GLFWvidmode* mode = monitor.mode();
+   const GLFWvidmode* mode = monitor.getMode();
    glm::ivec2 size = glm::ivec2(mode->width, mode->height);
    glm::ivec2 topLeft = glm::ivec2(200, 200);
    glm::ivec2 bottomRight = size - glm::ivec2(200, 200);
@@ -61,7 +63,7 @@ static void closeCallback(Window& window) {
    window.destroy();
 }
 
-static void buttonCallback(const Mouse&, int, int action, int mods) {
+static void buttonCallback(const Window&, int, int action, int mods) {
    if (action != GLFW_RELEASE) {
       return;
    }
@@ -79,13 +81,8 @@ static void buttonCallback(const Mouse&, int, int action, int mods) {
    }
 }
 
-static void scrollCalback(const Mouse&, const glm::vec2& scroll) {
-   scrollAmount += scroll.y;
-}
-
-static void positionCallback(const Mouse& mouse, const glm::vec2& position) {
-   const Window& window = mouse.window();
-   const glm::ivec2& size = window.windowSize();
+static void positionCallback(const Window& window, const glm::vec2& position) {
+   const glm::ivec2& size = window.getWindowSize();
    glm::ivec2 center = size / 2;
 
    if (position.x < center.x) {
@@ -107,7 +104,7 @@ static void positionCallback(const Mouse& mouse, const glm::vec2& position) {
    }
 }
 
-static void enteredCallback(const Mouse&, bool entered) {
+static void enteredCallback(const Window&, bool entered) {
    if (entered) {
       pointerEntered = true;
    } else {
@@ -115,7 +112,11 @@ static void enteredCallback(const Mouse&, bool entered) {
    }
 }
 
-static void keyCallback(const Keyboard&, int key, int, int action, int) {
+static void scrollCalback(const Window&, const glm::vec2& scroll) {
+   scrollAmount += scroll.y;
+}
+
+static void keyCallback(const Window&, int key, int, int action, int) {
    if (action != GLFW_RELEASE) {
       return;
    }
@@ -123,7 +124,7 @@ static void keyCallback(const Keyboard&, int key, int, int action, int) {
    lastKey = key;
 }
 
-static void characterCallback(const Keyboard&, unsigned int character) {
+static void characterCallback(const Window&, unsigned int character) {
    if (spelledWord == "") {
       if (character == 'c') {
          spelledWord = "c";
@@ -150,7 +151,7 @@ static void characterCallback(const Keyboard&, unsigned int character) {
 static void demoMonitors() {
    printf("Detecting attached monitors...\n");
 
-   auto monitorsOpt = Monitor::availableMonitors();
+   auto monitorsOpt = Monitor::getAvailableMonitors();
    if (!monitorsOpt) {
       printf("No monitors detected!\n\n");
       return;
@@ -168,18 +169,18 @@ static void demoMonitors() {
       print(monitor);
 
       printf("   Available color modes:\n");
-      for (auto mode : monitor.availableModes()) {
+      for (auto mode : monitor.getAvailableModes()) {
          printf("      ");
          print(mode);
       }
 
       printf("   Current color mode:\n      ");
-      print(monitor.mode());
+      print(monitor.getMode());
 
       printf("\n");
    }
 
-   auto primaryMonitorOpt = Monitor::primaryMonitor();
+   auto primaryMonitorOpt = Monitor::getPrimaryMonitor();
    if (!primaryMonitorOpt) {
       printf("No primary monitor detected!\n\n");
       return;
@@ -193,13 +194,13 @@ static void demoMonitors() {
 }
 
 static void demoWindowPosition() {
-   Window window = Window(glm::ivec2(400, 300));
-   window.setPositionCallback(positionCallback);
+   Window window = Window(glm::ivec2(400, 300), "", boost::none, boost::none);
+   window.setWindowPositionCallback(positionCallback);
 
-   window.visible(true);
+   window.setVisible(true);
 
    printf("Move the window to the top left quadrant.\n");
-   window.title("Window Position: Top Left");
+   window.setTitle("Window Position: Top Left");
    do {
       windowQuadrant1Reached = windowQuadrant2Reached =
        windowQuadrant3Reached = windowQuadrant4Reached = false;
@@ -207,7 +208,7 @@ static void demoWindowPosition() {
    } while (!windowQuadrant1Reached);
 
    printf("Move the window to the bottom left quadrant.\n");
-   window.title("Window Position: Bottom Left");
+   window.setTitle("Window Position: Bottom Left");
    do {
       windowQuadrant1Reached = windowQuadrant2Reached =
        windowQuadrant3Reached = windowQuadrant4Reached = false;
@@ -215,7 +216,7 @@ static void demoWindowPosition() {
    } while (!windowQuadrant2Reached);
 
    printf("Move the window to the bottom right quadrant.\n");
-   window.title("Window Position: Bottom Right");
+   window.setTitle("Window Position: Bottom Right");
    do {
       windowQuadrant1Reached = windowQuadrant2Reached =
        windowQuadrant3Reached = windowQuadrant4Reached = false;
@@ -223,7 +224,7 @@ static void demoWindowPosition() {
    } while (!windowQuadrant3Reached);
 
    printf("Move the window to the top right quadrant.\n");
-   window.title("Window Position: Top Right");
+   window.setTitle("Window Position: Top Right");
    do {
       windowQuadrant1Reached = windowQuadrant2Reached =
        windowQuadrant3Reached = windowQuadrant4Reached = false;
@@ -232,66 +233,66 @@ static void demoWindowPosition() {
 }
 
 static void demoWindowFocus() {
-   Window window1 = Window(glm::ivec2(400, 300));
-   Window window2 = Window(glm::ivec2(400, 300));
+   Window window1 = Window(glm::ivec2(400, 300), "", boost::none, boost::none);
+   Window window2 = Window(glm::ivec2(400, 300), "", boost::none, boost::none);
 
-   window1.position(window1.position() - glm::ivec2(100, 100));
-   window2.position(window2.position() + glm::ivec2(100, 100));
+   window1.setWindowPosition(window1.getWindowPosition() - glm::ivec2(100, 100));
+   window2.setWindowPosition(window2.getWindowPosition() + glm::ivec2(100, 100));
 
-   window1.visible(true);
-   window2.visible(true);
+   window1.setVisible(true);
+   window2.setVisible(true);
 
    printf("Focus window 1.\n");
-   window1.title("Window Focus: Click on this window");
-   window2.title("Window Focus: Click on the other window");
+   window1.setTitle("Window Focus: Click on this window");
+   window2.setTitle("Window Focus: Click on the other window");
    do {
       glfwWaitEvents();
-   } while (!window1.focused());
+   } while (!window1.isFocused());
 
    printf("Focus window 2.\n");
-   window1.title("Window Focus: Click on the other window");
-   window2.title("Window Focus: Click on this window");
+   window1.setTitle("Window Focus: Click on the other window");
+   window2.setTitle("Window Focus: Click on this window");
    do {
       glfwWaitEvents();
-   } while (!window2.focused());
+   } while (!window2.isFocused());
 }
 
 static void demoWindowMinimize() {
-   Window window = Window(glm::ivec2(400, 300));
+   Window window = Window(glm::ivec2(400, 300), "", boost::none, boost::none);
 
-   window.visible(true);
+   window.setVisible(true);
 
    printf("Minimize window.\n");
-   window.title("Window Minimize");
+   window.setTitle("Window Minimize");
    do {
       glfwWaitEvents();
-   } while (!window.minimized());
+   } while (!window.isMinimized());
 }
 
 static void demoWindowClose() {
    printf("Creating three windows with varying sizes.\n");
    printf("Close each as they appear.\n");
 
-   Window window1 = Window(glm::ivec2(400, 300), "Window Close");
-   Window window2 = Window(glm::ivec2(800, 600), "Window Close");
-   Window window3 = Window(glm::ivec2(800, 450), "Window Close");
+   Window window1 = Window(glm::ivec2(400, 300), "Window Close", boost::none, boost::none);
+   Window window2 = Window(glm::ivec2(800, 600), "Window Close", boost::none, boost::none);
+   Window window3 = Window(glm::ivec2(800, 450), "Window Close", boost::none, boost::none);
 
    window1.setCloseCallback(closeCallback);
    window2.setCloseCallback(closeCallback);
    window3.setCloseCallback(closeCallback);
 
-   window1.visible(true);
-   while (!window1.destroyed()) {
+   window1.setVisible(true);
+   while (!window1.isDestroyed()) {
       glfwWaitEvents();
    }
 
-   window2.visible(true);
-   while (!window2.destroyed()) {
+   window2.setVisible(true);
+   while (!window2.isDestroyed()) {
       glfwWaitEvents();
    }
 
-   window3.visible(true);
-   while (!window3.destroyed()) {
+   window3.setVisible(true);
+   while (!window3.isDestroyed()) {
       glfwWaitEvents();
    }
 }
@@ -307,7 +308,7 @@ static void demoWindow() {
 
 static void demoMouseButtons(Window& window) {
    printf("Click the mouse button to continue.\n");
-   window.title("Mouse button: Click");
+   window.setTitle("Mouse button: Click");
    do {
       normalButtonClicked = shiftButtonClicked = controlButtonClicked = 
        altButtonClicked = superButtonClicked = false;
@@ -315,7 +316,7 @@ static void demoMouseButtons(Window& window) {
    } while (!normalButtonClicked);
 
    printf("Hold shift and click the mouse button to continue.\n");
-   window.title("Mouse button: Shift Click");
+   window.setTitle("Mouse button: Shift Click");
    do {
       normalButtonClicked = shiftButtonClicked = controlButtonClicked = 
        altButtonClicked = superButtonClicked = false;
@@ -323,7 +324,7 @@ static void demoMouseButtons(Window& window) {
    } while (!shiftButtonClicked);
 
    printf("Hold control and click the mouse button to continue.\n");
-   window.title("Mouse button: Control Click");
+   window.setTitle("Mouse button: Control Click");
    do {
       normalButtonClicked = shiftButtonClicked = controlButtonClicked = 
        altButtonClicked = superButtonClicked = false;
@@ -331,7 +332,7 @@ static void demoMouseButtons(Window& window) {
    } while (!controlButtonClicked);
 
    printf("Hold alt and click the mouse button to continue.\n");
-   window.title("Mouse button: Alt Click");
+   window.setTitle("Mouse button: Alt Click");
    do {
       normalButtonClicked = shiftButtonClicked = controlButtonClicked = 
        altButtonClicked = superButtonClicked = false;
@@ -339,7 +340,7 @@ static void demoMouseButtons(Window& window) {
    } while (!altButtonClicked);
 
    printf("Hold super and click the mouse button to continue.\n");
-   window.title("Mouse button: Super Click");
+   window.setTitle("Mouse button: Super Click");
    do {
       normalButtonClicked = shiftButtonClicked = controlButtonClicked = 
        altButtonClicked = superButtonClicked = false;
@@ -349,7 +350,7 @@ static void demoMouseButtons(Window& window) {
 
 static void demoMouseScroll(Window& window) {
    printf("Scroll up.\n");
-   window.title("Mouse Scroll: Up");
+   window.setTitle("Mouse Scroll: Up");
    do {
       glfwWaitEvents();
    } while (scrollAmount < 1.0f);
@@ -357,7 +358,7 @@ static void demoMouseScroll(Window& window) {
    scrollAmount = 0.0f;
 
    printf("Scroll down.\n");
-   window.title("Mouse Scroll: Down");
+   window.setTitle("Mouse Scroll: Down");
    do {
       glfwWaitEvents();
    } while (scrollAmount > -1.0f);
@@ -365,7 +366,7 @@ static void demoMouseScroll(Window& window) {
 
 static void demoMousePosition(Window& window) {
    printf("Move the cursor to the top left quadrant.\n");
-   window.title("Mouse Position: Top Left");
+   window.setTitle("Mouse Position: Top Left");
    do {
       mouseQuadrant1Reached = mouseQuadrant2Reached =
        mouseQuadrant3Reached = mouseQuadrant4Reached = false;
@@ -373,7 +374,7 @@ static void demoMousePosition(Window& window) {
    } while (!mouseQuadrant1Reached);
 
    printf("Move the cursor to the bottom left quadrant.\n");
-   window.title("Mouse Position: Bottom Left");
+   window.setTitle("Mouse Position: Bottom Left");
    do {
       mouseQuadrant1Reached = mouseQuadrant2Reached =
        mouseQuadrant3Reached = mouseQuadrant4Reached = false;
@@ -381,7 +382,7 @@ static void demoMousePosition(Window& window) {
    } while (!mouseQuadrant2Reached);
 
    printf("Move the cursor to the bottom right quadrant.\n");
-   window.title("Mouse Position: Bottom Right");
+   window.setTitle("Mouse Position: Bottom Right");
    do {
       mouseQuadrant1Reached = mouseQuadrant2Reached =
        mouseQuadrant3Reached = mouseQuadrant4Reached = false;
@@ -389,7 +390,7 @@ static void demoMousePosition(Window& window) {
    } while (!mouseQuadrant3Reached);
 
    printf("Move the cursor to the top right quadrant.\n");
-   window.title("Mouse Position: Top Right");
+   window.setTitle("Mouse Position: Top Right");
    do {
       mouseQuadrant1Reached = mouseQuadrant2Reached =
        mouseQuadrant3Reached = mouseQuadrant4Reached = false;
@@ -399,14 +400,14 @@ static void demoMousePosition(Window& window) {
 
 static void demoMouseEnterExit(Window& window) {
    printf("Move the cursor off screen.\n");
-   window.title("Mouse Position: Off Screen");
+   window.setTitle("Mouse Position: Off Screen");
    do {
       pointerEntered = pointerExited = false;
       glfwWaitEvents();
    } while (!pointerExited);
 
    printf("Move the cursor on screen.\n");
-   window.title("Mouse Position: On Screen");
+   window.setTitle("Mouse Position: On Screen");
    do {
       pointerEntered = pointerExited = false;
       glfwWaitEvents();
@@ -416,15 +417,14 @@ static void demoMouseEnterExit(Window& window) {
 static void demoMouse() {
    printf("Creating a window with mouse handlers.\n");
 
-   Window window = Window(glm::ivec2(400, 300));
+   Window window = Window(glm::ivec2(400, 300), "", boost::none, boost::none);
 
-   Mouse* mouse = Mouse::factory(window);
-   mouse->setButtonCallback(buttonCallback);
-   mouse->setPositionCallback(positionCallback);
-   mouse->setEnterCallback(enteredCallback);
-   mouse->setScrollCallback(scrollCalback);
+   window.setMouseButtonCallback(buttonCallback);
+   window.setMousePositionCallback(positionCallback);
+   window.setMouseEnterCallback(enteredCallback);
+   window.setMouseScrollCallback(scrollCalback);
 
-   window.visible(true);
+   window.setVisible(true);
 
    demoMouseButtons(window);
    demoMouseScroll(window);
@@ -437,51 +437,50 @@ static void demoMouse() {
 static void demoKeyboard() {
    printf("Creating a window with keyboard handlers.\n");
 
-   Window window = Window(glm::ivec2(400, 300));
+   Window window = Window(glm::ivec2(400, 300), "", boost::none, boost::none);
 
-   Keyboard* keyboard = Keyboard::factory(window);
-   keyboard->setKeyCallback(keyCallback);
-   keyboard->setCharCallback(characterCallback);
+   window.setKeyCallback(keyCallback);
+   window.setCharCallback(characterCallback);
 
-   window.visible(true);
+   window.setVisible(true);
 
    printf("Press the Escape key.\n");
-   window.title("Keyboard: Press Escape");
+   window.setTitle("Keyboard: Press Escape");
    do {
       lastKey = GLFW_KEY_UNKNOWN;
       glfwWaitEvents();
    } while (lastKey != GLFW_KEY_ESCAPE);
 
    printf("Press the Up Arrow key.\n");
-   window.title("Keyboard: Press Up Arrow");
+   window.setTitle("Keyboard: Press Up Arrow");
    do {
       lastKey = GLFW_KEY_UNKNOWN;
       glfwWaitEvents();
    } while (lastKey != GLFW_KEY_UP);
 
    printf("Press the Down Arrow key.\n");
-   window.title("Keyboard: Press Down Arrow");
+   window.setTitle("Keyboard: Press Down Arrow");
    do {
       lastKey = GLFW_KEY_UNKNOWN;
       glfwWaitEvents();
    } while (lastKey != GLFW_KEY_DOWN);
 
    printf("Press the Left Arrow key.\n");
-   window.title("Keyboard: Press Left Arrow");
+   window.setTitle("Keyboard: Press Left Arrow");
    do {
       lastKey = GLFW_KEY_UNKNOWN;
       glfwWaitEvents();
    } while (lastKey != GLFW_KEY_LEFT);
 
    printf("Press the Right Arrow key.\n");
-   window.title("Keyboard: Press Right Arrow");
+   window.setTitle("Keyboard: Press Right Arrow");
    do {
       lastKey = GLFW_KEY_UNKNOWN;
       glfwWaitEvents();
    } while (lastKey != GLFW_KEY_RIGHT);
 
    printf("Spell the word 'crash'.\n");
-   window.title("Keyboard: Spell 'crash'");
+   window.setTitle("Keyboard: Spell 'crash'");
    do {
       glfwWaitEvents();
    } while (spelledWord != "crash");

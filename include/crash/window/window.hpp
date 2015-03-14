@@ -2,10 +2,11 @@
 
 #include <map>
 #include <string>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <boost/optional/optional.hpp>
 #include <crash/window/glfw_adapter.hpp>
+
+struct GLFWwindow;
 
 namespace crash {
 namespace window {
@@ -18,13 +19,19 @@ public:
    // Type definitions.
    /////////////////////////////////////////////////////////////////////////////
 
-   typedef void (*positionCallback)(const Window&, const glm::ivec2&);
+   typedef void (*windowPositionCallback)(const Window&, const glm::ivec2&);
    typedef void (*windowSizeCallback)(const Window&, const glm::ivec2&);
    typedef void (*frameBufferSizeCallback)(const Window&, const glm::ivec2&);
    typedef void (*focusCallback)(const Window&, int);
    typedef void (*minimizeCallback)(const Window&, int);
    typedef void (*refreshCallback)(const Window&);
    typedef void (*closeCallback)(Window&);
+   typedef void (*keyCallback)(const Window&, int, int, int, int);
+   typedef void (*charCallback)(const Window&, unsigned int);
+   typedef void (*mouseButtonCallback)(const Window&, int, int, int);
+   typedef void (*mousePositionCallback)(const Window&, const glm::vec2&);
+   typedef void (*mouseEnterCallback)(const Window&, bool);
+   typedef void (*mouseScrollCallback)(const Window&, const glm::vec2&);
 
    static struct DestroyedWindow {} _destroyedWindow;
 
@@ -32,73 +39,120 @@ public:
    // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
-   Window(const glm::ivec2& size);
-   Window(const glm::ivec2& size, const std::string& title);
-   Window(const glm::ivec2& size, const std::string& title,
-    boost::optional< Monitor > monitor);
+   Window(const Window& window);
    Window(const glm::ivec2& size, const std::string& title,
     boost::optional< Monitor > monitor, boost::optional< Window > share);
    virtual ~Window();
 
    /////////////////////////////////////////////////////////////////////////////
-   // Getters.
+   // Data access.
    /////////////////////////////////////////////////////////////////////////////
 
-   GLFWwindow* handle() const;
-   boost::optional< Monitor > monitor() const;
+   GLFWwindow* getHandle() const;
+   boost::optional< Monitor > getMonitor() const;
+   boost::optional< Window > getShare() const;
 
-   std::string title() const;
-   glm::ivec2 position() const;
-   glm::ivec2 windowSize() const;
-   glm::ivec2 frameBufferSize() const;
-   bool visible() const;
-   bool focused() const;
-   bool minimized() const;
-   bool resizable() const;
-   bool decorated() const;
+   std::string getTitle() const;
+   glm::ivec2 getWindowPosition() const;
+   glm::ivec2 getWindowSize() const;
+   glm::ivec2 getFrameBufferSize() const;
+   bool isVisible() const;
+   bool isFocused() const;
+   bool isMinimized() const;
+   bool isResizable() const;
+   bool isDecorated() const;
    bool shouldClose() const;
-   int attribute(int a) const;
-   int inputMode(int m) const;
-   void* userPointer() const;
+   int getAttribute(int a) const;
+   int getInputMode(int m) const;
+   void* getUserPointer() const;
+   int getKey(int key) const;
+   int getMouseButton(int button) const;
+   glm::vec2 getMousePosition() const;
 
-   bool destroyed() const;
+   bool isDestroyed() const;
 
-   boost::optional< positionCallback > getPositionCallback() const;
+   void setTitle(const std::string& t);
+   void setWindowPosition(const glm::ivec2& p) const;
+   void setWindowSize(const glm::ivec2& s) const;
+   void setVisible(bool v) const;
+   void setMinimized(bool m) const;
+   void setShouldClose(bool c) const;
+   void setInputMode(int m, int v) const;
+   void setUserPointer(void* p) const;
+   void setMousePosition(const glm::vec2& p) const;
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Callback management.
+   /////////////////////////////////////////////////////////////////////////////
+
+   boost::optional< windowPositionCallback > getWindowPositionCallback() const;
    boost::optional< windowSizeCallback > getWindowSizeCallback() const;
    boost::optional< closeCallback > getCloseCallback() const;
    boost::optional< refreshCallback > getRefreshCallback() const;
    boost::optional< focusCallback > getFocusCallback() const;
    boost::optional< minimizeCallback > getMinimizeCallback() const;
    boost::optional< frameBufferSizeCallback > getFrameBufferCallback() const;
+   boost::optional< keyCallback > getKeyCallback() const;
+   boost::optional< charCallback > getCharCallback() const;
+   boost::optional< mouseButtonCallback > getMouseButtonCallback() const;
+   boost::optional< mousePositionCallback > getMousePositionCallback() const;
+   boost::optional< mouseEnterCallback > getMouseEnterCallback() const;
+   boost::optional< mouseScrollCallback > getMouseScrollCallback() const;
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Setters.
-   /////////////////////////////////////////////////////////////////////////////
-
-   void title(const std::string& t);
-   void position(const glm::ivec2& p) const;
-   void windowSize(const glm::ivec2& s) const;
-   void visible(bool v) const;
-   void minimized(bool m) const;
-   void shouldClose(bool c) const;
-   void inputMode(int m, int v) const;
-   void userPointer(void* p) const;
-
-   boost::optional< positionCallback > removePositionCallback();
+   boost::optional< windowPositionCallback > removeWindowPositionCallback();
    boost::optional< windowSizeCallback > removeWindowSizeCallback();
    boost::optional< closeCallback > removeCloseCallback();
    boost::optional< refreshCallback > removeRefreshCallback();
    boost::optional< focusCallback > removeFocusCallback();
    boost::optional< minimizeCallback > removeMinimizeCallback();
    boost::optional< frameBufferSizeCallback > removeFrameBufferCallback();
+   boost::optional< keyCallback > removeKeyCallback();
+   boost::optional< charCallback > removeCharCallback();
+   boost::optional< mouseButtonCallback > removeMouseButtonCallback();
+   boost::optional< mousePositionCallback > removeMousePositionCallback();
+   boost::optional< mouseEnterCallback > removeMouseEnterCallback();
+   boost::optional< mouseScrollCallback > removeMouseScrollCallback();
 
-   boost::optional< positionCallback > setPositionCallback(positionCallback callback);
-   boost::optional< windowSizeCallback > setWindowSizeCallback(windowSizeCallback callback);
+   boost::optional< windowPositionCallback >
+    setWindowPositionCallback(windowPositionCallback callback);
+   boost::optional< windowSizeCallback >
+    setWindowSizeCallback(windowSizeCallback callback);
    boost::optional< closeCallback > setCloseCallback(closeCallback callback);
-   boost::optional< refreshCallback > setRefreshCallback(refreshCallback callback);
+   boost::optional< refreshCallback >
+    setRefreshCallback(refreshCallback callback);
    boost::optional< focusCallback > setFocusCallback(focusCallback callback);
-   boost::optional< minimizeCallback > setMinimizeCallback(minimizeCallback callback);
-   boost::optional< frameBufferSizeCallback > setFrameBufferSizeCallback(frameBufferSizeCallback callback);
+   boost::optional< minimizeCallback >
+    setMinimizeCallback(minimizeCallback callback);
+   boost::optional< frameBufferSizeCallback >
+    setFrameBufferSizeCallback(frameBufferSizeCallback callback);
+   boost::optional< keyCallback > setKeyCallback(keyCallback callback);
+   boost::optional< charCallback > setCharCallback(charCallback callback);
+   boost::optional< mouseButtonCallback >
+    setMouseButtonCallback(mouseButtonCallback callback);
+   boost::optional< mousePositionCallback >
+    setMousePositionCallback(mousePositionCallback callback);
+   boost::optional< mouseEnterCallback >
+    setMouseEnterCallback(mouseEnterCallback callback);
+   boost::optional< mouseScrollCallback >
+    setMouseScrollCallback(mouseScrollCallback callback);
+
+   static void windowPositionCallbackAdapter(GLFWwindow* handle, int x, int y);
+   static void windowSizeCallbackAdapter(GLFWwindow* handle, int w, int h);
+   static void closeCallbackAdapter(GLFWwindow* handle);
+   static void refreshCallbackAdapter(GLFWwindow* handle);
+   static void focusCallbackAdapter(GLFWwindow* handle, int f);
+   static void minimizeCallbackAdapter(GLFWwindow* handle, int m);
+   static void frameBufferSizeCallbackAdapter(GLFWwindow* handle, int w, int h);
+   static void keyCallbackAdapter(GLFWwindow* handle, int key, int scancode,
+    int action, int mods);
+   static void charCallbackAdapter(GLFWwindow* handle, unsigned int character);
+   static void mouseButtonCallbackAdapter(GLFWwindow* handle, int button,
+    int action, int mods);
+   static void mousePositionCallbackAdapter(GLFWwindow* handle, double x,
+    double y);
+   static void mouseEnterCallbackAdapter(GLFWwindow* handle, int entered);
+   static void mouseScrollCallbackAdapter(GLFWwindow* handle, double x,
+    double y);
 
    /////////////////////////////////////////////////////////////////////////////
    // GLFW callthroughs.
@@ -109,50 +163,29 @@ public:
    void makeContextCurrent() const;
    void destroy();
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Static setters.
-   /////////////////////////////////////////////////////////////////////////////
-
    static void setHint(int target, int hint);
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Static GLFW callthroughs.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static boost::optional< Window* > getCurrentContext();
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Callback adapters.
-   /////////////////////////////////////////////////////////////////////////////
-
-   static void positionCallbackAdapter(GLFWwindow* handle, int x, int y);
-   static void windowSizeCallbackAdapter(GLFWwindow* handle, int w, int h);
-   static void closeCallbackAdapter(GLFWwindow* handle);
-   static void refreshCallbackAdapter(GLFWwindow* handle);
-   static void focusCallbackAdapter(GLFWwindow* handle, int f);
-   static void minimizeCallbackAdapter(GLFWwindow* handle, int m);
-   static void frameBufferSizeCallbackAdapter(GLFWwindow* handle, int w, int h);
+   static boost::optional< Window > getCurrentContext();
 
 private:
-   /////////////////////////////////////////////////////////////////////////////
-   // Members.
-   /////////////////////////////////////////////////////////////////////////////
-
    bool _destroyed;
    GLFWwindow* _handle;
+   GLFWwindow* _share;
    std::string _title;
 
-   positionCallback _positionCb;
+   windowPositionCallback _windowPositionCb;
    windowSizeCallback _windowSizeCb;
    closeCallback _closeCb;
    refreshCallback _refreshCb;
    focusCallback _focusCb;
    minimizeCallback _minimizeCb;
    frameBufferSizeCallback _frameBufferSizeCb;
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Static members.
-   /////////////////////////////////////////////////////////////////////////////
+   keyCallback _keyCb;
+   charCallback _charCb;
+   mouseButtonCallback _mouseButtonCb;
+   mousePositionCallback _mousePositionCb;
+   mouseEnterCallback _mouseEnterCb;
+   mouseScrollCallback _mouseScrollCb;
 
    static std::map< GLFWwindow*, Window* > _instances;
 };

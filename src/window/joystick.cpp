@@ -1,18 +1,25 @@
+#include <GLFW/glfw3.h>
 #include <crash/window/joystick.hpp>
 
 using namespace crash::window;
 
-/////////////////////////////////////////////////////////////////////////////
-// Getters.
-/////////////////////////////////////////////////////////////////////////////
+Joystick::Joystick(const Joystick& joystick) :
+   Joystick(joystick._handle)
+{}
 
-int Joystick::handle() const { return this->_handle; }
+Joystick::Joystick(int handle) :
+   _handle(handle)
+{}
 
-bool Joystick::present() const {
+int Joystick::getHandle() const {
+   return this->_handle;
+}
+
+bool Joystick::isPresent() const {
    return glfwJoystickPresent(this->_handle) == GL_TRUE;
 }
 
-boost::optional< std::vector< float > > Joystick::axes() const {
+boost::optional< std::vector< float > > Joystick::getAxes() const {
    int count = -1;
    const float* axes = glfwGetJoystickAxes(this->_handle, &count);
 
@@ -27,7 +34,7 @@ boost::optional< std::vector< float > > Joystick::axes() const {
    return axesVector;
 }
 
-boost::optional< std::vector< unsigned char > > Joystick::buttons() const {
+boost::optional< std::vector< unsigned char > > Joystick::getButtons() const {
    int count = -1;
    const unsigned char* buttons = glfwGetJoystickButtons(this->_handle, &count);
 
@@ -42,7 +49,7 @@ boost::optional< std::vector< unsigned char > > Joystick::buttons() const {
    return buttonsVector;
 }
 
-boost::optional< std::string > Joystick::name() const {
+boost::optional< std::string > Joystick::getName() const {
    const char* name = glfwGetJoystickName(this->_handle);
    if (name == nullptr) {
       return boost::none;
@@ -51,58 +58,20 @@ boost::optional< std::string > Joystick::name() const {
    return std::string(name);
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// Static constructors.
-/////////////////////////////////////////////////////////////////////////////
-
-/* static */ boost::optional< Joystick* > Joystick::factory(int joy) {
-   if (Joystick::_instances[joy] == nullptr) {
-      Joystick::_instances[joy] = new Joystick(joy);
-   }
-
-   return Joystick::_instances[joy];
-}
-
-/* static */ void Joystick::release(Joystick* joystick) {
-   delete Joystick::_instances[joystick->_handle];
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Static initializers.
-/////////////////////////////////////////////////////////////////////////////
-
-/* static */ void Joystick::initialize() {
+/* static */ std::vector< Joystick > Joystick::getAllJoysticks() {
+   std::vector< Joystick > joysticks;
    for (int ndx = 0; ndx < GLFW_JOYSTICK_LAST; ++ndx) {
-      Joystick::factory(ndx);
+      joysticks.push_back(Joystick(ndx));
    }
+   return joysticks;
 }
 
-/* static */ void Joystick::teardown() {
+/* static */ std::vector< Joystick > Joystick::getConnectedJoysticks() {
+   std::vector< Joystick > joysticks;
    for (int ndx = 0; ndx < GLFW_JOYSTICK_LAST; ++ndx) {
-      Joystick::release(Joystick::_instances[ndx]);
+      if (glfwJoystickPresent(ndx) == GL_TRUE) {
+         joysticks.push_back(Joystick(ndx));
+      }
    }
+   return joysticks;
 }
-
-/////////////////////////////////////////////////////////////////////////////
-// Constructors.
-/////////////////////////////////////////////////////////////////////////////
-
-Joystick::Joystick(int handle) :
-   _handle(handle)
-{}
-
-/* virtual */ Joystick::~Joystick() {}
-
-////////////////////////////////////////////////////////////////////////////////
-// Static members.
-////////////////////////////////////////////////////////////////////////////////
-
-/* static */ std::array< Joystick*, GLFW_JOYSTICK_LAST > Joystick::_instances;
-
-/* static */ bool Joystick::_initialized = false;
-
-Joystick::initializer::initializer() {
-   Joystick::initialize();
-}
-
-/* static */ Joystick::initializer Joystick::_initializer;

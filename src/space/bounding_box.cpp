@@ -1,69 +1,90 @@
-#include <cmath>
-#include <crash/space/boundable.hpp>
+#include <crash/math/plane.hpp>
+#include <crash/math/arithmetic.hpp>
+#include <crash/space/bounding_box.hpp>
+#include <crash/space/util.hpp>
 #include <crash/space/view_frustum.hpp>
-#include <crash/math/math.hpp>
 
 using namespace crash::math;
 using namespace crash::space;
 
-Boundable::Boundable(const Boundable& boundable) :
-   Boundable(boundable._transformer, boundable._velocity)
+///////////////////////////////////////////////////////////////////////////////
+// Constructors.
+///////////////////////////////////////////////////////////////////////////////
+
+BoundingBox::BoundingBox(const BoundingBox& boundingBox) :
+   _transformer(boundingBox._transformer),
+    _linearVelocity(boundingBox._linearVelocity),
+    _angularVelocity(boundingBox._angularVelocity),
+    _frustumPlaneIndex(0)
 {}
 
-Boundable::Boundable(const Transformer& transformer,
- const glm::vec3& velocity) :
-   _transformer(transformer), _velocity(velocity), _frustumPlaneIndex(0)
+BoundingBox::BoundingBox(const math::Transformer& transformer,
+ const glm::vec3& linearVelocity, const glm::vec4& angularVelocity) :
+   _transformer(transformer), _linearVelocity(linearVelocity),
+   _angularVelocity(angularVelocity), _frustumPlaneIndex(0)
 {}
 
 ///////////////////////////////////////////////////////////////////////////////
-// Data access
+// Data access.
 ///////////////////////////////////////////////////////////////////////////////
 
-const Transformer& Boundable::transformer() const {
+const Transformer& BoundingBox::getTransformer() const {
    return this->_transformer;
 }
 
-const glm::vec3& Boundable::position() const {
-   return this->_transformer.position();
+const glm::vec3& BoundingBox::getPosition() const {
+   return this->_transformer.getPosition();
 }
 
-const glm::vec4& Boundable::orientation() const {
-   return this->_transformer.orientation();
+const glm::vec4& BoundingBox::getOrientation() const {
+   return this->_transformer.getOrientation();
 }
 
-const glm::vec3& Boundable::size() const {
-   return this->_transformer.size();
+const glm::vec3& BoundingBox::getSize() const {
+   return this->_transformer.getSize();
 }
 
-const glm::vec3& Boundable::velocity() const {
-   return this->_velocity;
+const glm::vec3& BoundingBox::getLineraVelocity() const {
+   return this->_linearVelocity;
 }
 
-void Boundable::position(const glm::vec3& position) {
+const glm::vec4& BoundingBox::getAngularVelocity() const {
+   return this->_angularVelocity;
+}
+
+void BoundingBox::setTransformer(const math::Transformer& transformer) {
+   this->_transformer = transformer;
    this->invalidate();
-   this->_transformer.position(position);
 }
 
-void Boundable::orientation(const glm::vec4& orientation) {
+void BoundingBox::setPosition(const glm::vec3& position) {
+   this->_transformer.setPosition(position);
    this->invalidate();
-   this->_transformer.orientation(orientation);
 }
 
-void Boundable::size(const glm::vec3& size) {
+void BoundingBox::setOrientation(const glm::vec4& orientation) {
+   this->_transformer.setOrientation(orientation);
    this->invalidate();
-   this->_transformer.size(size);
 }
 
-void Boundable::velocity(const glm::vec3& velocity) {
+void BoundingBox::setSize(const glm::vec3& size) {
+   this->_transformer.setSize(size);
    this->invalidate();
-   this->_velocity = velocity;
+}
+
+void BoundingBox::setLinearVelocity(const glm::vec3& linearVelocity) {
+   this->_linearVelocity = linearVelocity;
+}
+
+void BoundingBox::setAngularVelocity(const glm::vec4& angularVelocity) {
+   this->_angularVelocity = angularVelocity;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Memoization
+// Memoization.
 ///////////////////////////////////////////////////////////////////////////////
 
-void Boundable::invalidate() {
+void BoundingBox::invalidate() {
    this->_transformer.invalidate();
 
    this->_radius = boost::none;
@@ -72,10 +93,11 @@ void Boundable::invalidate() {
    this->_diagonalDirections = boost::none;
 }
 
-/**
- * Calculate the radius of the sphere that circumscribes this Boundable.
- */
-float Boundable::getRadius() {
+const glm::mat4& BoundingBox::getTransform() {
+   return this->_transformer.getTransform();
+}
+
+float BoundingBox::getRadius() {
    if (!this->_radius) {
       this->generateRadius();
    }
@@ -83,26 +105,7 @@ float Boundable::getRadius() {
    return this->_radius.get();
 }
 
-/**
- * Calculate the transform matrix of this Boundable.
- */
-const glm::mat4& Boundable::getTransform() {
-   return this->_transformer.getTransform();
-}
-
-/**
- * Calculate the corners of the box enclosing this Boundable.
- * Ordered:
- *    0: near bottom  left (nbl)
- *    1: near bottom right (nbr)
- *    2: near    top  left (ntl)
- *    3: near    top right (ntr)
- *    4:  far bottom  left (fbl)
- *    5:  far bottom right (fbr)
- *    6:  far    top  left (ftl)
- *    7:  far    top right (ftr)
- */
-const Boundable::Corners& Boundable::getCorners() {
+const BoundingBox::Corners& BoundingBox::getCorners() {
    if (!this->_corners) {
       this->generateCorners();
    }
@@ -110,15 +113,7 @@ const Boundable::Corners& Boundable::getCorners() {
    return this->_corners.get();
 }
 
-/**
- * Calculate the normal vectors of the faces of the box enclosing this
- * Boundable.
- * Ordered:
- *    0: right
- *    1: top
- *    2: far
- */
-const Boundable::FaceNormals& Boundable::getFaceNormals() {
+const BoundingBox::FaceNormals& BoundingBox::getFaceNormals() {
    if (!this->_faceNormals) {
       this->generateFaceNormals();
    }
@@ -126,15 +121,7 @@ const Boundable::FaceNormals& Boundable::getFaceNormals() {
    return this->_faceNormals.get();
 }
 
-/**
- * Calculate the diagonal direction vectors of this Boundable.
- * Ordered:
- *    0: nbl -> ftr
- *    1: nbr -> ftl
- *    2: ntl -> fbr
- *    3: ntr -> fbl
- */
-const Boundable::DiagonalDirections& Boundable::getDiagonalDirections() {
+const BoundingBox::DiagonalDirections& BoundingBox::getDiagonalDirections() {
    if (!this->_diagonalDirections) {
       this->generateDiagonalDirections();
    }
@@ -142,11 +129,11 @@ const Boundable::DiagonalDirections& Boundable::getDiagonalDirections() {
    return this->_diagonalDirections.get();
 }
 
-void Boundable::generateRadius() {
-   this->_radius = std::sqrt(glm::dot(this->size(), this->size()));
+void BoundingBox::generateRadius() {
+   this->_radius = std::sqrt(glm::dot(this->getSize(), this->getSize()));
 }
 
-void Boundable::generateCorners() {
+void BoundingBox::generateCorners() {
    static const std::array< glm::vec4, NUM_CORNERS > unitCorners {{
       glm::vec4(-0.5f, -0.5f, -0.5f, 1.0f), // 0:nbl
       glm::vec4( 0.5f, -0.5f, -0.5f, 1.0f), // 1:nbr
@@ -160,7 +147,7 @@ void Boundable::generateCorners() {
 
    auto transform = this->getTransform();
 
-   Boundable::Corners corners;
+   Corners corners;
    for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       corners[ndx] = glm::vec3(transform * unitCorners[ndx]);
    }
@@ -168,10 +155,10 @@ void Boundable::generateCorners() {
    this->_corners = corners;
 }
 
-void Boundable::generateFaceNormals() {
+void BoundingBox::generateFaceNormals() {
    auto corners = this->getCorners();
 
-   Boundable::FaceNormals normals {{
+   FaceNormals normals {{
       Plane::fromPoints(corners[5], corners[7], corners[3]).normal, // 0:right: fbr ftr ntr
       Plane::fromPoints(corners[3], corners[7], corners[6]).normal, // 1:top:   ntr ftr ftl
       Plane::fromPoints(corners[6], corners[7], corners[5]).normal, // 2:far:   ftl ftr fbr
@@ -180,10 +167,10 @@ void Boundable::generateFaceNormals() {
    this->_faceNormals = normals;
 }
 
-void Boundable::generateDiagonalDirections() {
+void BoundingBox::generateDiagonalDirections() {
    auto corners = this->getCorners();
 
-   Boundable::DiagonalDirections diagonals;
+   DiagonalDirections diagonals;
    for (int ndx = 0; ndx < NUM_DIAGONALS; ++ndx) {
       auto v1 = corners[ndx];
       auto v2 = corners[(NUM_CORNERS - 1) - ndx];
@@ -194,24 +181,26 @@ void Boundable::generateDiagonalDirections() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Spatial queries
+// Spatial queries.
 ///////////////////////////////////////////////////////////////////////////////
 
-bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
+bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
    auto corners = this->getCorners();
    auto diagonals = this->getDiagonalDirections();
    auto frustumPlanes = viewFrustum.getPlanes();
 
-   for (int planeCount = 0; planeCount < ViewFrustum::NUM_PLANES; ++planeCount) {
+   for (int planeCount = 0; planeCount < ViewFrustum::NUM_PLANES;
+    ++planeCount) {
       // Utilize temporal locality by starting at the last failing plane.
-      int planeNdx = (this->_frustumPlaneIndex + planeCount) % ViewFrustum::NUM_PLANES;
+      int planeNdx = (this->_frustumPlaneIndex + planeCount) %
+       ViewFrustum::NUM_PLANES;
       const Plane& plane = frustumPlanes[planeNdx];
 
       // Find the diagonal that is most orthogonal to the plane.
       // Doing this allows us to reduce the maximum number of dot products that
       // need to be calculated from 8 to 6. The minimum rises from 1 to 5, but
       // the reduction in worst-case behaviour results in better performance
-      // when most Boundables are out of the viewing frustum - as is the norm
+      // when most BoundingBoxes are out of the viewing frustum - as is the norm
       // in large scenes where performance may start to suffer.
       // This step involves 4 dot products.
       int closestDiagonal = 0;
@@ -237,28 +226,29 @@ bool Boundable::isVisible(const ViewFrustum& viewFrustum) {
    return true;
 }
 
-bool Boundable::intersect(Boundable& other) {
-   return this->intersectAsSpheres(other) && this->intersectAsBoxes(other);
+bool BoundingBox::isIntersecting(BoundingBox& boundable) {
+   return this->intersectAsSpheres(boundable) &&
+    this->intersectAsBoxes(boundable);
 }
 
-bool Boundable::intersectAsSpheres(Boundable& other) {
-   float minimumDistance = this->getRadius() + other.getRadius();
-   glm::vec3 centerDistance = this->position() - other.position();
+bool BoundingBox::intersectAsSpheres(BoundingBox& boundingBox) {
+   float minimumDistance = this->getRadius() + boundingBox.getRadius();
+   glm::vec3 centerDistance = this->getPosition() - boundingBox.getPosition();
 
    return approxGreaterThan(minimumDistance * minimumDistance,
     glm::dot(centerDistance, centerDistance));
 }
 
-bool Boundable::intersectAsBoxes(Boundable& other) {
-   Boundable& a = *this;
-   Boundable& b = other;
+bool BoundingBox::intersectAsBoxes(BoundingBox& boundingBox) {
+   BoundingBox& a = *this;
+   BoundingBox& b = boundingBox;
 
    bool parallelPairExists = false;
 
-   glm::vec3 centerDistance = b.position() - a.position();
+   glm::vec3 centerDistance = b.getPosition() - a.getPosition();
 
-   glm::vec3 aSize = a.size() * 0.5f;
-   glm::vec3 bSize = b.size() * 0.5f;
+   glm::vec3 aSize = a.getSize() * 0.5f;
+   glm::vec3 bSize = b.getSize() * 0.5f;
 
    auto aNormals = a.getFaceNormals();
    auto bNormals = b.getFaceNormals();
@@ -301,7 +291,7 @@ bool Boundable::intersectAsBoxes(Boundable& other) {
       }
    }
 
-   // Assess face normals from other Boundable.
+   // Assess face normals from other BoundingBox.
    // We don't need to look for parallel axes anymore.
    for (int bNdx = 0; bNdx < 3; ++bNdx) {
       float interval = std::abs(glm::dot(bNormals[bNdx], centerDistance));
@@ -325,11 +315,11 @@ bool Boundable::intersectAsBoxes(Boundable& other) {
    // Assess axes generated from face normal cross products.
    for (int aNdx = 0; aNdx < 3; ++aNdx) {
       for (int bNdx = 0; bNdx < 3; ++bNdx) {
-         float interval = Boundable::centerDifferenceProjection(
+         float interval = BoundingBox::centerDifferenceProjection(
           aNdx, bNdx, normalDots, coefMatrix);
-         float aRadius = Boundable::thisIntersectionRadiusProjection(
+         float aRadius = BoundingBox::thisIntersectionRadiusProjection(
           aNdx, bNdx, aSize, absCoefMatrix);
-         float bRadius = Boundable::otherIntersectionRadiusProjection(
+         float bRadius = BoundingBox::otherIntersectionRadiusProjection(
           aNdx, bNdx, bSize, absCoefMatrix);
 
          if (approxGreaterThan(interval, aRadius + bRadius)) {
@@ -341,13 +331,15 @@ bool Boundable::intersectAsBoxes(Boundable& other) {
    return true;
 }
 
-/* static */ float Boundable::centerDifferenceProjection(int aNdx, int bNdx,
+/* static */ float BoundingBox::centerDifferenceProjection(int aNdx, int bNdx,
  const glm::vec3& normalDots, CoefficientMatrix coefMatrix) {
    int aDotNdx = (aNdx + 2) % 3;
    int bDotNdx = (aNdx + 1) % 3;
 
-   int aCoefIndex = linearize_index(glm::ivec2(bDotNdx, bNdx), glm::ivec2(3, 3));
-   int bCoefIndex = linearize_index(glm::ivec2(aDotNdx, bNdx), glm::ivec2(3, 3));
+   int aCoefIndex = linearize_index(glm::ivec2(bDotNdx, bNdx),
+    glm::ivec2(3, 3));
+   int bCoefIndex = linearize_index(glm::ivec2(aDotNdx, bNdx),
+    glm::ivec2(3, 3));
 
    float aCoef = coefMatrix[aCoefIndex];
    float bCoef = coefMatrix[bCoefIndex];
@@ -355,13 +347,15 @@ bool Boundable::intersectAsBoxes(Boundable& other) {
    return std::abs(normalDots[aDotNdx] * aCoef - normalDots[bDotNdx] * bCoef);
 }
 
-/* static */ float Boundable::thisIntersectionRadiusProjection(
- int aNdx, int bNdx, const glm::vec3& aSize, CoefficientMatrix absCoefMatrix) {
+/* static */ float BoundingBox::thisIntersectionRadiusProjection(int aNdx, int bNdx,
+ const glm::vec3& aSize, CoefficientMatrix absCoefMatrix) {
    int aSizeNdx = (aNdx + 1) % 3;
    int bSizeNdx = (aNdx + 2) % 3;
 
-   int aCoefIndex = linearize_index(glm::ivec2(bSizeNdx, bNdx), glm::ivec2(3, 3));
-   int bCoefIndex = linearize_index(glm::ivec2(aSizeNdx, bNdx), glm::ivec2(3, 3));
+   int aCoefIndex = linearize_index(glm::ivec2(bSizeNdx, bNdx),
+    glm::ivec2(3, 3));
+   int bCoefIndex = linearize_index(glm::ivec2(aSizeNdx, bNdx),
+    glm::ivec2(3, 3));
 
    float aCoef = absCoefMatrix[aCoefIndex];
    float bCoef = absCoefMatrix[bCoefIndex];
@@ -369,13 +363,15 @@ bool Boundable::intersectAsBoxes(Boundable& other) {
    return aSize[aSizeNdx] * aCoef + aSize[bSizeNdx] * bCoef;
 }
 
-/* static */ float Boundable::otherIntersectionRadiusProjection(
- int aNdx, int bNdx, const glm::vec3& bSize, CoefficientMatrix absCoefMatrix) {
+/* static */ float BoundingBox::otherIntersectionRadiusProjection(int aNdx, int bNdx,
+ const glm::vec3& bSize, CoefficientMatrix absCoefMatrix) {
    int aSizeNdx = bNdx ? 0 : 1;
    int bSizeNdx = (bNdx == 2) ? 1 : 2;
 
-   int aCoefIndex = linearize_index(glm::ivec2(aNdx, bSizeNdx), glm::ivec2(3, 3));
-   int bCoefIndex = linearize_index(glm::ivec2(aNdx, aSizeNdx), glm::ivec2(3, 3));
+   int aCoefIndex = linearize_index(glm::ivec2(aNdx, bSizeNdx),
+    glm::ivec2(3, 3));
+   int bCoefIndex = linearize_index(glm::ivec2(aNdx, aSizeNdx),
+    glm::ivec2(3, 3));
 
    float aCoef = absCoefMatrix[aCoefIndex];
    float bCoef = absCoefMatrix[bCoefIndex];

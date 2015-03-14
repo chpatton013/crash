@@ -1,5 +1,6 @@
 #include <crash/space/view_frustum.hpp>
 
+using namespace crash::math;
 using namespace crash::space;
 
 ViewFrustum::ViewFrustum(const ViewFrustum& viewFrustum) :
@@ -12,6 +13,16 @@ ViewFrustum::ViewFrustum(const Planes& planes) :
 
 const ViewFrustum::Planes& ViewFrustum::getPlanes() const {
    return this->_planes;
+}
+
+bool ViewFrustum::isPointVisible(const glm::vec3& point) const {
+   for (auto plane : this->getPlanes()) {
+      if (plane.distance(point) < 0) {
+         return false;
+      }
+   }
+
+   return true;
 }
 
 /* static */ ViewFrustum ViewFrustum::fromValues(float fieldOfView,
@@ -38,10 +49,10 @@ const ViewFrustum::Planes& ViewFrustum::getPlanes() const {
    return ViewFrustum::fromCorners(corners, transformMatrix);
 }
 
-/* static */ ViewFrustum ViewFrustum::fromCorners(
- const Corners3& corners, const glm::mat4& transformMatrix) {
+/* static */ ViewFrustum ViewFrustum::fromCorners(const Corners3& corners,
+ const glm::mat4& transformMatrix) {
    Corners4 wideCorners;
-   for (int ndx = 0; ndx < ViewFrustum::NUM_CORNERS; ++ndx) {
+   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       wideCorners[ndx] = glm::vec4(corners[ndx], 1.0f);
    }
 
@@ -50,7 +61,7 @@ const ViewFrustum::Planes& ViewFrustum::getPlanes() const {
 
 /* static */ ViewFrustum ViewFrustum::fromCorners(const Corners3& corners) {
    Corners4 wideCorners;
-   for (int ndx = 0; ndx < ViewFrustum::NUM_CORNERS; ++ndx) {
+   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       wideCorners[ndx] = glm::vec4(corners[ndx], 1.0f);
    }
 
@@ -60,7 +71,7 @@ const ViewFrustum::Planes& ViewFrustum::getPlanes() const {
 /* static */ ViewFrustum ViewFrustum::fromCorners(const Corners4& corners,
  const glm::mat4& transformMatrix) {
    Corners4 transformedCorners;
-   for (int ndx = 0; ndx < ViewFrustum::NUM_CORNERS; ++ndx) {
+   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       transformedCorners[ndx] = transformMatrix * corners[ndx];
    }
 
@@ -69,12 +80,12 @@ const ViewFrustum::Planes& ViewFrustum::getPlanes() const {
 
 /* static */ ViewFrustum ViewFrustum::fromCorners(const Corners4& corners) {
    Planes planes {{
-      math::Plane::fromPoints(corners[0], corners[4], corners[6]), // 0:left
-      math::Plane::fromPoints(corners[3], corners[7], corners[5]), // 1:right
-      math::Plane::fromPoints(corners[2], corners[6], corners[7]), // 2:top
-      math::Plane::fromPoints(corners[1], corners[5], corners[4]), // 3:bottom
-      math::Plane::fromPoints(corners[1], corners[0], corners[2]), // 4:near
-      math::Plane::fromPoints(corners[4], corners[5], corners[7]), // 5:far
+      Plane::fromPoints(corners[0], corners[4], corners[6]), // 0:left
+      Plane::fromPoints(corners[3], corners[7], corners[5]), // 1:right
+      Plane::fromPoints(corners[2], corners[6], corners[7]), // 2:top
+      Plane::fromPoints(corners[1], corners[5], corners[4]), // 3:bottom
+      Plane::fromPoints(corners[1], corners[0], corners[2]), // 4:near
+      Plane::fromPoints(corners[4], corners[5], corners[7]), // 5:far
    }};
    return ViewFrustum(planes);
 }

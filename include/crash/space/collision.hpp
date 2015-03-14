@@ -1,44 +1,27 @@
 #pragma once
 
-#include <boost/functional/hash.hpp>
-
 namespace crash {
 namespace space {
 
-class Boundable;
+class BoundingBox;
 
 class Collision {
 public:
    virtual ~Collision();
 
-   Boundable* first() const;
-   Boundable* second() const;
+   BoundingBox* getFirst() const;
+   BoundingBox* getSecond() const;
 
    bool operator<(const Collision& other) const;
-   bool operator==(const Collision& other) const;
 
-   static Collision factory(Boundable* first, Boundable* second);
+   static Collision factory(BoundingBox* first, BoundingBox* second);
 
 private:
-   Collision(Boundable* first, Boundable* second);
+   Collision(BoundingBox* first, BoundingBox* second);
 
-   Boundable* _first;
-   Boundable* _second;
+   BoundingBox* _first;
+   BoundingBox* _second;
 };
 
 } // namespace space
 } // namespace crash
-
-namespace std {
-
-template<>
-struct hash< crash::space::Collision > {
-   std::size_t operator()(crash::space::Collision const& arg) const noexcept {
-      std::size_t seed = 0;
-      boost::hash_combine(seed, arg.first());
-      boost::hash_combine(seed, arg.second());
-      return seed;
-   }
-};
-
-} // namespace std

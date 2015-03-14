@@ -6,7 +6,7 @@ namespace crash {
 namespace math {
 
 struct Line {
-   Line(const glm::vec3& direction);
+   Line(const Line& line);
    Line(const glm::vec3& point, const glm::vec3& direction);
 
    glm::vec3 point;
