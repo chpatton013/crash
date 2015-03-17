@@ -2,11 +2,12 @@
 
 #include <boost/optional.hpp>
 #include <glm/glm.hpp>
+#include <crash/math/transformable.hpp>
 
 namespace crash {
 namespace math {
 
-class Transformer {
+class Transformer : public Transformable {
 public:
    ////////////////////////////////////////////////////////////////////////////
    // Constructors.
@@ -17,7 +18,7 @@ public:
     const glm::vec3& size);
 
    ////////////////////////////////////////////////////////////////////////////
-   // Data access.
+   // Transformable interface.
    ////////////////////////////////////////////////////////////////////////////
 
    const glm::vec3& getPosition() const;
@@ -27,6 +28,8 @@ public:
    void setPosition(const glm::vec3& position);
    void setOrientation(const glm::vec4& orientation);
    void setSize(const glm::vec3& size);
+
+   const glm::mat4& getTransform();
 
    ////////////////////////////////////////////////////////////////////////////
    // Memoization.
@@ -40,7 +43,6 @@ public:
    const glm::mat4& getPositionInvariantTransform();
    const glm::mat4& getOrientationInvariantTransform();
    const glm::mat4& getSizeInvariantTransform();
-   const glm::mat4& getTransform();
 
    void applyTranslation(const glm::vec3& translation);
    void applyRotation(const glm::vec4& rotation);

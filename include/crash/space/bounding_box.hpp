@@ -3,6 +3,7 @@
 #include <array>
 #include <boost/optional.hpp>
 #include <glm/glm.hpp>
+#include <crash/math/transformable.hpp>
 #include <crash/math/transformer.hpp>
 
 namespace crash {
@@ -10,7 +11,7 @@ namespace space {
 
 class ViewFrustum;
 
-class BoundingBox {
+class BoundingBox : public math::Transformable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Type definitions.
@@ -33,20 +34,28 @@ public:
     const glm::vec3& linearVelocity, const glm::vec4& angularVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
+   // Transformable interface.
+   /////////////////////////////////////////////////////////////////////////////
+
+   const glm::vec3& getPosition() const;
+   const glm::vec4& getOrientation() const;
+   const glm::vec3& getSize() const;
+
+   void setPosition(const glm::vec3& position);
+   void setOrientation(const glm::vec4& orientation);
+   void setSize(const glm::vec3& size);
+
+   const glm::mat4& getTransform();
+
+   /////////////////////////////////////////////////////////////////////////////
    // Data access.
    /////////////////////////////////////////////////////////////////////////////
 
    const math::Transformer& getTransformer() const;
-   const glm::vec3& getPosition() const;
-   const glm::vec4& getOrientation() const;
-   const glm::vec3& getSize() const;
    const glm::vec3& getLineraVelocity() const;
    const glm::vec4& getAngularVelocity() const;
 
    void setTransformer(const math::Transformer& transformer);
-   void setPosition(const glm::vec3& position);
-   void setOrientation(const glm::vec4& orientation);
-   void setSize(const glm::vec3& size);
    void setLinearVelocity(const glm::vec3& linearVelocity);
    void setAngularVelocity(const glm::vec4& angularVelocity);
 
@@ -55,11 +64,6 @@ public:
    /////////////////////////////////////////////////////////////////////////////
 
    void invalidate();
-
-   /**
-    * Calculate the transform matrix of this BoundingBox.
-    */
-   const glm::mat4& getTransform();
 
    /**
     * Calculate the radius of the sphere that circumscribes this BoundingBox.
@@ -106,16 +110,15 @@ public:
    /**
     * Determine if any part of this BoundingBox is within the given ViewFrustum.
     *
-    * :param viewFrustum:  The ViewFrustum to test this Boundable against.
+    * :param viewFrustum:  The ViewFrustum to test this BoundingBox against.
     */
    bool isVisible(const ViewFrustum& viewFrustum);
 
    /**
     * Determine if this BoundingBox is intersecting with the specified other
-    * BoundingBox. Intersection is assessed with a sphere approximation,
-    * then with oriented bounding boxes.
+    * BoundingBox.
     *
-    * :param other: The other Boundable to test for intersection.
+    * :param other: The other BoundingBox to test for intersection.
     */
    bool isIntersecting(BoundingBox& boundable);
 

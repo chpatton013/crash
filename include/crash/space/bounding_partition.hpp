@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <crash/math/transformable.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/bounding_group.hpp>
 
@@ -16,10 +17,10 @@ namespace space {
 class Collision;
 class ViewFrustum;
 
-class BoundingPartition {
+class BoundingPartition : public math::Transformable {
 public:
    /////////////////////////////////////////////////////////////////////////////
-   // Constructors
+   // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
    BoundingPartition(const BoundingPartition& spatialManager);
@@ -27,13 +28,24 @@ public:
     const glm::ivec3& partitions);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Data access
+   // Transformable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const BoundingBox& getBoundingBox() const;
    const glm::vec3& getPosition() const;
    const glm::vec4& getOrientation() const;
    const glm::vec3& getSize() const;
+
+   void setPosition(const glm::vec3& position);
+   void setOrientation(const glm::vec4& orientation);
+   void setSize(const glm::vec3& size);
+
+   const glm::mat4& getTransform();
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Data access.
+   /////////////////////////////////////////////////////////////////////////////
+
+   const BoundingBox& getBoundingBox() const;
 
    void resize(const math::Transformer& transformer,
     const glm::ivec3& partitions);
@@ -41,7 +53,7 @@ public:
     const glm::ivec3& partitions);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Grouping
+   // Grouping.
    /////////////////////////////////////////////////////////////////////////////
 
    bool add(BoundingBox* boundable);
@@ -58,7 +70,7 @@ public:
    const glm::ivec3& getPartitions() const;
 
    /////////////////////////////////////////////////////////////////////////////
-   // Spatial queries
+   // Spatial queries.
    /////////////////////////////////////////////////////////////////////////////
 
    bool isVisible(const ViewFrustum& viewFrustum);

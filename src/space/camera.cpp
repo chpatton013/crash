@@ -20,7 +20,7 @@ Camera::Camera(const math::Transformer& transformer, float fieldOfView,
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Data access.
+// Transformable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
 const glm::vec3& Camera::getPosition() const {
@@ -30,6 +30,33 @@ const glm::vec3& Camera::getPosition() const {
 const glm::vec4& Camera::getOrientation() const {
    return this->_transformer.getOrientation();
 }
+
+const glm::vec3& Camera::getSize() const {
+   return this->_transformer.getSize();
+}
+
+void Camera::setPosition(const glm::vec3& position) {
+   this->_transformer.setPosition(position);
+   this->invalidate();
+}
+
+void Camera::setOrientation(const glm::vec4& orientation) {
+   this->_transformer.setOrientation(orientation);
+   this->invalidate();
+}
+
+void Camera::setSize(const glm::vec3& size) {
+   this->_transformer.setSize(size);
+   this->invalidate();
+}
+
+const glm::mat4& Camera::getTransform() {
+   return this->_transformer.getSizeInvariantTransform();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Data access.
+////////////////////////////////////////////////////////////////////////////////
 
 float Camera::getFieldOfView() const {
    return this->_fieldOfView;
@@ -49,16 +76,6 @@ float Camera::getFarPlane() const {
 
 const Transformer& Camera::getTransformer() const {
    return this->_transformer;
-}
-
-void Camera::setPosition(const glm::vec3& position) {
-   this->_transformer.setPosition(position);
-   this->invalidate();
-}
-
-void Camera::setOrientation(const glm::vec4& orientation) {
-   this->_transformer.setOrientation(orientation);
-   this->invalidate();
 }
 
 void Camera::setFieldOfView(float fieldOfView) {
@@ -95,10 +112,6 @@ void Camera::invalidate() {
 
    this->_perspective = boost::none;
    this->_viewFrustum = boost::none;
-}
-
-const glm::mat4& Camera::getTransform() {
-   return this->_transformer.getSizeInvariantTransform();
 }
 
 const glm::mat4& Camera::getPerspective() {

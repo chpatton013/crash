@@ -7,9 +7,9 @@
 using namespace crash::math;
 using namespace crash::space;
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Constructors.
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 BoundingBox::BoundingBox(const BoundingBox& boundingBox) :
    _transformer(boundingBox._transformer),
@@ -24,13 +24,9 @@ BoundingBox::BoundingBox(const math::Transformer& transformer,
    _angularVelocity(angularVelocity), _frustumPlaneIndex(0)
 {}
 
-///////////////////////////////////////////////////////////////////////////////
-// Data access.
-///////////////////////////////////////////////////////////////////////////////
-
-const Transformer& BoundingBox::getTransformer() const {
-   return this->_transformer;
-}
+////////////////////////////////////////////////////////////////////////////////
+// Transformable interface.
+////////////////////////////////////////////////////////////////////////////////
 
 const glm::vec3& BoundingBox::getPosition() const {
    return this->_transformer.getPosition();
@@ -42,19 +38,6 @@ const glm::vec4& BoundingBox::getOrientation() const {
 
 const glm::vec3& BoundingBox::getSize() const {
    return this->_transformer.getSize();
-}
-
-const glm::vec3& BoundingBox::getLineraVelocity() const {
-   return this->_linearVelocity;
-}
-
-const glm::vec4& BoundingBox::getAngularVelocity() const {
-   return this->_angularVelocity;
-}
-
-void BoundingBox::setTransformer(const math::Transformer& transformer) {
-   this->_transformer = transformer;
-   this->invalidate();
 }
 
 void BoundingBox::setPosition(const glm::vec3& position) {
@@ -72,6 +55,31 @@ void BoundingBox::setSize(const glm::vec3& size) {
    this->invalidate();
 }
 
+const glm::mat4& BoundingBox::getTransform() {
+   return this->_transformer.getTransform();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Data access.
+////////////////////////////////////////////////////////////////////////////////
+
+const Transformer& BoundingBox::getTransformer() const {
+   return this->_transformer;
+}
+
+const glm::vec3& BoundingBox::getLineraVelocity() const {
+   return this->_linearVelocity;
+}
+
+const glm::vec4& BoundingBox::getAngularVelocity() const {
+   return this->_angularVelocity;
+}
+
+void BoundingBox::setTransformer(const math::Transformer& transformer) {
+   this->_transformer = transformer;
+   this->invalidate();
+}
+
 void BoundingBox::setLinearVelocity(const glm::vec3& linearVelocity) {
    this->_linearVelocity = linearVelocity;
 }
@@ -80,9 +88,9 @@ void BoundingBox::setAngularVelocity(const glm::vec4& angularVelocity) {
    this->_angularVelocity = angularVelocity;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Memoization.
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 void BoundingBox::invalidate() {
    this->_transformer.invalidate();
@@ -91,10 +99,6 @@ void BoundingBox::invalidate() {
    this->_corners = boost::none;
    this->_faceNormals = boost::none;
    this->_diagonalDirections = boost::none;
-}
-
-const glm::mat4& BoundingBox::getTransform() {
-   return this->_transformer.getTransform();
 }
 
 float BoundingBox::getRadius() {
@@ -180,9 +184,9 @@ void BoundingBox::generateDiagonalDirections() {
    this->_diagonalDirections = diagonals;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Spatial queries.
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
    auto corners = this->getCorners();

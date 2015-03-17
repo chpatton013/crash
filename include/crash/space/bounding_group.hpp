@@ -2,6 +2,7 @@
 
 #include <set>
 #include <vector>
+#include <crash/math/transformable.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/collision.hpp>
 
@@ -15,20 +16,19 @@ namespace space {
 
 class ViewFrustum;
 
-class BoundingGroup {
+class BoundingGroup : public math::Transformable {
 public:
    /////////////////////////////////////////////////////////////////////////////
-   // Constructors
+   // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
    BoundingGroup(const BoundingGroup& boundingGroup);
    BoundingGroup(const math::Transformer& transformer);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Data access
+   // Transformable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const BoundingBox& getBoundingBox() const;
    const glm::vec3& getPosition() const;
    const glm::vec4& getOrientation() const;
    const glm::vec3& getSize() const;
@@ -37,8 +37,16 @@ public:
    void setOrientation(const glm::vec4& orientation);
    void setSize(const glm::vec3& size);
 
+   const glm::mat4& getTransform();
+
    /////////////////////////////////////////////////////////////////////////////
-   // Grouping
+   // Data access.
+   /////////////////////////////////////////////////////////////////////////////
+
+   const BoundingBox& getBoundingBox() const;
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Grouping.
    /////////////////////////////////////////////////////////////////////////////
 
    bool add(BoundingBox* boundingBox);
@@ -47,7 +55,7 @@ public:
    const std::set< BoundingBox* >& getBoundingBoxes() const;
 
    /////////////////////////////////////////////////////////////////////////////
-   // Spatial queries
+   // Spatial queries.
    /////////////////////////////////////////////////////////////////////////////
 
    bool isVisible(const ViewFrustum& viewFrustum);

@@ -7,7 +7,7 @@ using namespace crash::math;
 using namespace crash::space;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Constructors
+// Constructors.
 ////////////////////////////////////////////////////////////////////////////////
 
 BoundingGroup::BoundingGroup(const BoundingGroup& boundingGroup) :
@@ -20,7 +20,47 @@ BoundingGroup::BoundingGroup(const Transformer& transformer) :
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Grouping
+// Transformable interface.
+////////////////////////////////////////////////////////////////////////////////
+
+const glm::vec3& BoundingGroup::getPosition() const {
+   return this->_boundingBox.getPosition();
+}
+
+const glm::vec4& BoundingGroup::getOrientation() const {
+   return this->_boundingBox.getOrientation();
+}
+
+const glm::vec3& BoundingGroup::getSize() const {
+   return this->_boundingBox.getSize();
+}
+
+void BoundingGroup::setPosition(const glm::vec3& position) {
+   this->_boundingBox.setPosition(position);
+}
+
+void BoundingGroup::setOrientation(const glm::vec4& orientation) {
+   this->_boundingBox.setOrientation(orientation);
+}
+
+void BoundingGroup::setSize(const glm::vec3& size) {
+   this->_boundingBox.setSize(size);
+}
+
+const glm::mat4& BoundingGroup::getTransform() {
+   return this->_boundingBox.getTransform();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Data access.
+////////////////////////////////////////////////////////////////////////////////
+
+const BoundingBox& BoundingGroup::getBoundingBox() const {
+   return this->_boundingBox;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Grouping.
 ////////////////////////////////////////////////////////////////////////////////
 
 bool BoundingGroup::add(BoundingBox* boundingBox) {
@@ -46,7 +86,7 @@ const std::set< BoundingBox* >& BoundingGroup::getBoundingBoxes() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Spatial queries
+// Spatial queries.
 ////////////////////////////////////////////////////////////////////////////////
 
 bool BoundingGroup::isVisible(const ViewFrustum& viewFrustum) {

@@ -6,7 +6,7 @@ using namespace crash::math;
 using namespace crash::space;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Constructors
+// Constructors.
 ////////////////////////////////////////////////////////////////////////////////
 
 BoundingPartition::BoundingPartition(const BoundingPartition& spatialManager) :
@@ -25,12 +25,8 @@ BoundingPartition::BoundingPartition(const Transformer& transformer,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Data access
+// Transformable interface.
 ////////////////////////////////////////////////////////////////////////////////
-
-const BoundingBox& BoundingPartition::getBoundingBox() const {
-   return this->_boundingBox;
-}
 
 const glm::vec3& BoundingPartition::getPosition() const {
    return this->_boundingBox.getTransformer().getPosition();
@@ -42,6 +38,36 @@ const glm::vec4& BoundingPartition::getOrientation() const {
 
 const glm::vec3& BoundingPartition::getSize() const {
    return this->_boundingBox.getTransformer().getSize();
+}
+
+void BoundingPartition::setPosition(const glm::vec3& position) {
+   Transformer transformer(this->_boundingBox.getTransformer());
+   transformer.setPosition(position);
+   this->resize(transformer, this->_partitions);
+}
+
+void BoundingPartition::setOrientation(const glm::vec4& orientation) {
+   Transformer transformer(this->_boundingBox.getTransformer());
+   transformer.setOrientation(orientation);
+   this->resize(transformer, this->_partitions);
+}
+
+void BoundingPartition::setSize(const glm::vec3& size) {
+   Transformer transformer(this->_boundingBox.getTransformer());
+   transformer.setSize(size);
+   this->resize(transformer, this->_partitions);
+}
+
+const glm::mat4& BoundingPartition::getTransform() {
+   return this->_boundingBox.getTransform();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Data access.
+////////////////////////////////////////////////////////////////////////////////
+
+const BoundingBox& BoundingPartition::getBoundingBox() const {
+   return this->_boundingBox;
 }
 
 void BoundingPartition::resize(const Transformer& transformer,
@@ -89,7 +115,7 @@ void BoundingPartition::partition(const Transformer& transformer,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Grouping
+// Grouping.
 ////////////////////////////////////////////////////////////////////////////////
 
 bool BoundingPartition::add(BoundingBox* boundingBox) {
@@ -173,7 +199,7 @@ const glm::ivec3& BoundingPartition::getPartitions() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Spatial queries
+// Spatial queries.
 ////////////////////////////////////////////////////////////////////////////////
 
 std::vector< BoundingGroup > BoundingPartition::getContainingBoundingGroups(

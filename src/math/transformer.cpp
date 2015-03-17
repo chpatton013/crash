@@ -4,6 +4,10 @@
 
 using namespace crash::math;
 
+///////////////////////////////////////////////////////////////////////////////
+// Constructors.
+///////////////////////////////////////////////////////////////////////////////
+
 Transformer::Transformer(const Transformer& transformer) :
    Transformer(transformer._position, transformer._orientation,
     transformer._size)
@@ -13,6 +17,10 @@ Transformer::Transformer(const glm::vec3& position,
  const glm::vec4& orientation, const glm::vec3& size) :
    _position(position), _orientation(orientation), _size(size)
 {}
+
+///////////////////////////////////////////////////////////////////////////////
+// Transformable interface.
+///////////////////////////////////////////////////////////////////////////////
 
 const glm::vec3& Transformer::getPosition() const {
    return this->_position;
@@ -37,6 +45,10 @@ void Transformer::setOrientation(const glm::vec4& orientation) {
 void Transformer::setSize(const glm::vec3& size) {
    this->_size = size;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Memoization.
+///////////////////////////////////////////////////////////////////////////////
 
 void Transformer::invalidate() {
    this->_transform = boost::none;
