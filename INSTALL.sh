@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex -o pipefail
 
 root_dir="$(cd "$(dirname "$0")" && pwd)"
 cd "$root_dir"
@@ -18,6 +18,12 @@ git submodule foreach git pull origin master
 ( # Dependency: GLFW library
    cd "$root_dir/external/glfw";
    cmake -Wno-dev -D BUILD_SHARED_LIBS=ON "$root_dir/external/glfw";
+   make
+)
+
+( # Dependency: AssImp library
+   cd "$root_dir/external/assimp";
+   cmake -G 'Unix Makefiles';
    make
 )
 

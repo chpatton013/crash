@@ -9,12 +9,14 @@ flags({
 })
 includedirs({
    'include',
+   'external/assimp/include',
    'external/boost',
    'external/glm',
    'external/glfw/include',
 })
 libdirs({
    'lib',
+   'external/assimp/lib',
    'external/boost/stage/lib',
    'external/glfw/src',
 })
