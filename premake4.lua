@@ -69,6 +69,22 @@ files({
 links({})
 linkoptions({})
 
+project('crash_render')
+kind('SharedLib')
+targetdir('lib')
+files({
+   'src/render/**.cpp',
+   'include/crash/render/**.hpp',
+   'include/crash/render/**.inl'
+})
+links({
+   'crash_math',
+   'assimp',
+   'boost_filesystem',
+   'boost_system',
+})
+linkoptions({})
+
 project('crash_space')
 kind('SharedLib')
 targetdir('lib')
