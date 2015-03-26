@@ -130,6 +130,19 @@ links({
 })
 linkoptions({})
 
+project('crash_asset_test')
+kind('ConsoleApp')
+targetdir('bin')
+files({
+   'tests/asset_driver.cpp',
+})
+links({
+   'crash_math',
+   'crash_render',
+   'assimp',
+})
+linkoptions({})
+
 project('crash_window_test')
 kind('ConsoleApp')
 targetdir('bin')
