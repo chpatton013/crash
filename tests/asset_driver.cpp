@@ -10,10 +10,9 @@ const aiScene* importFile(const std::string& file);
 
 int main(int argc, char** argv) {
    if (argc < 2) {
-      std::cerr << "usage: asset_test <filename>" << std::endl;
+      std::cerr << "usage: " << argv[0] << " <filename>" << std::endl;
       return 1;
    }
-
    const std::string file = argv[1];
 
    auto scene = importFile(file);
