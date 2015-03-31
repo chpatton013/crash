@@ -56,8 +56,7 @@ TEST_CASE("crash/space/bounding_box/is_visible") {
    glm::vec3 near = glm::vec3(tanX, tanY, 1.0f);
    glm::vec3 far = 10.0f * near;
 
-   Camera c = Camera(Transformer(origin, glm::vec4(zAxis, 0.0f), glm::vec3(1.0f)),
-    fov, aspect, near.z, far.z);
+   Camera c = Camera(origin, -zAxis, yAxis, fov, aspect, near.z, far.z);
    ViewFrustum vf = c.getViewFrustum();
 
    std::array< glm::vec3, 8 > corners = {{
@@ -91,19 +90,18 @@ TEST_CASE("crash/space/bounding_box/is_visible") {
 
    std::vector< BoundingBox > inView;
    std::vector< BoundingBox > outOfView;
-   glm::mat4 transformMatrix = c.getTransform();
    for (int setNdx = 0; setNdx < 6; ++setNdx) {
       std::array< glm::vec3, 9 >& pointSet = pointSets[setNdx];
       for (int pointNdx = 0; pointNdx < (int)pointSet.size(); ++pointNdx) {
          glm::vec3 position = pointSet[pointNdx];
-         glm::vec3 transformedPosition = glm::vec3(transformMatrix *
-          glm::vec4(pointSet[pointNdx] + pointSetOffsets[setNdx], 1.0f));
+         glm::vec3 transformedPosition =
+          pointSet[pointNdx] + pointSetOffsets[setNdx];
 
-         inView.push_back(BoundingBox(
-          Transformer(position, glm::vec4(zAxis, 0.0f), glm::vec3(1.0f)),
+         inView.push_back(BoundingBox(Transformer(
+          position, glm::vec4(zAxis, 0.0f), glm::vec3(1.0f)),
           glm::vec3(), glm::vec4(xAxis, 0.0f)));
-         outOfView.push_back(BoundingBox(
-          Transformer(transformedPosition, glm::vec4(zAxis, 0.0f), glm::vec3(1.0f)),
+         outOfView.push_back(BoundingBox(Transformer(
+          transformedPosition, glm::vec4(zAxis, 0.0f), glm::vec3(1.0f)),
           glm::vec3(), glm::vec4(xAxis, 0.0f)));
       }
    }

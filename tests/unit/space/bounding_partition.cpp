@@ -83,8 +83,9 @@ TEST_CASE("crash/space/bounding_partition/visible_elements") {
    Transformer transformer(origin, glm::vec4(xAxis, 0.0f), size);
    BoundingPartition partition = BoundingPartition(transformer, glm::ivec3(1));
 
-   Camera c = Camera(Transformer(origin, glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)),
-    /* fov */ glm::radians(60.0f), /* aspect */ 1.0f, /* near */ 3.0f, /* far */ 32.0f);
+   Camera c = Camera(origin, -zAxis, yAxis,
+    /* fov */ glm::radians(60.0f), /* aspect */ 1.0f,
+    /* near */ 3.0f, /* far */ 32.0f);
 
    std::set< BoundingBox* > inView = {{
       new BoundingBox(Transformer(

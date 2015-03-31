@@ -1,3 +1,4 @@
+#include <array>
 #include <glm/gtc/matrix_transform.hpp>
 #include <crash/space/camera.hpp>
 
@@ -9,54 +10,35 @@ using namespace crash::space;
 ////////////////////////////////////////////////////////////////////////////////
 
 Camera::Camera(const Camera& camera) :
-   Camera(camera._transformer, camera._fieldOfView, camera._aspectRatio,
-    camera._nearPlane, camera._farPlane)
+   _position(camera._position), _forward(camera._forward), _up(camera._up),
+    _fieldOfView(camera._fieldOfView), _aspectRatio(camera._aspectRatio),
+    _nearPlane(camera._nearPlane), _farPlane(camera._farPlane)
 {}
 
-Camera::Camera(const math::Transformer& transformer, float fieldOfView,
- float aspectRatio, float nearPlane, float farPlane) :
-   _transformer(transformer), _fieldOfView(fieldOfView),
-    _aspectRatio(aspectRatio), _nearPlane(nearPlane), _farPlane(farPlane)
+Camera::Camera(const glm::vec3& position, const glm::vec3& forward,
+ const glm::vec3& up, float fieldOfView, float aspectRatio,
+ float nearPlane, float farPlane) :
+   _position(position), _forward(glm::normalize(forward)),
+    _up(glm::normalize(up)),
+    _fieldOfView(fieldOfView), _aspectRatio(aspectRatio),
+    _nearPlane(nearPlane), _farPlane(farPlane)
 {}
-
-////////////////////////////////////////////////////////////////////////////////
-// Transformable interface.
-////////////////////////////////////////////////////////////////////////////////
-
-const glm::vec3& Camera::getPosition() const {
-   return this->_transformer.getPosition();
-}
-
-const glm::vec4& Camera::getOrientation() const {
-   return this->_transformer.getOrientation();
-}
-
-const glm::vec3& Camera::getSize() const {
-   return this->_transformer.getSize();
-}
-
-void Camera::setPosition(const glm::vec3& position) {
-   this->_transformer.setPosition(position);
-   this->invalidate();
-}
-
-void Camera::setOrientation(const glm::vec4& orientation) {
-   this->_transformer.setOrientation(orientation);
-   this->invalidate();
-}
-
-void Camera::setSize(const glm::vec3& size) {
-   this->_transformer.setSize(size);
-   this->invalidate();
-}
-
-const glm::mat4& Camera::getTransform() {
-   return this->_transformer.getSizeInvariantTransform();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Data access.
 ////////////////////////////////////////////////////////////////////////////////
+
+const glm::vec3& Camera::getPosition() const {
+   return this->_position;
+}
+
+const glm::vec3& Camera::getForward() const {
+   return this->_forward;
+}
+
+const glm::vec3& Camera::getUp() const {
+   return this->_up;
+}
 
 float Camera::getFieldOfView() const {
    return this->_fieldOfView;
@@ -74,8 +56,19 @@ float Camera::getFarPlane() const {
    return this->_farPlane;
 }
 
-const Transformer& Camera::getTransformer() const {
-   return this->_transformer;
+void Camera::setPosition(const glm::vec3& position) {
+   this->_position = position;
+   this->invalidate();
+}
+
+void Camera::setForward(const glm::vec3& forward) {
+   this->_forward = glm::normalize(forward);
+   this->invalidate();
+}
+
+void Camera::setUp(const glm::vec3& up) {
+   this->_up = glm::normalize(up);
+   this->invalidate();
 }
 
 void Camera::setFieldOfView(float fieldOfView) {
@@ -98,20 +91,23 @@ void Camera::setFarPlane(float farPlane) {
    this->invalidate();
 }
 
-void Camera::setTransformer(const Transformer& transformer) {
-   this->_transformer = transformer;
-   this->invalidate();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Memoization
 ////////////////////////////////////////////////////////////////////////////////
 
 void Camera::invalidate() {
-   this->_transformer.invalidate();
-
+   this->_orthographic = boost::none;
    this->_perspective = boost::none;
+   this->_lookAt = boost::none;
    this->_viewFrustum = boost::none;
+}
+
+const glm::mat4& Camera::getOrthographic() {
+   if (!this->_orthographic) {
+      this->calculateOrthographic();
+   }
+
+   return this->_orthographic.get();
 }
 
 const glm::mat4& Camera::getPerspective() {
@@ -122,6 +118,14 @@ const glm::mat4& Camera::getPerspective() {
    return this->_perspective.get();
 }
 
+const glm::mat4& Camera::getLookAt() {
+   if (!this->_lookAt) {
+      this->calculateLookAt();
+   }
+
+   return this->_lookAt.get();
+}
+
 const ViewFrustum& Camera::getViewFrustum() {
    if (!this->_viewFrustum) {
       this->calculateViewFrustum();
@@ -130,13 +134,30 @@ const ViewFrustum& Camera::getViewFrustum() {
    return this->_viewFrustum.get();
 }
 
+void Camera::calculateOrthographic() {
+   float fovY = this->getFieldOfView();
+   float fovX = fovY * this->getAspectRatio();
+   float tanX = tan(fovX * 0.5f);
+   float tanY = tan(fovY * 0.5f);
+   float x = tanX * this->_farPlane;
+   float y = tanY * this->_farPlane;
+   this->_orthographic = glm::ortho(-x, x, -y, y,
+    this->_nearPlane, this->_farPlane);
+}
+
 void Camera::calculatePerspective() {
    this->_perspective = glm::perspective(this->_fieldOfView,
     this->_aspectRatio, this->_nearPlane, this->_farPlane);
 }
 
+void Camera::calculateLookAt() {
+   this->_lookAt = glm::lookAt(this->_position,
+    this->_position + this->_forward, this->_up);
+}
+
 void Camera::calculateViewFrustum() {
-   this->_viewFrustum = ViewFrustum::fromValues(this->_fieldOfView,
-    this->_aspectRatio, this->_nearPlane, this->_farPlane,
-    this->getTransform());
+   this->_viewFrustum = ViewFrustum::fromValues(
+    this->getFieldOfView(), this->getAspectRatio(),
+    this->getNearPlane(), this->getFarPlane(),
+    this->getLookAt());
 }

@@ -22,17 +22,15 @@ static void assertPointVisibility(Camera& camera,
    }
 }
 
-static void assertCamera(const glm::vec3& position,
- const glm::vec4& orientation, float fov, float aspect) {
+static void assertCamera(Camera c) {
+   auto fov = c.getFieldOfView();
+   auto aspect = c.getAspectRatio();
    float tanX = tan(fov * aspect * 0.5f);
    float tanY = tan(fov * 0.5f);
    glm::vec3 near = glm::vec3(tanX, tanY, 1.0f);
    glm::vec3 far = 10.0f * near;
    glm::vec3 mid = average(near, far);
    glm::vec3 buffer = glm::vec3(tanX * 1.5f, tanY * 1.5f, 1.0f);
-
-   Camera c = Camera(Transformer(position, orientation, glm::vec3(1.0f)),
-    fov, aspect, near.z, far.z);
 
    std::vector< glm::vec3 > inView = {{
       // Behind near plane.
@@ -105,28 +103,17 @@ static void assertCamera(const glm::vec3& position,
       glm::vec3(-far.x + buffer.x, -far.y + buffer.y, far.z + 1.0f),
    }};
 
-   glm::mat4 transformMatrix = c.getTransform();
-   for (int ndx = 0; ndx < (int)inView.size(); ++ndx) {
-      inView[ndx] = glm::vec3(transformMatrix * glm::vec4(inView[ndx], 1.0f));
-   }
-   for (int ndx = 0; ndx < (int)outOfView.size(); ++ndx) {
-      outOfView[ndx] = glm::vec3(transformMatrix * glm::vec4(outOfView[ndx], 1.0f));
-   }
-
    assertPointVisibility(c, inView, outOfView);
 }
 
 TEST_CASE("crash/space/camera/simple") {
-   assertCamera(origin, glm::vec4(xAxis, 0.0f),
-    /* fov */ glm::radians(60.0f), /* aspect ratio */ 1.0f);
+   assertCamera(Camera(origin, -zAxis, yAxis,
+    /* fov */ glm::radians(60.0f), /* aspect ratio */ 1.0f,
+    /* near */ 1.0f, /* far */ 10.0f));
 }
 
 TEST_CASE("crash/space/camera/wide") {
-   assertCamera(origin, glm::vec4(xAxis, 0.0f),
-    /* fov */ glm::radians(60.0f), /* aspect ratio */ 2.0f);
-}
-
-TEST_CASE("crash/space/camera/skewed") {
-   assertCamera(glm::vec3(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 30.0f),
-    /* fov */ glm::radians(80.0f), /* aspect ratio */ 16.0f / 9.0f);
+   assertCamera(Camera(origin, -zAxis, yAxis,
+    /* fov */ glm::radians(60.0f), /* aspect ratio */ 2.0f,
+    /* near */ 1.0f, /* far */ 10.0f));
 }
