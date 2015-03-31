@@ -5,7 +5,6 @@ defines({'GLM_FORCE_RADIANS'})
 flags({
    'FloatFast',
    'NoPCH',
-   'OptimizeSpeed',
 })
 includedirs({
    'include',
@@ -38,11 +37,17 @@ flags({'Symbols'})
 
 configuration('profile')
 defines({'NDEBUG', 'PROFILE', 'NRELEASE'})
-flags({'Symbols'})
+flags({
+   'Symbols',
+   'OptimizeSpeed',
+})
 
 configuration('release')
 defines({'NDEBUG', 'NPROFILE', 'RELEASE'})
-flags({'NoFramePointer'})
+flags({
+   'NoFramePointer',
+   'OptimizeSpeed',
+})
 
 project('crash_util')
 kind('SharedLib')
@@ -82,8 +87,13 @@ links({
    'assimp',
    'boost_filesystem',
    'boost_system',
+   'GLEW',
 })
 linkoptions({})
+configuration("macosx")
+links({"OpenGL.framework"})
+configuration("not macosx")
+links({"GL"})
 
 project('crash_space')
 kind('SharedLib')
@@ -107,7 +117,7 @@ files({
    'include/crash/window/**.inl'
 })
 links({
-   'glfw3'
+   'glfw3',
 })
 linkoptions({})
 
@@ -142,6 +152,33 @@ links({
    'assimp',
 })
 linkoptions({})
+
+project('crash_render_test')
+kind('ConsoleApp')
+targetdir('bin')
+files({
+   'tests/render_driver.cpp',
+})
+links({
+   'crash_math',
+   'crash_space',
+
+   'crash_render',
+   'assimp',
+   'boost_filesystem',
+   'boost_system',
+
+   'crash_window',
+   'glfw3',
+   'GLEW',
+
+   'boost_timer',
+})
+linkoptions({})
+configuration('macosx')
+links({'OpenGL.framework'})
+configuration('not macosx')
+links({'GL'})
 
 project('crash_window_test')
 kind('ConsoleApp')
