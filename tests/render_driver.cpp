@@ -100,13 +100,12 @@ int main(int argc, char** argv) {
    program->setUniformVariable("uDefaultSpecularReflectivity", defaultSpecularReflectivity);
 
    Camera camera(
-    /* position */ glm::vec3(0.0f, 0.0f, 250.0f),
+    /* position */ glm::vec3(0.0f, 0.0f, 1.0f),
     /* forward */ glm::vec3(0.0f, 0.0f, -1.0f),
     /* up */ glm::vec3(0.0f, 1.0f, 0.0f),
     /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
-    /* near */ 0.1f, /* far */ 1000.0f);
+    /* near */ 0.1f, /* far */ 10.0f);
 
-   glm::mat4 model = glm::translate(glm::vec3(0.0f, -100.0f, 0.0f));
 
    MatrixStack stack;
 
@@ -129,9 +128,7 @@ int main(int argc, char** argv) {
 
          program->use();
 
-         stack.push(model);
          mesh.render(*program, stack);
-         stack.pop(); // model
 
          stack.pop(); // view, perspective
 

@@ -15,23 +15,44 @@
 #  include <GL/gl.h>
 #endif
 
+#include <crash/math/transformer.hpp>
+#include <crash/math/transformable.hpp>
+
 namespace crash {
 namespace render {
 
 class MatrixStack;
 class ShaderProgram;
 
-class Mesh {
+class Mesh : public math::Transformable {
 public:
    Mesh(const Mesh& mesh);
    Mesh(const boost::filesystem::path& path);
    virtual ~Mesh();
 
+   /////////////////////////////////////////////////////////////////////////////
+   // Transformable interface.
+   /////////////////////////////////////////////////////////////////////////////
+
+   const glm::vec3& getPosition() const;
+   const glm::vec4& getOrientation() const;
+   const glm::vec3& getSize() const;
+
+   void setPosition(const glm::vec3& position);
+   void setOrientation(const glm::vec4& orientation);
+   void setSize(const glm::vec3& size);
+
+   const glm::mat4& getTransform();
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Rendering.
+   /////////////////////////////////////////////////////////////////////////////
+
    void initialize();
    void teardown();
 
    void bindAttributes(const ShaderProgram& program) const;
-   void render(const ShaderProgram& program, MatrixStack& matrixStack) const;
+   void render(const ShaderProgram& program, MatrixStack& matrixStack);
 
    struct SceneImportFailure {
       SceneImportFailure(const std::string& error);
@@ -89,6 +110,8 @@ private:
    void importScene();
    void releaseScene();
 
+   void normalizeScene();
+
    void buildComponents();
    void destroyComponents();
 
@@ -100,6 +123,7 @@ private:
 
    boost::filesystem::path _path;
    const aiScene* _scene;
+   math::Transformer _transformer;
    std::vector< GLuint > _vaos;
    std::vector< GLuint > _vbos;
    std::vector< GLuint > _ibos;

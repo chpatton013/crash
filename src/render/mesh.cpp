@@ -3,10 +3,13 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <crash/math/arithmetic.hpp>
+#include <crash/math/symbols.hpp>
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/shader_program.hpp>
 
+using namespace crash::math;
 using namespace crash::render;
 
 Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
@@ -18,13 +21,15 @@ Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
 ////////////////////////////////////////////////////////////////////////////////
 
 Mesh::Mesh(const Mesh& mesh) :
-   _path(mesh._path), _scene(mesh._scene),
+   _path(mesh._path), _scene(mesh._scene), _transformer(mesh._transformer),
     _vaos(mesh._vaos), _vbos(mesh._vbos), _ibos(mesh._ibos),
     _components(mesh._components)
 {}
 
 Mesh::Mesh(const boost::filesystem::path& path) :
-   _path(path), _scene(nullptr), _vaos(), _vbos(), _ibos(), _components()
+   _path(path), _scene(nullptr),
+    _transformer(glm::vec3(), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)),
+    _vaos(), _vbos(), _ibos(), _components()
 {
    this->importScene();
 }
@@ -32,6 +37,42 @@ Mesh::Mesh(const boost::filesystem::path& path) :
 /* virtual */ Mesh::~Mesh() {
    this->releaseScene();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Transformable interface.
+////////////////////////////////////////////////////////////////////////////////
+
+const glm::vec3& Mesh::getPosition() const {
+   return this->_transformer.getPosition();
+}
+
+const glm::vec4& Mesh::getOrientation() const {
+   return this->_transformer.getOrientation();
+}
+
+const glm::vec3& Mesh::getSize() const {
+   return this->_transformer.getSize();
+}
+
+void Mesh::setPosition(const glm::vec3& position) {
+   this->_transformer.setPosition(position);
+}
+
+void Mesh::setOrientation(const glm::vec4& orientation) {
+   this->_transformer.setOrientation(orientation);
+}
+
+void Mesh::setSize(const glm::vec3& size) {
+   this->_transformer.setSize(size);
+}
+
+const glm::mat4& Mesh::getTransform() {
+   return this->_transformer.getTransform();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Rendering.
+////////////////////////////////////////////////////////////////////////////////
 
 void Mesh::initialize() {
    this->allocateBuffers();
@@ -49,8 +90,10 @@ void Mesh::bindAttributes(const ShaderProgram& program) const {
    }
 }
 
-void Mesh::render(const ShaderProgram& program, MatrixStack& matrixStack) const {
+void Mesh::render(const ShaderProgram& program, MatrixStack& matrixStack) {
+   matrixStack.push(this->getTransform());
    this->renderNode(program, matrixStack, this->_scene->mRootNode);
+   matrixStack.pop();
 }
 
 /**
@@ -89,6 +132,34 @@ void Mesh::importScene() {
    }
 
    this->_scene = scene;
+   this->normalizeScene();
+}
+
+void Mesh::normalizeScene() {
+   glm::vec3 min(std::numeric_limits< float >::max());
+   glm::vec3 max(std::numeric_limits< float >::min());
+   for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
+      aiMesh* mesh = this->_scene->mMeshes[i];
+      for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
+         aiVector3D vertex = mesh->mVertices[j];
+         min.x = std::min< float >(min.x, vertex.x);
+         min.y = std::min< float >(min.y, vertex.y);
+         min.z = std::min< float >(min.z, vertex.z);
+         max.x = std::max< float >(max.x, vertex.x);
+         max.y = std::max< float >(max.y, vertex.y);
+         max.z = std::max< float >(max.z, vertex.z);
+      }
+   }
+
+   glm::vec3 dimensions = glm::abs(max - min);
+   float maxDimension = std::max< float >(
+    std::max< float >(dimensions.x, dimensions.y), dimensions.z);
+   float scale = 1.0f / maxDimension;
+
+   glm::vec3 center = average(min, max) * scale;
+
+   this->setPosition(-center);
+   this->setSize(glm::vec3(scale));
 }
 
 void Mesh::releaseScene() {
