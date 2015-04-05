@@ -2,10 +2,15 @@
 
 // FRAGMENT SHADER
 
+struct Light {
+   vec3 position;
+   vec4 diffuse;
+   vec4 specular;
+};
+
 uniform vec3 uCameraPosition;
 
-uniform vec3 uLightPosition;
-uniform float uLightIntensity;
+uniform Light uLights[2];
 
 uniform vec4 uDefaultAmbientColor = vec4(vec3(0.4), 1.0);
 uniform vec4 uDefaultDiffuseColor = vec4(vec3(0.7), 1.0);
@@ -26,41 +31,36 @@ void main() {
    vec4 specularColor;
    float reflectivity;
 
-   // if (uHasAmbientTexture) {
-   //    ambientColor = texture3D(uAmbientSampler, vTexCoord);
-   // } else {
-   //    ambientColor = uDefaultAmbientColor;
-   // }
-
-   // if (uHasDiffuseTexture) {
-   //    diffuseColor = texture3D(uDiffuseSampler, vTexCoord);
-   // } else {
-   //    diffuseColor = uDefaultDiffuseColor;
-   // }
-
-   // if (uHasSpecularTexture) {
-   //    specularColor = texture3D(uSpecularSampler, vTexCoord);
-   //    specularReflectivity = uDefaultSpecularReflectivity;
-   // } else {
-   //    specularColor = uDefaultSpecularColor;
-   //    reflectivity = uDefaultSpecularReflectivity;
-   // }
-
    ambientColor = uDefaultAmbientColor;
    diffuseColor = uDefaultDiffuseColor;
    specularColor = uDefaultSpecularColor;
    reflectivity = uDefaultSpecularReflectivity;
 
-   vec3 L = normalize(uLightPosition - vPosition);
-   float nDotL = dot(vNormal, L);
+   oColor = ambientColor;
+   for (int i = 0; i < 2; ++i) {
+      vec3 L = normalize(uLights[i].position - vPosition);
+      vec3 R = normalize(-reflect(L, vNormal));
+      vec3 V = normalize(vPosition - uCameraPosition);
 
-   vec3 V = normalize(vPosition - uCameraPosition);
-   vec3 R = normalize((2 * nDotL * vNormal) - L);
-   float rDotV = dot(R, V);
+      float nDotL = max(dot(vNormal, L), 0.0);
+      float rDotV = max(dot(R, V), 0.0);
 
-   vec4 ambient = ambientColor;
-   vec4 diffuse = diffuseColor * nDotL;
-   vec4 specular = specularColor * pow(rDotV, reflectivity);
+      vec4 diffuse = diffuseColor * nDotL;
+      vec4 specular = specularColor * pow(rDotV, reflectivity);
 
-   oColor = clamp(ambient + uLightIntensity * (diffuse + specular), 0.0, 1.0);
+      diffuse.x *= uLights[i].diffuse.x;
+      diffuse.y *= uLights[i].diffuse.y;
+      diffuse.z *= uLights[i].diffuse.z;
+      diffuse.w *= uLights[i].diffuse.w;
+
+      specular.x *= uLights[i].specular.x;
+      specular.y *= uLights[i].specular.y;
+      specular.z *= uLights[i].specular.z;
+      specular.w *= uLights[i].specular.w;
+
+      diffuse = clamp(diffuse, 0.0, 1.0);
+      specular = clamp(specular, 0.0, 1.0);
+
+      oColor += clamp(diffuse + specular, 0.0, 1.0);
+   }
 }

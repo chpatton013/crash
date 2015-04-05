@@ -16,6 +16,7 @@
 
 #include <crash/math/symbols.hpp>
 #include <crash/math/util.hpp>
+#include <crash/render/light.hpp>
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/shader.hpp>
@@ -81,19 +82,26 @@ int main(int argc, char** argv) {
 
    program->createUniformVariable("uMvpMatrix");
    program->createUniformVariable("uCameraPosition");
-
-   program->createUniformVariable("uLightPosition");
-   program->createUniformVariable("uLightIntensity");
+   program->createUniformVariable("uLights[0].position");
+   program->createUniformVariable("uLights[0].diffuse");
+   program->createUniformVariable("uLights[0].specular");
+   program->createUniformVariable("uLights[1].position");
+   program->createUniformVariable("uLights[1].diffuse");
+   program->createUniformVariable("uLights[1].specular");
 
    program->createUniformVariable("uDefaultAmbientColor");
    program->createUniformVariable("uDefaultDiffuseColor");
    program->createUniformVariable("uDefaultSpecularColor");
    program->createUniformVariable("uDefaultSpecularReflectivity");
 
-   program->setUniformVariable4f("uDefaultAmbientColor", glm::value_ptr(defaultAmbientColor), 1);
-   program->setUniformVariable4f("uDefaultDiffuseColor", glm::value_ptr(defaultDiffuseColor), 1);
-   program->setUniformVariable4f("uDefaultSpecularColor", glm::value_ptr(defaultSpecularColor), 1);
-   program->setUniformVariable1f("uDefaultSpecularReflectivity", &defaultSpecularReflectivity, 1);
+   program->setUniformVariable4f("uDefaultAmbientColor",
+    glm::value_ptr(defaultAmbientColor), 1);
+   program->setUniformVariable4f("uDefaultDiffuseColor",
+    glm::value_ptr(defaultDiffuseColor), 1);
+   program->setUniformVariable4f("uDefaultSpecularColor",
+    glm::value_ptr(defaultSpecularColor), 1);
+   program->setUniformVariable1f("uDefaultSpecularReflectivity",
+    &defaultSpecularReflectivity, 1);
 
    Camera camera(
     /* position */ glm::vec3(0.0f, 0.0f, 1.0f),
@@ -102,6 +110,16 @@ int main(int argc, char** argv) {
     /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
     /* near */ 0.1f, /* far */ 10.0f);
 
+   std::vector< Light > lights = {{
+      Light(
+       /* position */ glm::vec3(1000.0f, 1000.0f, 100.0f),
+       /* diffuse */ glm::vec4(0.6f, 0.3f, 0.3f, 1.0f),
+       /* specular */ glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(-1000.0f, -1000.0f, 100.0f),
+       /* diffuse */ glm::vec4(0.3f, 0.3f, 0.6f, 1.0f),
+       /* specular */ glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
+   }};
 
    MatrixStack stack;
 
@@ -118,12 +136,22 @@ int main(int argc, char** argv) {
 
          stack.push(perspective * view);
 
-         float intensity = 0.5f;
          program->setUniformVariable3f("uCameraPosition",
           glm::value_ptr(camera.getPosition()), 1);
-         program->setUniformVariable3f("uLightPosition",
-          glm::value_ptr(glm::vec3(1000.0f, 1000.0f, 0.0f)), 1);
-         program->setUniformVariable1f("uLightIntensity", &intensity, 1);
+
+         program->setUniformVariable3f("uLights[0].position",
+          glm::value_ptr(lights[0].getPosition()), 1);
+         program->setUniformVariable4f("uLights[0].diffuse",
+          glm::value_ptr(lights[0].getDiffuse()), 1);
+         program->setUniformVariable1f("uLights[0].specular",
+          glm::value_ptr(lights[0].getSpecular()), 1);
+
+         program->setUniformVariable3f("uLights[1].position",
+          glm::value_ptr(lights[1].getPosition()), 1);
+         program->setUniformVariable4f("uLights[1].diffuse",
+          glm::value_ptr(lights[1].getDiffuse()), 1);
+         program->setUniformVariable1f("uLights[1].specular",
+          glm::value_ptr(lights[1].getSpecular()), 1);
 
          program->use();
 
