@@ -12,13 +12,6 @@ uniform vec4 uDefaultDiffuseColor = vec4(vec3(0.7), 1.0);
 uniform vec4 uDefaultSpecularColor = vec4(vec3(0.9), 1.0);
 uniform float uDefaultSpecularReflectivity = 250.0;
 
-// uniform bool uHasAmbientTexture;
-// uniform bool uHasDiffuseTexture;
-// uniform bool uHasSpecularTexture;
-// uniform sampler2D uAmbientSampler;
-// uniform sampler2D uDiffuseSampler;
-// uniform sampler2D uSpecularSampler;
-
 in vec3 vPosition;
 in vec3 vNormal;
 in vec3 vTangent;

@@ -1,4 +1,3 @@
-#include <glm/gtc/type_ptr.hpp>
 #include <crash/render/shader_program.hpp>
 #include <crash/render/util.hpp>
 
@@ -78,73 +77,101 @@ void ShaderProgram::createUniformVariable(const std::string& name) {
    this->_variables[name] = handle;
 }
 
-void ShaderProgram::setUniformVariable(const std::string& name,
- GLboolean value) const {
+GLint ShaderProgram::getVariableHandle(const std::string& name) const {
    auto itr = this->_variables.find(name);
    if (itr == this->_variables.end()) {
       throw VariableReferenceFailure(name);
    }
 
-   glProgramUniform1ui(this->_handle, itr->second, value);
+   return itr->second;
 }
 
-void ShaderProgram::setUniformVariable(const std::string& name,
- GLint value) const {
-   auto itr = this->_variables.find(name);
-   if (itr == this->_variables.end()) {
-      throw VariableReferenceFailure(name);
-   }
-
-   glProgramUniform1i(this->_handle, itr->second, value);
+void ShaderProgram::setUniformVariable1f(const std::string& name,
+ const GLfloat* array, GLsizei length) const {
+   glProgramUniform1fv(this->_handle, this->getVariableHandle(name),
+    length, array);
 }
 
-void ShaderProgram::setUniformVariable(const std::string& name,
- GLuint value) const {
-   auto itr = this->_variables.find(name);
-   if (itr == this->_variables.end()) {
-      throw VariableReferenceFailure(name);
-   }
-
-   glProgramUniform1ui(this->_handle, itr->second, value);
+void ShaderProgram::setUniformVariable2f(const std::string& name,
+ const GLfloat* array, GLsizei length) const {
+   glProgramUniform2fv(this->_handle, this->getVariableHandle(name),
+    length, array);
 }
 
-void ShaderProgram::setUniformVariable(const std::string& name,
- GLfloat value) const {
-   auto itr = this->_variables.find(name);
-   if (itr == this->_variables.end()) {
-      throw VariableReferenceFailure(name);
-   }
-
-   glProgramUniform1f(this->_handle, itr->second, value);
+void ShaderProgram::setUniformVariable3f(const std::string& name,
+ const GLfloat* array, GLsizei length) const {
+   glProgramUniform3fv(this->_handle, this->getVariableHandle(name),
+    length, array);
 }
 
-void ShaderProgram::setUniformVariable(const std::string& name,
- const glm::vec3& value) const {
-   auto itr = this->_variables.find(name);
-   if (itr == this->_variables.end()) {
-      throw VariableReferenceFailure(name);
-   }
-
-   glProgramUniform3fv(this->_handle, itr->second, 1, glm::value_ptr(value));
+void ShaderProgram::setUniformVariable4f(const std::string& name,
+ const GLfloat* array, GLsizei length) const {
+   glProgramUniform4fv(this->_handle, this->getVariableHandle(name),
+    length, array);
 }
 
-void ShaderProgram::setUniformVariable(const std::string& name,
- const glm::vec4& value) const {
-   auto itr = this->_variables.find(name);
-   if (itr == this->_variables.end()) {
-      throw VariableReferenceFailure(name);
-   }
-
-   glProgramUniform4fv(this->_handle, itr->second, 1, glm::value_ptr(value));
+void ShaderProgram::setUniformVariable1i(const std::string& name,
+ const GLint* array, GLsizei length) const {
+   glProgramUniform1iv(this->_handle, this->getVariableHandle(name),
+    length, array);
 }
 
-void ShaderProgram::setUniformVariable(const std::string& name,
- const glm::mat4& value) const {
-   auto itr = this->_variables.find(name);
-   if (itr == this->_variables.end()) {
-      throw VariableReferenceFailure(name);
-   }
+void ShaderProgram::setUniformVariable2i(const std::string& name,
+ const GLint* array, GLsizei length) const {
+   glProgramUniform2iv(this->_handle, this->getVariableHandle(name),
+    length, array);
+}
 
-   glProgramUniformMatrix4fv(this->_handle, itr->second, 1, GL_FALSE,
-    glm::value_ptr(value));
+void ShaderProgram::setUniformVariable3i(const std::string& name,
+ const GLint* array, GLsizei length) const {
+   glProgramUniform3iv(this->_handle, this->getVariableHandle(name),
+    length, array);
+}
+
+void ShaderProgram::setUniformVariable4i(const std::string& name,
+ const GLint* array, GLsizei length) const {
+   glProgramUniform4iv(this->_handle, this->getVariableHandle(name),
+    length, array);
+}
+
+void ShaderProgram::setUniformVariable1ui(const std::string& name,
+ const GLuint* array, GLsizei length) const {
+   glProgramUniform1uiv(this->_handle, this->getVariableHandle(name),
+    length, array);
+}
+
+void ShaderProgram::setUniformVariable2ui(const std::string& name,
+ const GLuint* array, GLsizei length) const {
+   glProgramUniform2uiv(this->_handle, this->getVariableHandle(name),
+    length, array);
+}
+
+void ShaderProgram::setUniformVariable3ui(const std::string& name,
+ const GLuint* array, GLsizei length) const {
+   glProgramUniform3uiv(this->_handle, this->getVariableHandle(name),
+    length, array);
+}
+
+void ShaderProgram::setUniformVariable4ui(const std::string& name,
+ const GLuint* array, GLsizei length) const {
+   glProgramUniform4uiv(this->_handle, this->getVariableHandle(name),
+    length, array);
+}
+
+void ShaderProgram::setUniformVariableMatrix2(const std::string& name,
+ const GLfloat* array, GLsizei length) const {
+   glProgramUniformMatrix2fv(this->_handle, this->getVariableHandle(name),
+    length, GL_FALSE, array);
+}
+
+void ShaderProgram::setUniformVariableMatrix3(const std::string& name,
+ const GLfloat* array, GLsizei length) const {
+   glProgramUniformMatrix3fv(this->_handle, this->getVariableHandle(name),
+    length, GL_FALSE, array);
+}
+
+void ShaderProgram::setUniformVariableMatrix4(const std::string& name,
+ const GLfloat* array, GLsizei length) const {
+   glProgramUniformMatrix4fv(this->_handle, this->getVariableHandle(name),
+    length, GL_FALSE, array);
 }

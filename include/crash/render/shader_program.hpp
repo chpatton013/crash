@@ -31,16 +31,38 @@ public:
    void link() const;
    void use() const;
    void createUniformVariable(const std::string& name);
-   void setUniformVariable(const std::string& name, GLboolean value) const;
-   void setUniformVariable(const std::string& name, GLint value) const;
-   void setUniformVariable(const std::string& name, GLuint value) const;
-   void setUniformVariable(const std::string& name, GLfloat value) const;
-   void setUniformVariable(const std::string& name,
-    const glm::vec3& value) const;
-   void setUniformVariable(const std::string& name,
-    const glm::vec4& value) const;
-   void setUniformVariable(const std::string& name,
-    const glm::mat4& value) const;
+   GLint getVariableHandle(const std::string& name) const;
+
+   void setUniformVariable1f(const std::string& name, const GLfloat* array,
+    GLsizei length) const;
+   void setUniformVariable2f(const std::string& name, const GLfloat* array,
+    GLsizei length) const;
+   void setUniformVariable3f(const std::string& name, const GLfloat* array,
+    GLsizei length) const;
+   void setUniformVariable4f(const std::string& name, const GLfloat* array,
+    GLsizei length) const;
+   void setUniformVariable1i(const std::string& name, const GLint* array,
+    GLsizei length) const;
+   void setUniformVariable2i(const std::string& name, const GLint* array,
+    GLsizei length) const;
+   void setUniformVariable3i(const std::string& name, const GLint* array,
+    GLsizei length) const;
+   void setUniformVariable4i(const std::string& name, const GLint* array,
+    GLsizei length) const;
+   void setUniformVariable1ui(const std::string& name, const GLuint* array,
+    GLsizei length) const;
+   void setUniformVariable2ui(const std::string& name, const GLuint* array,
+    GLsizei length) const;
+   void setUniformVariable3ui(const std::string& name, const GLuint* array,
+    GLsizei length) const;
+   void setUniformVariable4ui(const std::string& name, const GLuint* array,
+    GLsizei length) const;
+   void setUniformVariableMatrix2(const std::string& name, const GLfloat* array,
+    GLsizei length) const;
+   void setUniformVariableMatrix3(const std::string& name, const GLfloat* array,
+    GLsizei length) const;
+   void setUniformVariableMatrix4(const std::string& name, const GLfloat* array,
+    GLsizei length) const;
 
    struct LinkFailure {
       LinkFailure(const std::string& error);

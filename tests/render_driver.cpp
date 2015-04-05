@@ -2,6 +2,7 @@
 #include <string>
 #include <boost/timer/timer.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
 
 #include <GL/glew.h>
@@ -26,7 +27,7 @@
 #include <crash/window/window.hpp>
 
 static const glm::vec4 defaultAmbientColor = glm::vec4(glm::vec3(0.4f), 1.0f);
-static const glm::vec4 defaultDiffuseColor = glm::vec4(glm::vec3(0.8f), 1.0f);
+static const glm::vec4 defaultDiffuseColor = glm::vec4(glm::vec3(0.7f), 1.0f);
 static const glm::vec4 defaultSpecularColor = glm::vec4(glm::vec3(0.9f), 1.0f);
 static const float defaultSpecularReflectivity = 250.0f;
 
@@ -50,9 +51,11 @@ int main(int argc, char** argv) {
 
    ShaderProgram::Shaders shaders = {{
       std::make_shared< Shader >(
-       boost::filesystem::path("tests/render/vertex.glsl"), GL_VERTEX_SHADER),
+       boost::filesystem::path("tests/render/vertex.glsl"),
+       GL_VERTEX_SHADER),
       std::make_shared< Shader >(
-       boost::filesystem::path("tests/render/fragment.glsl"), GL_FRAGMENT_SHADER),
+       boost::filesystem::path("tests/render/fragment.glsl"),
+       GL_FRAGMENT_SHADER),
    }};
    try {
       for (auto shader : shaders) {
@@ -87,17 +90,10 @@ int main(int argc, char** argv) {
    program->createUniformVariable("uDefaultSpecularColor");
    program->createUniformVariable("uDefaultSpecularReflectivity");
 
-   /* program->createUniformVariable("uHasAmbientTexture"); */
-   /* program->createUniformVariable("uHasDiffuseTexture"); */
-   /* program->createUniformVariable("uHasSpecularTexture"); */
-   /* program->createUniformVariable("uAmbientSampler"); */
-   /* program->createUniformVariable("uDiffuseSampler"); */
-   /* program->createUniformVariable("uSpecularSampler"); */
-
-   program->setUniformVariable("uDefaultAmbientColor", defaultAmbientColor);
-   program->setUniformVariable("uDefaultDiffuseColor", defaultDiffuseColor);
-   program->setUniformVariable("uDefaultSpecularColor", defaultSpecularColor);
-   program->setUniformVariable("uDefaultSpecularReflectivity", defaultSpecularReflectivity);
+   program->setUniformVariable4f("uDefaultAmbientColor", glm::value_ptr(defaultAmbientColor), 1);
+   program->setUniformVariable4f("uDefaultDiffuseColor", glm::value_ptr(defaultDiffuseColor), 1);
+   program->setUniformVariable4f("uDefaultSpecularColor", glm::value_ptr(defaultSpecularColor), 1);
+   program->setUniformVariable1f("uDefaultSpecularReflectivity", &defaultSpecularReflectivity, 1);
 
    Camera camera(
     /* position */ glm::vec3(0.0f, 0.0f, 1.0f),
@@ -122,9 +118,12 @@ int main(int argc, char** argv) {
 
          stack.push(perspective * view);
 
-         program->setUniformVariable("uCameraPosition", camera.getPosition());
-         program->setUniformVariable("uLightPosition", glm::vec3(1000.0f, 1000.0f, 0.0f));
-         program->setUniformVariable("uLightIntensity", 0.5f);
+         float intensity = 0.5f;
+         program->setUniformVariable3f("uCameraPosition",
+          glm::value_ptr(camera.getPosition()), 1);
+         program->setUniformVariable3f("uLightPosition",
+          glm::value_ptr(glm::vec3(1000.0f, 1000.0f, 0.0f)), 1);
+         program->setUniformVariable1f("uLightIntensity", &intensity, 1);
 
          program->use();
 
@@ -165,7 +164,7 @@ Window initializeOpenGl() {
    }
 
    glViewport(0, 0, 900, 600);
-   glClearColor(0.8f, 0.7f, 0.9f, 1.0f);
+   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
    // culling
    glEnable(GL_CULL_FACE);

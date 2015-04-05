@@ -333,10 +333,7 @@ void Mesh::Component::bindAttributes(const ShaderProgram& program) const {
 
 void Mesh::Component::render(const ShaderProgram& program,
  const glm::mat4& transform) const {
-   program.setUniformVariable("uMvpMatrix", transform);
-   /* program.setUniformVariable("uHasAmbientTexture", false); */
-   /* program.setUniformVariable("uHasDiffuseTexture", false); */
-   /* program.setUniformVariable("uHasSpecularTexture", false); */
+   program.setUniformVariableMatrix4("uMvpMatrix", glm::value_ptr(transform), 1);
 
    glBindVertexArray(this->vao);
    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
