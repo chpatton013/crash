@@ -82,16 +82,16 @@ private:
          Vertex(const Vertex& v);
          Vertex(const glm::vec3& position, const glm::vec3& normal,
           const glm::vec3& tangent, const glm::vec3& bitangent,
-          const glm::vec3& textureCoordinates);
+          const glm::vec2& textureCoordinates);
          Vertex(const aiVector3D& position, const aiVector3D& normal,
           const aiVector3D& tangent, const aiVector3D& bitangent,
-          const aiVector3D& textureCoordinates);
+          const aiVector2D& textureCoordinates);
 
          glm::vec3 position;
          glm::vec3 normal;
          glm::vec3 tangent;
          glm::vec3 bitangent;
-         glm::vec3 textureCoordinates;
+         glm::vec2 textureCoordinates;
 
          struct Attribute {
             Attribute(unsigned int index, const std::string& name,

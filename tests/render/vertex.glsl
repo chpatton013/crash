@@ -8,13 +8,13 @@ in vec3 aPosition;
 in vec3 aNormal;
 in vec3 aTangent;
 in vec3 aBitangent;
-in vec3 aTexCoord;
+in vec2 aTexCoord;
 
 out vec3 vPosition;
 out vec3 vNormal;
 out vec3 vTangent;
 out vec3 vBitangent;
-out vec3 vTexCoord;
+out vec2 vTexCoord;
 
 void main() {
    vPosition = aPosition;

@@ -292,9 +292,11 @@ void Mesh::Component::generateVertexBuffer() {
          bitangent = this->mesh->mBitangents[i];
       }
 
-      auto textureCoordinates = zero;
+      auto textureCoordinates = aiVector2D(0.0f, 0.0f);
       if (this->mesh->HasTextureCoords(0)) {
-         textureCoordinates = this->mesh->mTextureCoords[0][i];
+         auto texture = this->mesh->mTextureCoords[0][i];
+         textureCoordinates.x = texture.x;
+         textureCoordinates.y = texture.y;
       }
 
       vertices.push_back(Vertex(position, normal, tangent, bitangent,
@@ -355,7 +357,7 @@ Mesh::Component::Vertex::Vertex(const Vertex& v) :
 
 Mesh::Component::Vertex::Vertex(const glm::vec3& position,
  const glm::vec3& normal, const glm::vec3& tangent, const glm::vec3& bitangent,
- const glm::vec3& textureCoordinates) :
+ const glm::vec2& textureCoordinates) :
    position(position), normal(normal),
     tangent(tangent), bitangent(bitangent),
     textureCoordinates(textureCoordinates)
@@ -363,12 +365,12 @@ Mesh::Component::Vertex::Vertex(const glm::vec3& position,
 
 Mesh::Component::Vertex::Vertex(const aiVector3D& position,
  const aiVector3D& normal, const aiVector3D& tangent,
- const aiVector3D& bitangent, const aiVector3D& textureCoordinates) :
+ const aiVector3D& bitangent, const aiVector2D& textureCoordinates) :
    Vertex(glm::vec3(position.x, position.y, position.z),
     glm::vec3(normal.x, normal.y, normal.z),
     glm::vec3(tangent.x, tangent.y, tangent.z),
     glm::vec3(bitangent.x, bitangent.y, bitangent.z),
-    glm::vec3(textureCoordinates.x, textureCoordinates.y, textureCoordinates.z))
+    glm::vec2(textureCoordinates.x, textureCoordinates.y))
 {}
 
 Mesh::Component::Vertex::Attribute::Attribute(
@@ -382,5 +384,5 @@ Mesh::Component::Vertex::Attribute::Attribute(
    Attribute(1, "aNormal", offsetof(Vertex, normal), 3),
    Attribute(2, "aTangent", offsetof(Vertex, tangent), 3),
    Attribute(3, "aBitangent", offsetof(Vertex, bitangent), 3),
-   Attribute(4, "aTexCoords", offsetof(Vertex, textureCoordinates), 3),
+   Attribute(4, "aTexCoords", offsetof(Vertex, textureCoordinates), 2),
 }};

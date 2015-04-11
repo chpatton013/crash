@@ -21,7 +21,7 @@ in vec3 vPosition;
 in vec3 vNormal;
 in vec3 vTangent;
 in vec3 vBitangent;
-in vec3 vTexCoord;
+in vec2 vTexCoord;
 
 out vec4 oColor;
 
