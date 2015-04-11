@@ -3,28 +3,11 @@
 #include <glm/glm.hpp>
 #include <crash/math/transformable.hpp>
 
-#include <GL/glew.h>
-#include <boost/predef/os.h>
-#ifdef BOOST_OS_MACOS
-#  include <OpenGL/gl.h>
-#else
-#  include <GL/gl.h>
-#endif
-
 namespace crash {
 namespace render {
 
 class Light : public math::Transformable {
 public:
-   struct ShaderLight {
-      ShaderLight(const glm::vec3& position, const glm::vec4& diffuse,
-       const glm::vec4& specular);
-
-      glm::vec3 position;
-      glm::vec4 diffuse;
-      glm::vec4 specular;
-   };
-
    Light(const Light& light);
    Light(const glm::vec3& position, const glm::vec4& diffuse,
     const glm::vec4& specular);
@@ -53,8 +36,6 @@ public:
 
    void setDiffuse(const glm::vec4& diffuse);
    void setSpecular(const glm::vec4& specular);
-
-   ShaderLight toShaderLight();
 
 private:
    glm::vec3 _position;

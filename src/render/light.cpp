@@ -1,13 +1,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <crash/render/light.hpp>
 
-using namespace crash::math;
 using namespace crash::render;
-
-Light::ShaderLight::ShaderLight(const glm::vec3& position,
- const glm::vec4& diffuse, const glm::vec4& specular) :
-   position(position), diffuse(diffuse), specular(specular)
-{}
 
 Light::Light(const Light& light) :
    _position(light._position), _diffuse(light._diffuse),
@@ -70,10 +64,6 @@ void Light::setDiffuse(const glm::vec4& diffuse) {
 
 void Light::setSpecular(const glm::vec4& specular) {
    this->_specular = specular;
-}
-
-Light::ShaderLight Light::toShaderLight() {
-   return ShaderLight(this->getPosition(), this->_diffuse, this->_specular);
 }
 
 /* static */ glm::vec4 Light::__orientation(1.0f, 0.0f, 0.0f, 0.0f);

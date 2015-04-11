@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <string>
 #include <boost/timer/timer.hpp>
 #include <glm/glm.hpp>
@@ -17,6 +18,7 @@
 #include <crash/math/symbols.hpp>
 #include <crash/math/util.hpp>
 #include <crash/render/light.hpp>
+#include <crash/render/light_manager.hpp>
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/shader.hpp>
@@ -38,6 +40,14 @@ using namespace crash::space;
 using namespace crash::window;
 
 Window initializeOpenGl();
+std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
+ std::shared_ptr< ShaderProgram >, std::shared_ptr< Mesh > >
+ initializeRender(const boost::filesystem::path& vertexShaderPath,
+ const boost::filesystem::path& fragmentShaderPath,
+ const boost::filesystem::path& meshPath);
+void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,
+ std::shared_ptr< ShaderProgram > program, std::shared_ptr< Mesh > mesh,
+ MatrixStack& stack);
 
 int main(int argc, char** argv) {
    if (argc < 2) {
@@ -50,44 +60,31 @@ int main(int argc, char** argv) {
    window.setVisible(true);
    Keyboard keyboard(window);
 
-   ShaderProgram::Shaders shaders = {{
-      std::make_shared< Shader >(
-       boost::filesystem::path("tests/render/vertex.glsl"),
-       GL_VERTEX_SHADER),
-      std::make_shared< Shader >(
-       boost::filesystem::path("tests/render/fragment.glsl"),
-       GL_FRAGMENT_SHADER),
-   }};
+   std::shared_ptr< Camera > camera;
+   std::vector< Light > lights;
+   std::shared_ptr< ShaderProgram > program;
+   std::shared_ptr< Mesh > mesh;
    try {
-      for (auto shader : shaders) {
-         shader->compile();
-      }
+      std::tie(camera, lights, program, mesh) = initializeRender(
+       boost::filesystem::path("tests/render/vertex.glsl"),
+       boost::filesystem::path("tests/render/fragment.glsl"),
+       boost::filesystem::path(file));
    } catch (Shader::CompileFailure e) {
       std::cerr << e.error << std::endl;
       return 2;
-   }
-
-   auto program = std::make_shared< ShaderProgram >(shaders);
-
-   Mesh mesh = Mesh(boost::filesystem::path(file));
-   mesh.initialize();
-   mesh.bindAttributes(*program);
-
-   try {
-      program->link();
    } catch (ShaderProgram::LinkFailure e) {
       std::cerr << e.error << std::endl;
       return 3;
    }
 
-   program->createUniformVariable("uMvpMatrix");
+
+   LightManager lightManager = LightManager("uLightPosition",
+    "uLightDiffuse", "uLightSpecular", lights);
+   MatrixStack stack;
+
+   lightManager.createUniforms(*program);
    program->createUniformVariable("uCameraPosition");
-   program->createUniformVariable("uLights[0].position");
-   program->createUniformVariable("uLights[0].diffuse");
-   program->createUniformVariable("uLights[0].specular");
-   program->createUniformVariable("uLights[1].position");
-   program->createUniformVariable("uLights[1].diffuse");
-   program->createUniformVariable("uLights[1].specular");
+   program->createUniformVariable("uMvpMatrix");
 
    program->createUniformVariable("uDefaultAmbientColor");
    program->createUniformVariable("uDefaultDiffuseColor");
@@ -103,26 +100,6 @@ int main(int argc, char** argv) {
    program->setUniformVariable1f("uDefaultSpecularReflectivity",
     &defaultSpecularReflectivity, 1);
 
-   Camera camera(
-    /* position */ glm::vec3(0.0f, 0.0f, 1.0f),
-    /* forward */ glm::vec3(0.0f, 0.0f, -1.0f),
-    /* up */ glm::vec3(0.0f, 1.0f, 0.0f),
-    /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
-    /* near */ 0.1f, /* far */ 10.0f);
-
-   std::vector< Light > lights = {{
-      Light(
-       /* position */ glm::vec3(1000.0f, 1000.0f, 100.0f),
-       /* diffuse */ glm::vec4(0.6f, 0.3f, 0.3f, 1.0f),
-       /* specular */ glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
-      Light(
-       /* position */ glm::vec3(-1000.0f, -1000.0f, 100.0f),
-       /* diffuse */ glm::vec4(0.3f, 0.3f, 0.6f, 1.0f),
-       /* specular */ glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
-   }};
-
-   MatrixStack stack;
-
    boost::timer::cpu_timer timer;
    const boost::timer::nanosecond_type interval = 10E9 / 60.0f;
    while (!window.shouldClose()) {
@@ -130,35 +107,7 @@ int main(int argc, char** argv) {
          timer.resume();
 
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-         auto perspective = camera.getPerspective();
-         auto view = camera.getLookAt();
-
-         stack.push(perspective * view);
-
-         program->setUniformVariable3f("uCameraPosition",
-          glm::value_ptr(camera.getPosition()), 1);
-
-         program->setUniformVariable3f("uLights[0].position",
-          glm::value_ptr(lights[0].getPosition()), 1);
-         program->setUniformVariable4f("uLights[0].diffuse",
-          glm::value_ptr(lights[0].getDiffuse()), 1);
-         program->setUniformVariable1f("uLights[0].specular",
-          glm::value_ptr(lights[0].getSpecular()), 1);
-
-         program->setUniformVariable3f("uLights[1].position",
-          glm::value_ptr(lights[1].getPosition()), 1);
-         program->setUniformVariable4f("uLights[1].diffuse",
-          glm::value_ptr(lights[1].getDiffuse()), 1);
-         program->setUniformVariable1f("uLights[1].specular",
-          glm::value_ptr(lights[1].getSpecular()), 1);
-
-         program->use();
-
-         mesh.render(*program, stack);
-
-         stack.pop(); // view, perspective
-
+         render(camera, lightManager, program, mesh, stack);
          window.swapBuffers();
       }
 
@@ -168,7 +117,7 @@ int main(int argc, char** argv) {
       }
    }
 
-   mesh.teardown();
+   mesh->teardown();
    glUseProgram(0);
 
    return 0;
@@ -205,4 +154,68 @@ Window initializeOpenGl() {
    glDepthFunc(GL_LEQUAL);
 
    return window;
+}
+
+std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
+ std::shared_ptr< ShaderProgram >, std::shared_ptr< Mesh > >
+ initializeRender(const boost::filesystem::path& vertexShaderPath,
+ const boost::filesystem::path& fragmentShaderPath,
+ const boost::filesystem::path& meshPath) {
+   ShaderProgram::Shaders shaders = {{
+      std::make_shared< Shader >(vertexShaderPath, GL_VERTEX_SHADER),
+      std::make_shared< Shader >(fragmentShaderPath, GL_FRAGMENT_SHADER),
+   }};
+   for (auto shader : shaders) {
+      // @throws Shader::CompileFailure
+      shader->compile();
+   }
+
+   std::shared_ptr< ShaderProgram > program =
+    std::make_shared< ShaderProgram >(shaders);
+
+   std::shared_ptr< Mesh > mesh = std::make_shared< Mesh >(meshPath);
+   mesh->initialize();
+   mesh->bindAttributes(*program);
+
+   // @throws ShaderProgram::LinkFailure
+   program->link();
+
+   std::shared_ptr< Camera > camera = std::make_shared< Camera >(
+    /* position */ glm::vec3(0.0f, 0.0f, 1.0f),
+    /* forward */ glm::vec3(0.0f, 0.0f, -1.0f),
+    /* up */ glm::vec3(0.0f, 1.0f, 0.0f),
+    /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
+    /* near */ 0.1f, /* far */ 10.0f);
+
+   std::vector< Light > lights = {{
+      Light(
+       /* position */ glm::vec3(1000.0f, 1000.0f, 100.0f),
+       /* diffuse */ glm::vec4(0.6f, 0.3f, 0.3f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(-1000.0f, -1000.0f, 100.0f),
+       /* diffuse */ glm::vec4(0.3f, 0.3f, 0.6f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+   }};
+
+   return std::make_tuple(camera, lights, program, mesh);
+}
+
+void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,
+ std::shared_ptr< ShaderProgram > program, std::shared_ptr< Mesh > mesh,
+ MatrixStack& stack) {
+   auto perspective = camera->getPerspective();
+   auto view = camera->getLookAt();
+   stack.push(perspective * view);
+
+   program->use();
+
+   program->setUniformVariable3f("uCameraPosition",
+    glm::value_ptr(camera->getPosition()), 1);
+
+   lightManager.setUniforms(*program);
+
+   mesh->render(*program, stack);
+
+   stack.pop(); // view, perspective
 }

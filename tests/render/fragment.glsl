@@ -2,15 +2,11 @@
 
 // FRAGMENT SHADER
 
-struct Light {
-   vec3 position;
-   vec4 diffuse;
-   vec4 specular;
-};
+uniform vec3 uLightPosition[8];
+uniform vec4 uLightDiffuse[8];
+uniform vec4 uLightSpecular[8];
 
 uniform vec3 uCameraPosition;
-
-uniform Light uLights[2];
 
 uniform vec4 uDefaultAmbientColor = vec4(vec3(0.4), 1.0);
 uniform vec4 uDefaultDiffuseColor = vec4(vec3(0.7), 1.0);
@@ -38,7 +34,7 @@ void main() {
 
    oColor = ambientColor;
    for (int i = 0; i < 2; ++i) {
-      vec3 L = normalize(uLights[i].position - vPosition);
+      vec3 L = normalize(uLightPosition[i] - vPosition);
       vec3 R = normalize(-reflect(L, vNormal));
       vec3 V = normalize(vPosition - uCameraPosition);
 
@@ -48,15 +44,15 @@ void main() {
       vec4 diffuse = diffuseColor * nDotL;
       vec4 specular = specularColor * pow(rDotV, reflectivity);
 
-      diffuse.x *= uLights[i].diffuse.x;
-      diffuse.y *= uLights[i].diffuse.y;
-      diffuse.z *= uLights[i].diffuse.z;
-      diffuse.w *= uLights[i].diffuse.w;
+      diffuse.x *= uLightDiffuse[i].x;
+      diffuse.y *= uLightDiffuse[i].y;
+      diffuse.z *= uLightDiffuse[i].z;
+      diffuse.w *= uLightDiffuse[i].w;
 
-      specular.x *= uLights[i].specular.x;
-      specular.y *= uLights[i].specular.y;
-      specular.z *= uLights[i].specular.z;
-      specular.w *= uLights[i].specular.w;
+      specular.x *= uLightSpecular[i].x;
+      specular.y *= uLightSpecular[i].y;
+      specular.z *= uLightSpecular[i].z;
+      specular.w *= uLightSpecular[i].w;
 
       diffuse = clamp(diffuse, 0.0, 1.0);
       specular = clamp(specular, 0.0, 1.0);
