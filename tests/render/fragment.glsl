@@ -8,10 +8,10 @@ uniform vec4 uLightSpecular[8];
 
 uniform vec3 uCameraPosition;
 
-uniform vec4 uDefaultAmbientColor = vec4(vec3(0.4), 1.0);
-uniform vec4 uDefaultDiffuseColor = vec4(vec3(0.7), 1.0);
-uniform vec4 uDefaultSpecularColor = vec4(vec3(0.9), 1.0);
-uniform float uDefaultSpecularReflectivity = 250.0;
+uniform vec4 uAmbientColor;
+uniform vec4 uDiffuseColor;
+uniform vec4 uSpecularColor;
+uniform float uShininess;
 
 in vec3 vPosition;
 in vec3 vNormal;
@@ -25,12 +25,12 @@ void main() {
    vec4 ambientColor;
    vec4 diffuseColor;
    vec4 specularColor;
-   float reflectivity;
+   float shininess;
 
-   ambientColor = uDefaultAmbientColor;
-   diffuseColor = uDefaultDiffuseColor;
-   specularColor = uDefaultSpecularColor;
-   reflectivity = uDefaultSpecularReflectivity;
+   ambientColor = uAmbientColor;
+   diffuseColor = uDiffuseColor;
+   specularColor = uSpecularColor;
+   shininess = uShininess;
 
    oColor = ambientColor;
    for (int i = 0; i < 2; ++i) {
@@ -42,7 +42,7 @@ void main() {
       float rDotV = max(dot(R, V), 0.0);
 
       vec4 diffuse = diffuseColor * nDotL;
-      vec4 specular = specularColor * pow(rDotV, reflectivity);
+      vec4 specular = specularColor * pow(rDotV, shininess);
 
       diffuse.x *= uLightDiffuse[i].x;
       diffuse.y *= uLightDiffuse[i].y;

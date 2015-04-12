@@ -29,11 +29,6 @@
 #include <crash/window/monitor.hpp>
 #include <crash/window/window.hpp>
 
-static const glm::vec4 defaultAmbientColor = glm::vec4(glm::vec3(0.4f), 1.0f);
-static const glm::vec4 defaultDiffuseColor = glm::vec4(glm::vec3(0.7f), 1.0f);
-static const glm::vec4 defaultSpecularColor = glm::vec4(glm::vec3(0.9f), 1.0f);
-static const float defaultSpecularReflectivity = 250.0f;
-
 using namespace crash::math;
 using namespace crash::render;
 using namespace crash::space;
@@ -86,19 +81,10 @@ int main(int argc, char** argv) {
    program->createUniformVariable("uCameraPosition");
    program->createUniformVariable("uMvpMatrix");
 
-   program->createUniformVariable("uDefaultAmbientColor");
-   program->createUniformVariable("uDefaultDiffuseColor");
-   program->createUniformVariable("uDefaultSpecularColor");
-   program->createUniformVariable("uDefaultSpecularReflectivity");
-
-   program->setUniformVariable4f("uDefaultAmbientColor",
-    glm::value_ptr(defaultAmbientColor), 1);
-   program->setUniformVariable4f("uDefaultDiffuseColor",
-    glm::value_ptr(defaultDiffuseColor), 1);
-   program->setUniformVariable4f("uDefaultSpecularColor",
-    glm::value_ptr(defaultSpecularColor), 1);
-   program->setUniformVariable1f("uDefaultSpecularReflectivity",
-    &defaultSpecularReflectivity, 1);
+   program->createUniformVariable("uAmbientColor");
+   program->createUniformVariable("uDiffuseColor");
+   program->createUniformVariable("uSpecularColor");
+   program->createUniformVariable("uShininess");
 
    boost::timer::cpu_timer timer;
    const boost::timer::nanosecond_type interval = 10E9 / 60.0f;
@@ -215,7 +201,9 @@ void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,
 
    lightManager.setUniforms(*program);
 
-   mesh->render(*program, stack);
+   Mesh::VariableSignature sig("uMvpMatrix", "uAmbientColor", "uDiffuseColor",
+    "uSpecularColor", "uShininess");
+   mesh->render(*program, sig, stack);
 
    stack.pop(); // view, perspective
 }

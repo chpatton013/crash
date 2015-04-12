@@ -26,6 +26,27 @@ class ShaderProgram;
 
 class Mesh : public math::Transformable {
 public:
+   struct SceneImportFailure {
+      SceneImportFailure(const std::string& error);
+      std::string error;
+   };
+
+   struct VariableSignature {
+      VariableSignature(const std::string& transform,
+        const std::string& ambient, const std::string& diffuse,
+        const std::string& specular, const std::string& shininess);
+      std::string transform;
+      std::string ambient;
+      std::string diffuse;
+      std::string specular;
+      std::string shininess;
+   };
+
+   static const glm::vec4 defaultAmbientColor;
+   static const glm::vec4 defaultDiffuseColor;
+   static const glm::vec4 defaultSpecularColor;
+   static const float defaultShininess;
+
    Mesh(const Mesh& mesh);
    Mesh(const boost::filesystem::path& path);
    virtual ~Mesh();
@@ -52,28 +73,28 @@ public:
    void teardown();
 
    void bindAttributes(const ShaderProgram& program) const;
-   void render(const ShaderProgram& program, MatrixStack& matrixStack);
-
-   struct SceneImportFailure {
-      SceneImportFailure(const std::string& error);
-      std::string error;
-   };
+   void render(const ShaderProgram& program, const VariableSignature& sig,
+    MatrixStack& matrixStack);
 
 private:
    struct Component {
       Component(const Component& component);
-      Component(const aiMesh* mesh, const GLuint& vao, const GLuint& vbo,
-       const GLuint& ibo);
+      Component(const aiMesh* mesh, const aiMaterial* material,
+       const GLuint& vao,
+       const GLuint& vbo, const GLuint& ibo);
 
       void generateVertexArray();
       void generateVertexBuffer();
       void generateIndexBuffer();
 
       void bindAttributes(const ShaderProgram& program) const;
-      void render(const ShaderProgram& program,
+      void render(const ShaderProgram& program, const VariableSignature& sig,
        const glm::mat4& transform) const;
+      std::tuple< glm::vec4, glm::vec4, glm::vec4, float >
+       getMaterialProperties() const;
 
       const aiMesh* mesh;
+      const aiMaterial* material;
       GLuint vao;
       GLuint vbo;
       GLuint ibo;
@@ -118,8 +139,8 @@ private:
    void allocateBuffers();
    void releaseBuffers();
 
-   void renderNode(const ShaderProgram& program, MatrixStack& matrixStack,
-    const aiNode* node) const;
+   void renderNode(const ShaderProgram& program, const VariableSignature& sig,
+     MatrixStack& matrixStack, const aiNode* node) const;
 
    boost::filesystem::path _path;
    const aiScene* _scene;

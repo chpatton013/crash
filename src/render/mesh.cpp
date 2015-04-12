@@ -12,8 +12,20 @@
 using namespace crash::math;
 using namespace crash::render;
 
+/* static */ const glm::vec4 Mesh::defaultAmbientColor = glm::vec4(glm::vec3(0.4f), 1.0f);
+/* static */ const glm::vec4 Mesh::defaultDiffuseColor = glm::vec4(glm::vec3(0.7f), 1.0f);
+/* static */ const glm::vec4 Mesh::defaultSpecularColor = glm::vec4(glm::vec3(0.9f), 1.0f);
+/* static */ const float Mesh::defaultShininess = 250.0f;
+
 Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
    error(error)
+{}
+
+Mesh::VariableSignature::VariableSignature(const std::string& transform,
+  const std::string& ambient, const std::string& diffuse,
+  const std::string& specular, const std::string& shininess) :
+   transform(transform), ambient(ambient), diffuse(diffuse),
+    specular(specular), shininess(shininess)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,9 +102,10 @@ void Mesh::bindAttributes(const ShaderProgram& program) const {
    }
 }
 
-void Mesh::render(const ShaderProgram& program, MatrixStack& matrixStack) {
+void Mesh::render(const ShaderProgram& program, const VariableSignature& sig,
+ MatrixStack& matrixStack) {
    matrixStack.push(this->getTransform());
-   this->renderNode(program, matrixStack, this->_scene->mRootNode);
+   this->renderNode(program, sig, matrixStack, this->_scene->mRootNode);
    matrixStack.pop();
 }
 
@@ -173,12 +186,14 @@ void Mesh::releaseScene() {
 
 void Mesh::buildComponents() {
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
-      auto mesh = this->_scene->mMeshes[i];
-      auto vao = this->_vaos[i];
-      auto vbo = this->_vbos[i];
-      auto ibo = this->_ibos[i];
+      aiMesh* mesh = this->_scene->mMeshes[i];
+      aiMaterial* material = this->_scene->mMaterials[mesh->mMaterialIndex];
+      GLuint vao = this->_vaos[i];
+      GLuint vbo = this->_vbos[i];
+      GLuint ibo = this->_ibos[i];
+
       this->_components.insert(std::make_pair(mesh,
-       Component(mesh, vao, vbo, ibo)));
+       Component(mesh, material, vao, vbo, ibo)));
    }
 }
 
@@ -215,7 +230,8 @@ void Mesh::releaseBuffers() {
    glDeleteBuffers(this->_ibos.size(), this->_ibos.data());
 }
 
-void Mesh::renderNode(const ShaderProgram& program, MatrixStack& matrixStack,
+void Mesh::renderNode(const ShaderProgram& program,
+ const VariableSignature& sig, MatrixStack& matrixStack,
  const aiNode* node) const {
    auto m = node->mTransformation;
    glm::mat4 transform = glm::mat4(
@@ -232,12 +248,12 @@ void Mesh::renderNode(const ShaderProgram& program, MatrixStack& matrixStack,
       auto itr = this->_components.find(mesh);
       if (itr != this->_components.end()) {
          auto component = itr->second;
-         component.render(program, matrixStack.top());
+         component.render(program, sig, matrixStack.top());
       }
    }
 
    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-      this->renderNode(program, matrixStack, node->mChildren[i]);
+      this->renderNode(program, sig, matrixStack, node->mChildren[i]);
    }
 
    matrixStack.pop();
@@ -248,12 +264,16 @@ void Mesh::renderNode(const ShaderProgram& program, MatrixStack& matrixStack,
 ////////////////////////////////////////////////////////////////////////////////
 
 Mesh::Component::Component(const Component& component) :
-   mesh(component.mesh), vao(component.vao), vbo(component.vbo), ibo(component.ibo)
+   mesh(component.mesh), material(component.material),
+    vao(component.vao), vbo(component.vbo),
+    ibo(component.ibo)
 {}
 
-Mesh::Component::Component(const aiMesh* mesh, const GLuint& vao,
- const GLuint& vbo, const GLuint& ibo) :
-   mesh(mesh), vao(vao), vbo(vbo), ibo(ibo)
+Mesh::Component::Component(const aiMesh* mesh, const aiMaterial* material,
+ const GLuint& vao, const GLuint& vbo,
+ const GLuint& ibo) :
+   mesh(mesh), material(material),
+    vao(vao), vbo(vbo), ibo(ibo)
 {
    this->generateVertexBuffer();
    this->generateIndexBuffer();
@@ -334,8 +354,18 @@ void Mesh::Component::bindAttributes(const ShaderProgram& program) const {
 }
 
 void Mesh::Component::render(const ShaderProgram& program,
- const glm::mat4& transform) const {
-   program.setUniformVariableMatrix4("uMvpMatrix", glm::value_ptr(transform), 1);
+ const VariableSignature& sig, const glm::mat4& transform) const {
+   program.setUniformVariableMatrix4(sig.transform, glm::value_ptr(transform), 1);
+
+   glm::vec4 ambient, diffuse, specular;
+   float shininess;
+   std::tie(ambient, diffuse, specular, shininess) =
+    this->getMaterialProperties();
+
+   program.setUniformVariable4f(sig.ambient, glm::value_ptr(ambient), 1);
+   program.setUniformVariable4f(sig.diffuse, glm::value_ptr(diffuse), 1);
+   program.setUniformVariable4f(sig.specular, glm::value_ptr(specular), 1);
+   program.setUniformVariable1f(sig.shininess, &shininess, 1);
 
    glBindVertexArray(this->vao);
    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
@@ -343,6 +373,52 @@ void Mesh::Component::render(const ShaderProgram& program,
 
    glDrawElements(GL_TRIANGLES, this->mesh->mNumFaces * 3, GL_UNSIGNED_INT,
     reinterpret_cast< const GLvoid* >(0));
+}
+
+std::tuple< glm::vec4, glm::vec4, glm::vec4, float >
+ Mesh::Component::getMaterialProperties() const {
+   glm::vec4 ambient, diffuse, specular;
+   float shininess;
+
+   if (this->material == nullptr) {
+      ambient = Mesh::defaultAmbientColor;
+      diffuse = Mesh::defaultDiffuseColor;
+      specular = Mesh::defaultSpecularColor;
+      shininess = Mesh::defaultShininess;
+   } else {
+      aiColor4D aiAmbient(0.0f, 0.0f, 0.0f, 1.0f);
+      this->material->Get(AI_MATKEY_COLOR_AMBIENT, aiAmbient);
+      if (aiAmbient.IsBlack()) {
+         ambient = Mesh::defaultAmbientColor;
+      } else {
+         ambient = glm::vec4(aiAmbient.r, aiAmbient.g, aiAmbient.g, aiAmbient.a);
+      }
+
+      aiColor4D aiDiffuse(0.0f, 0.0f, 0.0f, 1.0f);
+      this->material->Get(AI_MATKEY_COLOR_DIFFUSE, aiDiffuse);
+      if (aiDiffuse.IsBlack()) {
+         diffuse = Mesh::defaultDiffuseColor;
+      } else {
+         diffuse = glm::vec4(aiDiffuse.r, aiDiffuse.g, aiDiffuse.g, aiDiffuse.a);
+      }
+
+      aiColor4D aiSpecular(0.0f, 0.0f, 0.0f, 1.0f);
+      this->material->Get(AI_MATKEY_COLOR_SPECULAR, aiSpecular);
+      if (aiSpecular.IsBlack()) {
+         specular = Mesh::defaultSpecularColor;
+      } else {
+         specular = glm::vec4(aiSpecular.r, aiSpecular.g, aiSpecular.g,
+          aiSpecular.a);
+      }
+
+      shininess = 0.0f;
+      this->material->Get(AI_MATKEY_SHININESS, shininess);
+      if (shininess == 0.0f) {
+         shininess = Mesh::defaultShininess;
+      }
+   }
+
+   return std::make_tuple(ambient, diffuse, specular, shininess);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
