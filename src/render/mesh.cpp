@@ -202,7 +202,7 @@ void Mesh::buildComponents() {
 
       this->_components.insert(std::make_pair(mesh,
        MeshComponent(mesh, material, GeometryUnit(vao, vbo, ibo),
-       texture, tbo)));
+       TextureUnit(texture, tbo, 0))));
    }
 }
 

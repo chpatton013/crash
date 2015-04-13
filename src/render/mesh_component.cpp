@@ -18,6 +18,11 @@ GeometryUnit::GeometryUnit(const GLuint& vao, const GLuint& vbo,
    vao(vao), vbo(vbo), ibo(ibo)
 {}
 
+TextureUnit::TextureUnit(std::shared_ptr< Texture > texture, const GLuint& tbo,
+ unsigned int index) :
+   texture(texture), tbo(tbo), index(index)
+{}
+
 /* static */ const glm::vec4 MeshComponent::defaultAmbientColor =
  glm::vec4(glm::vec3(0.1f), 1.0f);
 /* static */ const glm::vec4 MeshComponent::defaultDiffuseColor =
@@ -30,15 +35,14 @@ MeshComponent::MeshComponent(const MeshComponent& component) :
    mesh(component.mesh), material(component.material),
     materialUnit(component.materialUnit),
     geometryUnit(component.geometryUnit),
-    texture(component.texture), tbo(component.tbo)
+    textureUnit(component.textureUnit)
 {}
 
 MeshComponent::MeshComponent(const aiMesh* mesh, const aiMaterial* material,
- const GeometryUnit& geometryUnit,
- std::shared_ptr< Texture > texture, const GLuint& tbo) :
+ const GeometryUnit& geometryUnit, const TextureUnit& textureUnit) :
    mesh(mesh), material(material),
     materialUnit(MeshComponent::extractMaterialUnit(material)),
-    geometryUnit(geometryUnit), texture(texture), tbo(tbo)
+    geometryUnit(geometryUnit), textureUnit(textureUnit)
 {
    this->generateVertexBuffer();
    this->generateIndexBuffer();
@@ -107,7 +111,7 @@ void MeshComponent::generateIndexBuffer() {
 
 void MeshComponent::generateTextureBuffer() {
    GLint format;
-   int components = this->texture->getComponents();
+   int components = this->textureUnit.texture->getComponents();
    if (components == 1) {
       format = GL_LUMINANCE;
    } else if (components == 2) {
@@ -118,12 +122,12 @@ void MeshComponent::generateTextureBuffer() {
       format = GL_RGBA;
    }
 
-   glBindTexture(GL_TEXTURE_2D, this->tbo);
+   glBindTexture(GL_TEXTURE_2D, this->textureUnit.tbo);
    glTexImage2D(GL_TEXTURE_2D,
     /* level of detail */ 0, /* texture format */ format,
-    this->texture->getWidth(), this->texture->getHeight(),
+    this->textureUnit.texture->getWidth(), this->textureUnit.texture->getHeight(),
     /* border */ 0, /* data format */ format, /* data type */ GL_FLOAT,
-    this->texture->getData().data());
+    this->textureUnit.texture->getData().data());
    glGenerateMipmap(GL_TEXTURE_2D);
 
    // Repeat with extra space in x-direction.
@@ -164,11 +168,11 @@ void MeshComponent::render(const ShaderProgram& program,
    glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->geometryUnit.ibo);
 
-   GLuint hasTexture = (this->texture != nullptr) ? 1 : 0;
+   GLuint hasTexture = (this->textureUnit.texture != nullptr) ? 1 : 0;
    program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
    if (hasTexture) {
       glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, this->tbo);
+      glBindTexture(GL_TEXTURE_2D, this->textureUnit.tbo);
       int activeTexture = 0;
       program.setUniformVariable1i(vars.diffuse_texture, &activeTexture, 1);
    }

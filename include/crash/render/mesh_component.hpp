@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <assimp/scene.h>
 #include <glm/glm.hpp>
 
@@ -37,6 +38,14 @@ struct GeometryUnit {
    GLuint ibo;
 };
 
+struct TextureUnit {
+   TextureUnit(std::shared_ptr< Texture > texture, const GLuint& tbo,
+    unsigned int index);
+   std::shared_ptr< Texture > texture;
+   GLuint tbo;
+   unsigned int index;
+};
+
 struct MeshComponent {
    static const glm::vec4 defaultAmbientColor;
    static const glm::vec4 defaultDiffuseColor;
@@ -45,8 +54,7 @@ struct MeshComponent {
 
    MeshComponent(const MeshComponent& component);
    MeshComponent(const aiMesh* mesh, const aiMaterial* material,
-    const GeometryUnit& geomtryUnit, std::shared_ptr< Texture > texture,
-    const GLuint& tbo);
+    const GeometryUnit& geomtryUnit, const TextureUnit& textureUnit);
 
    void generateVertexArray();
    void generateVertexBuffer();
@@ -64,8 +72,7 @@ struct MeshComponent {
    const aiMaterial* material;
    MaterialUnit materialUnit;
    GeometryUnit geometryUnit;
-   std::shared_ptr< Texture > texture;
-   GLuint tbo;
+   TextureUnit textureUnit;
 };
 
 } // namespace render
