@@ -24,15 +24,6 @@ Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
    error(error)
 {}
 
-Mesh::VariableSignature::VariableSignature(const std::string& transform,
-  const std::string& ambient, const std::string& diffuse,
-  const std::string& specular, const std::string& shininess,
-  const std::string& hasTexture, const std::string& texture) :
-   transform(transform), ambient(ambient), diffuse(diffuse),
-    specular(specular), shininess(shininess),
-    hasTexture(hasTexture), texture(texture)
-{}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Mesh
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,10 +99,10 @@ void Mesh::bindAttributes(const ShaderProgram& program) const {
    }
 }
 
-void Mesh::render(const ShaderProgram& program, const VariableSignature& sig,
+void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
  MatrixStack& matrixStack) {
    matrixStack.push(this->getTransform());
-   this->renderNode(program, sig, matrixStack, this->_scene->mRootNode);
+   this->renderNode(program, vars, matrixStack, this->_scene->mRootNode);
    matrixStack.pop();
 }
 
@@ -266,7 +257,7 @@ void Mesh::releaseBuffers() {
 }
 
 void Mesh::renderNode(const ShaderProgram& program,
- const VariableSignature& sig, MatrixStack& matrixStack,
+ const UniformVariable& vars, MatrixStack& matrixStack,
  const aiNode* node) const {
    auto m = node->mTransformation;
    glm::mat4 transform = glm::mat4(
@@ -283,12 +274,12 @@ void Mesh::renderNode(const ShaderProgram& program,
       auto itr = this->_components.find(mesh);
       if (itr != this->_components.end()) {
          auto component = itr->second;
-         component.render(program, sig, matrixStack.top());
+         component.render(program, vars, matrixStack.top());
       }
    }
 
    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-      this->renderNode(program, sig, matrixStack, node->mChildren[i]);
+      this->renderNode(program, vars, matrixStack, node->mChildren[i]);
    }
 
    matrixStack.pop();
@@ -430,25 +421,29 @@ void Mesh::Component::bindAttributes(const ShaderProgram& program) const {
 }
 
 void Mesh::Component::render(const ShaderProgram& program,
- const VariableSignature& sig, const glm::mat4& transform) const {
-   program.setUniformVariableMatrix4(sig.transform, glm::value_ptr(transform), 1);
+ const UniformVariable& vars, const glm::mat4& transform) const {
+   program.setUniformVariableMatrix4(vars.transform_matrix,
+    glm::value_ptr(transform), 1);
 
-   program.setUniformVariable4f(sig.ambient, glm::value_ptr(this->ambient), 1);
-   program.setUniformVariable4f(sig.diffuse, glm::value_ptr(this->diffuse), 1);
-   program.setUniformVariable4f(sig.specular, glm::value_ptr(this->specular), 1);
-   program.setUniformVariable1f(sig.shininess, &this->shininess, 1);
+   program.setUniformVariable4f(vars.ambient_color,
+    glm::value_ptr(this->ambient), 1);
+   program.setUniformVariable4f(vars.diffuse_color,
+    glm::value_ptr(this->diffuse), 1);
+   program.setUniformVariable4f(vars.specular_color,
+    glm::value_ptr(this->specular), 1);
+   program.setUniformVariable1f(vars.shininess_value, &this->shininess, 1);
 
    glBindVertexArray(this->vao);
    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ibo);
 
    GLuint hasTexture = (this->texture != nullptr) ? 1 : 0;
-   program.setUniformVariable1ui(sig.hasTexture, &hasTexture, 1);
+   program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
    if (hasTexture) {
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, this->tbo);
       int activeTexture = 0;
-      program.setUniformVariable1i(sig.texture, &activeTexture, 1);
+      program.setUniformVariable1i(vars.diffuse_texture, &activeTexture, 1);
    }
 
    if (this->twoSided) {

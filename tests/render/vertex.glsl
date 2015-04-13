@@ -2,7 +2,7 @@
 
 // VERTEX SHADER
 
-uniform mat4 uMvpMatrix;
+uniform mat4 uTransformMatrix;
 
 in vec3 aPosition;
 in vec3 aNormal;
@@ -23,5 +23,5 @@ void main() {
    vBitangent = aBitangent;
    vTexCoord = aTexCoord;
 
-   gl_Position = uMvpMatrix * vec4(aPosition, 1.0);
+   gl_Position = uTransformMatrix * vec4(aPosition, 1.0);
 }

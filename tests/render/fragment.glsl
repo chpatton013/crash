@@ -11,9 +11,9 @@ uniform vec3 uCameraPosition;
 uniform vec4 uAmbientColor;
 uniform vec4 uDiffuseColor;
 uniform vec4 uSpecularColor;
-uniform float uShininess;
-uniform bool uHasTexture;
-uniform sampler2D uTexture;
+uniform float uShininessValue;
+uniform bool uHasDiffuseTexture;
+uniform sampler2D uDiffuseTexture;
 
 in vec3 vPosition;
 in vec3 vNormal;
@@ -23,46 +23,64 @@ in vec2 vTexCoord;
 
 out vec4 oColor;
 
-void main() {
-   vec4 ambientColor;
-   vec4 diffuseColor;
-   vec4 specularColor;
-   float shininess;
+vec3 getPosition() {
+   return vPosition;
+}
 
-   ambientColor = uAmbientColor;
-   if (uHasTexture) {
-      diffuseColor = texture(uTexture, vTexCoord);
+vec3 getNormal() {
+   return vNormal;
+}
+
+vec4 getAmbientColor() {
+   return uAmbientColor;
+}
+
+vec4 getDiffuseColor() {
+   if (uHasDiffuseTexture) {
+      return texture(uDiffuseTexture, vTexCoord);
    } else {
-      diffuseColor = uDiffuseColor;
+      return uDiffuseColor;
    }
-   specularColor = uSpecularColor;
-   shininess = uShininess;
+}
+
+vec4 getSpecularColor() {
+   return uSpecularColor;
+}
+
+float getShininessValue() {
+   return uShininessValue;
+}
+
+vec4 getColorForLight(vec3 P, vec3 N, vec4 kD, vec4 kS, float n, int i) {
+   vec3 lP = uLightPosition[i];
+   vec4 lD = uLightDiffuse[i];
+   vec4 lS = uLightSpecular[i];
+
+   vec3 L = normalize(lP - P);
+   vec3 R = normalize(-reflect(L, N));
+   vec3 V = normalize(P - uCameraPosition);
+
+   float nDotL = max(dot(N, L), 0.0);
+   float rDotV = max(dot(R, V), 0.0);
+
+   vec4 diffuse = kD * nDotL * lD;
+   vec4 specular = kS * pow(rDotV, n) * lS;
+
+   return clamp(diffuse + specular, 0.0, 1.0);
+}
+
+void main() {
+   vec3 position = getPosition();
+   vec3 normal = getNormal();
+   vec4 ambientColor = getAmbientColor();
+   vec4 diffuseColor = getDiffuseColor();
+   vec4 specularColor = getSpecularColor();
+   float shininessValue = getShininessValue();
 
    oColor = ambientColor;
    for (int i = 0; i < 8; ++i) {
-      vec3 L = normalize(uLightPosition[i] - vPosition);
-      vec3 R = normalize(-reflect(L, vNormal));
-      vec3 V = normalize(vPosition - uCameraPosition);
-
-      float nDotL = max(dot(vNormal, L), 0.0);
-      float rDotV = max(dot(R, V), 0.0);
-
-      vec4 diffuse = diffuseColor * nDotL;
-      vec4 specular = specularColor * pow(rDotV, shininess);
-
-      diffuse.x *= uLightDiffuse[i].x;
-      diffuse.y *= uLightDiffuse[i].y;
-      diffuse.z *= uLightDiffuse[i].z;
-      diffuse.w *= uLightDiffuse[i].w;
-
-      specular.x *= uLightSpecular[i].x;
-      specular.y *= uLightSpecular[i].y;
-      specular.z *= uLightSpecular[i].z;
-      specular.w *= uLightSpecular[i].w;
-
-      diffuse = clamp(diffuse, 0.0, 1.0);
-      specular = clamp(specular, 0.0, 1.0);
-
-      oColor += clamp(diffuse + specular, 0.0, 1.0);
+      oColor += getColorForLight(position, normal, diffuseColor, specularColor,
+       shininessValue, i);
    }
+   oColor = clamp(oColor, 0.0, 1.0);
 }

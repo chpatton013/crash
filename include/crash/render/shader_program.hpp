@@ -18,6 +18,20 @@
 namespace crash {
 namespace render {
 
+struct UniformVariable {
+   std::string transform_matrix;
+   std::string camera_position;
+   std::string light_position;
+   std::string light_diffuse;
+   std::string light_specular;
+   std::string ambient_color;
+   std::string diffuse_color;
+   std::string specular_color;
+   std::string shininess_value;
+   std::string has_diffuse_texture;
+   std::string diffuse_texture;
+};
+
 class ShaderProgram {
 public:
    typedef std::vector< std::shared_ptr< Shader > > Shaders;

@@ -25,26 +25,13 @@ namespace render {
 
 class MatrixStack;
 class ShaderProgram;
+struct UniformVariable;
 
 class Mesh : public math::Transformable {
 public:
    struct SceneImportFailure {
       SceneImportFailure(const std::string& error);
       std::string error;
-   };
-
-   struct VariableSignature {
-      VariableSignature(const std::string& transform,
-        const std::string& ambient, const std::string& diffuse,
-        const std::string& specular, const std::string& shininess,
-        const std::string& hasTexture, const std::string& texture);
-      std::string transform;
-      std::string ambient;
-      std::string diffuse;
-      std::string specular;
-      std::string shininess;
-      std::string hasTexture;
-      std::string texture;
    };
 
    static const glm::vec4 defaultAmbientColor;
@@ -78,7 +65,7 @@ public:
    void teardown();
 
    void bindAttributes(const ShaderProgram& program) const;
-   void render(const ShaderProgram& program, const VariableSignature& sig,
+   void render(const ShaderProgram& program, const UniformVariable& vars,
     MatrixStack& matrixStack);
 
 private:
@@ -94,7 +81,7 @@ private:
       void generateTextureBuffer();
 
       void bindAttributes(const ShaderProgram& program) const;
-      void render(const ShaderProgram& program, const VariableSignature& sig,
+      void render(const ShaderProgram& program, const UniformVariable& vars,
        const glm::mat4& transform) const;
       void setMaterialProperties();
 
@@ -152,7 +139,7 @@ private:
    void allocateBuffers();
    void releaseBuffers();
 
-   void renderNode(const ShaderProgram& program, const VariableSignature& sig,
+   void renderNode(const ShaderProgram& program, const UniformVariable& vars,
      MatrixStack& matrixStack, const aiNode* node) const;
 
    boost::filesystem::path _path;
