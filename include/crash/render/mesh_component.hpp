@@ -20,6 +20,23 @@ class Texture;
 struct AttributeVariable;
 struct UniformVariable;
 
+struct MaterialUnit {
+   MaterialUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
+    const glm::vec4& specular, float shininess, bool twoSided);
+   glm::vec4 ambient;
+   glm::vec4 diffuse;
+   glm::vec4 specular;
+   float shininess;
+   bool twoSided;
+};
+
+struct GeometryUnit {
+   GeometryUnit(const GLuint& vao, const GLuint& vbo, const GLuint& ibo);
+   GLuint vao;
+   GLuint vbo;
+   GLuint ibo;
+};
+
 struct MeshComponent {
    static const glm::vec4 defaultAmbientColor;
    static const glm::vec4 defaultDiffuseColor;
@@ -28,8 +45,8 @@ struct MeshComponent {
 
    MeshComponent(const MeshComponent& component);
    MeshComponent(const aiMesh* mesh, const aiMaterial* material,
-    std::shared_ptr< Texture > texture, const GLuint& vao,
-    const GLuint& vbo, const GLuint& ibo, const GLuint& tbo);
+    const GeometryUnit& geomtryUnit, std::shared_ptr< Texture > texture,
+    const GLuint& tbo);
 
    void generateVertexArray();
    void generateVertexBuffer();
@@ -40,19 +57,14 @@ struct MeshComponent {
     const AttributeVariable& vars) const;
    void render(const ShaderProgram& program, const UniformVariable& vars,
     const glm::mat4& transform) const;
-   void setMaterialProperties();
+
+   static MaterialUnit extractMaterialUnit(const aiMaterial* material);
 
    const aiMesh* mesh;
    const aiMaterial* material;
-   glm::vec4 ambient;
-   glm::vec4 diffuse;
-   glm::vec4 specular;
-   float shininess;
-   bool twoSided;
+   MaterialUnit materialUnit;
+   GeometryUnit geometryUnit;
    std::shared_ptr< Texture > texture;
-   GLuint vao;
-   GLuint vbo;
-   GLuint ibo;
    GLuint tbo;
 };
 

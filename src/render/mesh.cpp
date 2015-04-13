@@ -134,6 +134,15 @@ void Mesh::importScene() {
    this->normalizeScene();
 }
 
+void Mesh::releaseScene() {
+   if (this->_scene == nullptr) {
+      return;
+   }
+
+   aiReleaseImport(this->_scene);
+   this->_scene = nullptr;
+}
+
 void Mesh::importTextures() {
    for (unsigned int i = 0; i < this->_scene->mNumMaterials; ++i) {
       aiMaterial* mat = this->_scene->mMaterials[i];
@@ -175,15 +184,6 @@ void Mesh::normalizeScene() {
    this->setSize(glm::vec3(scale));
 }
 
-void Mesh::releaseScene() {
-   if (this->_scene == nullptr) {
-      return;
-   }
-
-   aiReleaseImport(this->_scene);
-   this->_scene = nullptr;
-}
-
 void Mesh::buildComponents() {
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
       aiMesh* mesh = this->_scene->mMeshes[i];
@@ -201,7 +201,8 @@ void Mesh::buildComponents() {
       GLuint tbo = this->_tbos[mesh->mMaterialIndex];
 
       this->_components.insert(std::make_pair(mesh,
-       MeshComponent(mesh, material, texture, vao, vbo, ibo, tbo)));
+       MeshComponent(mesh, material, GeometryUnit(vao, vbo, ibo),
+       texture, tbo)));
    }
 }
 

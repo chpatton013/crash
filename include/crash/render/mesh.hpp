@@ -63,6 +63,7 @@ public:
 
    void bindAttributes(const ShaderProgram& program,
     const AttributeVariable& vars) const;
+
    void render(const ShaderProgram& program, const UniformVariable& vars,
     MatrixStack& matrixStack);
 

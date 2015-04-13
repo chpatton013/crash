@@ -7,6 +7,17 @@
 
 using namespace crash::render;
 
+MaterialUnit::MaterialUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
+ const glm::vec4& specular, float shininess, bool twoSided) :
+   ambient(ambient), diffuse(diffuse), specular(specular),
+   shininess(shininess), twoSided(twoSided)
+{}
+
+GeometryUnit::GeometryUnit(const GLuint& vao, const GLuint& vbo,
+ const GLuint& ibo) :
+   vao(vao), vbo(vbo), ibo(ibo)
+{}
+
 /* static */ const glm::vec4 MeshComponent::defaultAmbientColor =
  glm::vec4(glm::vec3(0.1f), 1.0f);
 /* static */ const glm::vec4 MeshComponent::defaultDiffuseColor =
@@ -17,34 +28,27 @@ using namespace crash::render;
 
 MeshComponent::MeshComponent(const MeshComponent& component) :
    mesh(component.mesh), material(component.material),
-    ambient(component.ambient), diffuse(component.diffuse),
-    specular(component.specular), shininess(component.shininess),
-    twoSided(component.twoSided), texture(component.texture),
-    vao(component.vao), vbo(component.vbo), ibo(component.ibo),
-    tbo(component.tbo)
+    materialUnit(component.materialUnit),
+    geometryUnit(component.geometryUnit),
+    texture(component.texture), tbo(component.tbo)
 {}
 
 MeshComponent::MeshComponent(const aiMesh* mesh, const aiMaterial* material,
- std::shared_ptr< Texture > texture, const GLuint& vao, const GLuint& vbo,
- const GLuint& ibo, const GLuint& tbo) :
+ const GeometryUnit& geometryUnit,
+ std::shared_ptr< Texture > texture, const GLuint& tbo) :
    mesh(mesh), material(material),
-    ambient(MeshComponent::defaultAmbientColor),
-    diffuse(MeshComponent::defaultDiffuseColor),
-    specular(MeshComponent::defaultSpecularColor),
-    shininess(MeshComponent::defaultShininess),
-    twoSided(false), texture(texture),
-    vao(vao), vbo(vbo), ibo(ibo), tbo(tbo)
+    materialUnit(MeshComponent::extractMaterialUnit(material)),
+    geometryUnit(geometryUnit), texture(texture), tbo(tbo)
 {
    this->generateVertexBuffer();
    this->generateIndexBuffer();
    this->generateVertexArray();
    this->generateTextureBuffer();
-   this->setMaterialProperties();
 }
 
 void MeshComponent::generateVertexArray() {
-   glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-   glBindVertexArray(this->vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
+   glBindVertexArray(this->geometryUnit.vao);
 
    Vertex::defineAttributes();
 }
@@ -80,7 +84,7 @@ void MeshComponent::generateVertexBuffer() {
        textureCoordinates));
    }
 
-   glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
+   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(),
     vertices.data(), GL_STATIC_DRAW);
 }
@@ -96,7 +100,7 @@ void MeshComponent::generateIndexBuffer() {
       }
    }
 
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ibo);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->geometryUnit.ibo);
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * faces.size(),
     faces.data(), GL_STATIC_DRAW);
 }
@@ -136,8 +140,8 @@ void MeshComponent::generateTextureBuffer() {
 
 void MeshComponent::bindAttributes(const ShaderProgram& program,
  const AttributeVariable& vars) const {
-   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-   glBindVertexArray(this->vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
+   glBindVertexArray(this->geometryUnit.vao);
 
    Vertex::bindAttributes(program, vars);
 }
@@ -148,16 +152,17 @@ void MeshComponent::render(const ShaderProgram& program,
     glm::value_ptr(transform), 1);
 
    program.setUniformVariable4f(vars.ambient_color,
-    glm::value_ptr(this->ambient), 1);
+    glm::value_ptr(this->materialUnit.ambient), 1);
    program.setUniformVariable4f(vars.diffuse_color,
-    glm::value_ptr(this->diffuse), 1);
+    glm::value_ptr(this->materialUnit.diffuse), 1);
    program.setUniformVariable4f(vars.specular_color,
-    glm::value_ptr(this->specular), 1);
-   program.setUniformVariable1f(vars.shininess_value, &this->shininess, 1);
+    glm::value_ptr(this->materialUnit.specular), 1);
+   program.setUniformVariable1f(vars.shininess_value,
+    &this->materialUnit.shininess, 1);
 
-   glBindVertexArray(this->vao);
-   glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ibo);
+   glBindVertexArray(this->geometryUnit.vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->geometryUnit.ibo);
 
    GLuint hasTexture = (this->texture != nullptr) ? 1 : 0;
    program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
@@ -168,7 +173,7 @@ void MeshComponent::render(const ShaderProgram& program,
       program.setUniformVariable1i(vars.diffuse_texture, &activeTexture, 1);
    }
 
-   if (this->twoSided) {
+   if (this->materialUnit.twoSided) {
       glDisable(GL_CULL_FACE);
    } else {
       glEnable(GL_CULL_FACE);
@@ -178,39 +183,46 @@ void MeshComponent::render(const ShaderProgram& program,
     reinterpret_cast< const GLvoid* >(0));
 }
 
-void MeshComponent::setMaterialProperties() {
-   if (this->material == nullptr) {
-      return;
+/* static */ MaterialUnit MeshComponent::extractMaterialUnit(
+ const aiMaterial* material) {
+   glm::vec4 ambient = MeshComponent::defaultAmbientColor;
+   glm::vec4 diffuse = MeshComponent::defaultDiffuseColor;
+   glm::vec4 specular = MeshComponent::defaultSpecularColor;
+   float shininess = MeshComponent::defaultShininess;
+   bool twoSided = false;
+
+   if (material == nullptr) {
+      return MaterialUnit(ambient, diffuse, specular, shininess, twoSided);
    }
 
    aiColor4D aiAmbient(0.0f, 0.0f, 0.0f, 1.0f);
-   this->material->Get(AI_MATKEY_COLOR_AMBIENT, aiAmbient);
+   material->Get(AI_MATKEY_COLOR_AMBIENT, aiAmbient);
    if (!aiAmbient.IsBlack()) {
-      this->ambient = glm::vec4(aiAmbient.r, aiAmbient.g, aiAmbient.g,
-       aiAmbient.a);
+      ambient = glm::vec4(aiAmbient.r, aiAmbient.g, aiAmbient.g, aiAmbient.a);
    }
 
    aiColor4D aiDiffuse(0.0f, 0.0f, 0.0f, 1.0f);
-   this->material->Get(AI_MATKEY_COLOR_DIFFUSE, aiDiffuse);
+   material->Get(AI_MATKEY_COLOR_DIFFUSE, aiDiffuse);
    if (!aiDiffuse.IsBlack()) {
-      this->diffuse = glm::vec4(aiDiffuse.r, aiDiffuse.g, aiDiffuse.g,
-       aiDiffuse.a);
+      diffuse = glm::vec4(aiDiffuse.r, aiDiffuse.g, aiDiffuse.g, aiDiffuse.a);
    }
 
    aiColor4D aiSpecular(0.0f, 0.0f, 0.0f, 1.0f);
-   this->material->Get(AI_MATKEY_COLOR_SPECULAR, aiSpecular);
+   material->Get(AI_MATKEY_COLOR_SPECULAR, aiSpecular);
    if (!aiSpecular.IsBlack()) {
-      this->specular = glm::vec4(aiSpecular.r, aiSpecular.g, aiSpecular.g,
+      specular = glm::vec4(aiSpecular.r, aiSpecular.g, aiSpecular.g,
        aiSpecular.a);
    }
 
-   float shininess = 0.0f;
-   this->material->Get(AI_MATKEY_SHININESS, shininess);
-   if (shininess != 0.0f) {
-      this->shininess = shininess;
+   float aiShininess = 0.0f;
+   material->Get(AI_MATKEY_SHININESS, aiShininess);
+   if (aiShininess != 0.0f) {
+      shininess = aiShininess;
    }
 
-   int iTwoSided;
-   this->material->Get(AI_MATKEY_TWOSIDED, iTwoSided);
-   this->twoSided = (iTwoSided != 0);
+   int aiTwoSided;
+   material->Get(AI_MATKEY_TWOSIDED, aiTwoSided);
+   twoSided = (aiTwoSided != 0);
+
+   return MaterialUnit(ambient, diffuse, specular, shininess, twoSided);
 }
