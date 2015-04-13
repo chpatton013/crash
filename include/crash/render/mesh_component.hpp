@@ -17,6 +17,7 @@ namespace render {
 class MatrixStack;
 class ShaderProgram;
 class Texture;
+struct AttributeVariable;
 struct UniformVariable;
 
 struct MeshComponent {
@@ -35,7 +36,8 @@ struct MeshComponent {
    void generateIndexBuffer();
    void generateTextureBuffer();
 
-   void bindAttributes(const ShaderProgram& program) const;
+   void bindAttributes(const ShaderProgram& program,
+    const AttributeVariable& vars) const;
    void render(const ShaderProgram& program, const UniformVariable& vars,
     const glm::mat4& transform) const;
    void setMaterialProperties();

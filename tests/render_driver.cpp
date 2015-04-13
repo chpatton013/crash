@@ -36,8 +36,9 @@ using namespace crash::window;
 
 Window initializeOpenGl();
 std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
- std::shared_ptr< ShaderProgram >, UniformVariable, std::shared_ptr< Mesh > >
- initializeRender(const boost::filesystem::path& vertexShaderPath,
+ std::shared_ptr< ShaderProgram >, AttributeVariable, UniformVariable,
+ std::shared_ptr< Mesh > > initializeRender(
+ const boost::filesystem::path& vertexShaderPath,
  const boost::filesystem::path& fragmentShaderPath,
  const boost::filesystem::path& meshPath);
 void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,
@@ -58,10 +59,12 @@ int main(int argc, char** argv) {
    std::shared_ptr< Camera > camera;
    std::vector< Light > lights;
    std::shared_ptr< ShaderProgram > program;
-   UniformVariable vars;
+   AttributeVariable attributes;
+   UniformVariable uniforms;
    std::shared_ptr< Mesh > mesh;
    try {
-      std::tie(camera, lights, program, vars, mesh) = initializeRender(
+      std::tie(camera, lights, program, attributes, uniforms, mesh) =
+       initializeRender(
        boost::filesystem::path("tests/render/vertex.glsl"),
        boost::filesystem::path("tests/render/fragment.glsl"),
        boost::filesystem::path(file));
@@ -73,21 +76,21 @@ int main(int argc, char** argv) {
       return 3;
    }
 
-   LightManager lightManager = LightManager(vars.light_position,
-    vars.light_diffuse, vars.light_specular, lights);
+   LightManager lightManager = LightManager(uniforms.light_position,
+    uniforms.light_diffuse, uniforms.light_specular, lights);
    MatrixStack stack;
 
    lightManager.createUniforms(*program);
-   program->createUniformVariable(vars.camera_position);
-   program->createUniformVariable(vars.transform_matrix);
+   program->createUniformVariable(uniforms.camera_position);
+   program->createUniformVariable(uniforms.transform_matrix);
 
-   program->createUniformVariable(vars.ambient_color);
-   program->createUniformVariable(vars.diffuse_color);
-   program->createUniformVariable(vars.specular_color);
-   program->createUniformVariable(vars.shininess_value);
+   program->createUniformVariable(uniforms.ambient_color);
+   program->createUniformVariable(uniforms.diffuse_color);
+   program->createUniformVariable(uniforms.specular_color);
+   program->createUniformVariable(uniforms.shininess_value);
 
-   program->createUniformVariable(vars.has_diffuse_texture);
-   program->createUniformVariable(vars.diffuse_texture);
+   program->createUniformVariable(uniforms.has_diffuse_texture);
+   program->createUniformVariable(uniforms.diffuse_texture);
 
    boost::timer::cpu_timer timer;
    const boost::timer::nanosecond_type interval = 10E9 / 60.0f;
@@ -96,7 +99,7 @@ int main(int argc, char** argv) {
          timer.resume();
 
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         render(camera, lightManager, program, vars, mesh, stack);
+         render(camera, lightManager, program, uniforms, mesh, stack);
          window.swapBuffers();
       }
 
@@ -145,8 +148,9 @@ Window initializeOpenGl() {
 }
 
 std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
- std::shared_ptr< ShaderProgram >, UniformVariable, std::shared_ptr< Mesh > >
- initializeRender(const boost::filesystem::path& vertexShaderPath,
+ std::shared_ptr< ShaderProgram >, AttributeVariable, UniformVariable,
+ std::shared_ptr< Mesh > > initializeRender(
+ const boost::filesystem::path& vertexShaderPath,
  const boost::filesystem::path& fragmentShaderPath,
  const boost::filesystem::path& meshPath) {
    ShaderProgram::Shaders shaders = {{
@@ -161,15 +165,23 @@ std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
    std::shared_ptr< ShaderProgram > program =
     std::make_shared< ShaderProgram >(shaders);
 
+   AttributeVariable attributes = {
+      "aPosition",
+      "aNormal",
+      "aTangent",
+      "aBitangent",
+      "aTexCoords",
+   };
+
    // @throws Texture::ImportFailure
    std::shared_ptr< Mesh > mesh = std::make_shared< Mesh >(meshPath);
    mesh->initialize();
-   mesh->bindAttributes(*program);
+   mesh->bindAttributes(*program, attributes);
 
    // @throws ShaderProgram::LinkFailure
    program->link();
 
-   UniformVariable vars = {
+   UniformVariable uniforms = {
       "uTransformMatrix",
       "uCameraPosition",
       "uLightPosition",
@@ -225,7 +237,7 @@ std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
        /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
    }};
 
-   return std::make_tuple(camera, lights, program, vars, mesh);
+   return std::make_tuple(camera, lights, program, attributes, uniforms, mesh);
 }
 
 void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,

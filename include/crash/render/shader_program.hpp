@@ -18,6 +18,14 @@
 namespace crash {
 namespace render {
 
+struct AttributeVariable {
+   std::string position;
+   std::string normal;
+   std::string tangent;
+   std::string bitangent;
+   std::string texture_coordinates;
+};
+
 struct UniformVariable {
    std::string transform_matrix;
    std::string camera_position;

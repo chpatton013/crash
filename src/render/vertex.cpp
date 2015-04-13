@@ -1,4 +1,13 @@
+#include <crash/render/shader_program.hpp>
 #include <crash/render/vertex.hpp>
+
+#include <GL/glew.h>
+#include <boost/predef/os.h>
+#ifdef BOOST_OS_MACOS
+#  include <OpenGL/gl.h>
+#else
+#  include <GL/gl.h>
+#endif
 
 using namespace crash::render;
 
@@ -26,16 +35,58 @@ Vertex::Vertex(const aiVector3D& position,
     glm::vec2(textureCoordinates.x, textureCoordinates.y))
 {}
 
+/* static */ void Vertex::defineAttributes() {
+   Vertex::defineAttribute(Vertex::attributeDefinition.position);
+   Vertex::defineAttribute(Vertex::attributeDefinition.normal);
+   Vertex::defineAttribute(Vertex::attributeDefinition.tangent);
+   Vertex::defineAttribute(Vertex::attributeDefinition.bitangent);
+   Vertex::defineAttribute(Vertex::attributeDefinition.texture_coordinates);
+}
+
+/* static */ void Vertex::defineAttribute(Attribute attribute) {
+   glVertexAttribPointer(attribute.index, attribute.width,
+    GL_FLOAT, GL_FALSE, sizeof(Vertex),
+    reinterpret_cast< const GLvoid* >(attribute.offset));
+   glEnableVertexAttribArray(attribute.index);
+}
+
+/* static */ void Vertex::bindAttributes(const ShaderProgram& program,
+ const AttributeVariable& vars) {
+   Vertex::bindAttribute(program, vars.position,
+    Vertex::attributeDefinition.position);
+   Vertex::bindAttribute(program, vars.normal,
+    Vertex::attributeDefinition.normal);
+   Vertex::bindAttribute(program, vars.tangent,
+    Vertex::attributeDefinition.tangent);
+   Vertex::bindAttribute(program, vars.bitangent,
+    Vertex::attributeDefinition.bitangent);
+   Vertex::bindAttribute(program, vars.texture_coordinates,
+    Vertex::attributeDefinition.texture_coordinates);
+}
+
+/* static */ void Vertex::bindAttribute(const ShaderProgram& program,
+ const std::string& var, Attribute attribute) {
+   glBindAttribLocation(program.getHandle(), attribute.index,
+    var.data());
+}
+
 Vertex::Attribute::Attribute(
- unsigned int index, const std::string& name, size_t offset, size_t width) :
-   index(index), name(name), offset(offset), width(width)
+ unsigned int index, size_t offset, size_t width) :
+   index(index), offset(offset), width(width)
 {}
 
-/* static */ std::vector< Vertex::Attribute > Vertex::attributes = {{
-   Attribute(0, "aPosition", offsetof(Vertex, position), 3),
-   Attribute(1, "aNormal", offsetof(Vertex, normal), 3),
-   Attribute(2, "aTangent", offsetof(Vertex, tangent), 3),
-   Attribute(3, "aBitangent", offsetof(Vertex, bitangent), 3),
-   Attribute(4, "aTexCoords", offsetof(Vertex, textureCoordinates), 2),
-}};
+Vertex::AttributeDefinition::AttributeDefinition(
+ Attribute position, Attribute normal,
+ Attribute tangent, Attribute bitangent,
+ Attribute texture_coordinates) :
+ position(position), normal(normal),
+ tangent(tangent), bitangent(bitangent),
+ texture_coordinates(texture_coordinates)
+{}
 
+/* static */ Vertex::AttributeDefinition Vertex::attributeDefinition(
+ Attribute(0, offsetof(Vertex, position), 3),
+ Attribute(1, offsetof(Vertex, normal), 3),
+ Attribute(2, offsetof(Vertex, tangent), 3),
+ Attribute(3, offsetof(Vertex, bitangent), 3),
+ Attribute(4, offsetof(Vertex, textureCoordinates), 2));

@@ -46,12 +46,7 @@ void MeshComponent::generateVertexArray() {
    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
    glBindVertexArray(this->vao);
 
-   for (auto& attribute : Vertex::attributes) {
-      glVertexAttribPointer(attribute.index, attribute.width, GL_FLOAT,
-       GL_FALSE, sizeof(Vertex),
-       reinterpret_cast< const GLvoid* >(attribute.offset));
-      glEnableVertexAttribArray(attribute.index);
-   }
+   Vertex::defineAttributes();
 }
 
 void MeshComponent::generateVertexBuffer() {
@@ -139,13 +134,12 @@ void MeshComponent::generateTextureBuffer() {
     GL_LINEAR_MIPMAP_LINEAR);
 }
 
-void MeshComponent::bindAttributes(const ShaderProgram& program) const {
+void MeshComponent::bindAttributes(const ShaderProgram& program,
+ const AttributeVariable& vars) const {
    glBindBuffer(GL_ARRAY_BUFFER, vbo);
    glBindVertexArray(this->vao);
-   for (auto& attribute : Vertex::attributes) {
-      glBindAttribLocation(program.getHandle(), attribute.index,
-       attribute.name.data());
-   }
+
+   Vertex::bindAttributes(program, vars);
 }
 
 void MeshComponent::render(const ShaderProgram& program,

@@ -81,9 +81,10 @@ void Mesh::teardown() {
    this->releaseBuffers();
 }
 
-void Mesh::bindAttributes(const ShaderProgram& program) const {
+void Mesh::bindAttributes(const ShaderProgram& program,
+ const AttributeVariable& vars) const {
    for (auto itr : this->_components) {
-      itr.second.bindAttributes(program);
+      itr.second.bindAttributes(program, vars);
    }
 }
 
@@ -234,10 +235,6 @@ void Mesh::destroyComponents() {
 }
 
 void Mesh::releaseBuffers() {
-   for (auto& attribute : Vertex::attributes) {
-      glDisableVertexAttribArray(attribute.index);
-   }
-
    glDeleteVertexArrays(this->_vaos.size(), this->_vaos.data());
    glDeleteBuffers(this->_vbos.size(), this->_vbos.data());
    glDeleteBuffers(this->_ibos.size(), this->_ibos.data());

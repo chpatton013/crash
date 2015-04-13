@@ -26,6 +26,7 @@ namespace render {
 
 class MatrixStack;
 class ShaderProgram;
+struct AttributeVariable;
 struct UniformVariable;
 
 class Mesh : public math::Transformable {
@@ -60,7 +61,8 @@ public:
    void initialize();
    void teardown();
 
-   void bindAttributes(const ShaderProgram& program) const;
+   void bindAttributes(const ShaderProgram& program,
+    const AttributeVariable& vars) const;
    void render(const ShaderProgram& program, const UniformVariable& vars,
     MatrixStack& matrixStack);
 
