@@ -85,6 +85,9 @@ int main(int argc, char** argv) {
    program->createUniformVariable("uSpecularColor");
    program->createUniformVariable("uShininess");
 
+   program->createUniformVariable("uHasTexture");
+   program->createUniformVariable("uTexture");
+
    boost::timer::cpu_timer timer;
    const boost::timer::nanosecond_type interval = 10E9 / 60.0f;
    while (!window.shouldClose()) {
@@ -129,7 +132,6 @@ Window initializeOpenGl() {
    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
    // culling
-   glEnable(GL_CULL_FACE);
    glCullFace(GL_BACK);
 
    // depth
@@ -158,6 +160,7 @@ std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
    std::shared_ptr< ShaderProgram > program =
     std::make_shared< ShaderProgram >(shaders);
 
+   // @throws Texture::ImportFailure
    std::shared_ptr< Mesh > mesh = std::make_shared< Mesh >(meshPath);
    mesh->initialize();
    mesh->bindAttributes(*program);
@@ -225,7 +228,7 @@ void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,
    lightManager.setUniforms(*program);
 
    Mesh::VariableSignature sig("uMvpMatrix", "uAmbientColor", "uDiffuseColor",
-    "uSpecularColor", "uShininess");
+    "uSpecularColor", "uShininess", "uHasTexture", "uTexture");
    mesh->render(*program, sig, stack);
 
    stack.pop(); // view, perspective

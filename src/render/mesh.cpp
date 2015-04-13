@@ -12,9 +12,12 @@
 using namespace crash::math;
 using namespace crash::render;
 
-/* static */ const glm::vec4 Mesh::defaultAmbientColor = glm::vec4(glm::vec3(0.4f), 1.0f);
-/* static */ const glm::vec4 Mesh::defaultDiffuseColor = glm::vec4(glm::vec3(0.7f), 1.0f);
-/* static */ const glm::vec4 Mesh::defaultSpecularColor = glm::vec4(glm::vec3(0.9f), 1.0f);
+/* static */ const glm::vec4 Mesh::defaultAmbientColor =
+ glm::vec4(glm::vec3(0.1f), 1.0f);
+/* static */ const glm::vec4 Mesh::defaultDiffuseColor =
+ glm::vec4(glm::vec3(0.7f), 1.0f);
+/* static */ const glm::vec4 Mesh::defaultSpecularColor =
+ glm::vec4(glm::vec3(0.9f), 1.0f);
 /* static */ const float Mesh::defaultShininess = 250.0f;
 
 Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
@@ -23,9 +26,11 @@ Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
 
 Mesh::VariableSignature::VariableSignature(const std::string& transform,
   const std::string& ambient, const std::string& diffuse,
-  const std::string& specular, const std::string& shininess) :
+  const std::string& specular, const std::string& shininess,
+  const std::string& hasTexture, const std::string& texture) :
    transform(transform), ambient(ambient), diffuse(diffuse),
-    specular(specular), shininess(shininess)
+    specular(specular), shininess(shininess),
+    hasTexture(hasTexture), texture(texture)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,16 +39,17 @@ Mesh::VariableSignature::VariableSignature(const std::string& transform,
 
 Mesh::Mesh(const Mesh& mesh) :
    _path(mesh._path), _scene(mesh._scene), _transformer(mesh._transformer),
-    _vaos(mesh._vaos), _vbos(mesh._vbos), _ibos(mesh._ibos),
-    _components(mesh._components)
+    _vaos(mesh._vaos), _vbos(mesh._vbos), _ibos(mesh._ibos), _tbos(mesh._tbos),
+    _components(mesh._components), _textures(mesh._textures)
 {}
 
 Mesh::Mesh(const boost::filesystem::path& path) :
    _path(path), _scene(nullptr),
     _transformer(glm::vec3(), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)),
-    _vaos(), _vbos(), _ibos(), _components()
+    _vaos(), _vbos(), _ibos(), _tbos(), _components()
 {
    this->importScene();
+   this->importTextures();
 }
 
 /* virtual */ Mesh::~Mesh() {
@@ -148,27 +154,41 @@ void Mesh::importScene() {
    this->normalizeScene();
 }
 
+void Mesh::importTextures() {
+   for (unsigned int i = 0; i < this->_scene->mNumMaterials; ++i) {
+      aiMaterial* mat = this->_scene->mMaterials[i];
+
+      aiString textureFileName;
+      mat->GetTexture(aiTextureType_DIFFUSE, /* index */ 0, &textureFileName,
+       /* mapping */ nullptr, /* uv index */ nullptr, /* blend */ nullptr,
+       /* operator */ nullptr, /* map mode */ nullptr);
+
+      boost::filesystem::path texturePath =
+       boost::filesystem::path(this->_path).parent_path() /
+       boost::filesystem::path(textureFileName.C_Str());
+
+      this->_textures.push_back(std::make_shared< Texture >(
+       Texture(texturePath)));
+   }
+}
+
 void Mesh::normalizeScene() {
    glm::vec3 min(std::numeric_limits< float >::max());
    glm::vec3 max(std::numeric_limits< float >::min());
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
       aiMesh* mesh = this->_scene->mMeshes[i];
       for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
-         aiVector3D vertex = mesh->mVertices[j];
-         min.x = std::min< float >(min.x, vertex.x);
-         min.y = std::min< float >(min.y, vertex.y);
-         min.z = std::min< float >(min.z, vertex.z);
-         max.x = std::max< float >(max.x, vertex.x);
-         max.y = std::max< float >(max.y, vertex.y);
-         max.z = std::max< float >(max.z, vertex.z);
+         aiVector3D aiVertex = mesh->mVertices[j];
+         glm::vec3 vertex(aiVertex.x, aiVertex.y, aiVertex.z);
+         min = glm::min(min, vertex);
+         max = glm::max(max, vertex);
       }
    }
 
    glm::vec3 dimensions = glm::abs(max - min);
-   float maxDimension = std::max< float >(
-    std::max< float >(dimensions.x, dimensions.y), dimensions.z);
+   float maxDimension = glm::max(glm::max(dimensions.x, dimensions.y),
+    dimensions.z);
    float scale = 1.0f / maxDimension;
-
    glm::vec3 center = average(min, max) * scale;
 
    this->setPosition(-center);
@@ -188,17 +208,26 @@ void Mesh::buildComponents() {
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
       aiMesh* mesh = this->_scene->mMeshes[i];
       aiMaterial* material = this->_scene->mMaterials[mesh->mMaterialIndex];
+      std::shared_ptr< Texture > texture;
+      if (mesh->mMaterialIndex < this->_textures.size()) {
+         texture = this->_textures[mesh->mMaterialIndex];
+      } else {
+         texture = nullptr;
+      }
+
       GLuint vao = this->_vaos[i];
       GLuint vbo = this->_vbos[i];
       GLuint ibo = this->_ibos[i];
+      GLuint tbo = this->_tbos[mesh->mMaterialIndex];
 
       this->_components.insert(std::make_pair(mesh,
-       Component(mesh, material, vao, vbo, ibo)));
+       Component(mesh, material, texture, vao, vbo, ibo, tbo)));
    }
 }
 
 void Mesh::allocateBuffers() {
    unsigned int numBuffers = this->_scene->mNumMeshes;
+   unsigned int numTextures = this->_scene->mNumMaterials;
 
    this->_vaos.clear();
    this->_vaos.resize(numBuffers);
@@ -214,6 +243,11 @@ void Mesh::allocateBuffers() {
    this->_ibos.resize(numBuffers);
    this->_ibos.insert(this->_ibos.end(), 0);
    glGenBuffers(numBuffers, this->_ibos.data());
+
+   this->_tbos.clear();
+   this->_tbos.resize(numTextures);
+   this->_tbos.insert(this->_tbos.end(), 0);
+   glGenTextures(numTextures, this->_tbos.data());
 }
 
 void Mesh::destroyComponents() {
@@ -228,6 +262,7 @@ void Mesh::releaseBuffers() {
    glDeleteVertexArrays(this->_vaos.size(), this->_vaos.data());
    glDeleteBuffers(this->_vbos.size(), this->_vbos.data());
    glDeleteBuffers(this->_ibos.size(), this->_ibos.data());
+   glDeleteTextures(this->_tbos.size(), this->_tbos.data());
 }
 
 void Mesh::renderNode(const ShaderProgram& program,
@@ -265,19 +300,27 @@ void Mesh::renderNode(const ShaderProgram& program,
 
 Mesh::Component::Component(const Component& component) :
    mesh(component.mesh), material(component.material),
-    vao(component.vao), vbo(component.vbo),
-    ibo(component.ibo)
+    ambient(component.ambient), diffuse(component.diffuse),
+    specular(component.specular), shininess(component.shininess),
+    twoSided(component.twoSided), texture(component.texture),
+    vao(component.vao), vbo(component.vbo), ibo(component.ibo),
+    tbo(component.tbo)
 {}
 
 Mesh::Component::Component(const aiMesh* mesh, const aiMaterial* material,
- const GLuint& vao, const GLuint& vbo,
- const GLuint& ibo) :
+ std::shared_ptr< Texture > texture, const GLuint& vao, const GLuint& vbo,
+ const GLuint& ibo, const GLuint& tbo) :
    mesh(mesh), material(material),
-    vao(vao), vbo(vbo), ibo(ibo)
+    ambient(Mesh::defaultAmbientColor), diffuse(Mesh::defaultDiffuseColor),
+    specular(Mesh::defaultSpecularColor), shininess(Mesh::defaultShininess),
+    twoSided(false), texture(texture),
+    vao(vao), vbo(vbo), ibo(ibo), tbo(tbo)
 {
    this->generateVertexBuffer();
    this->generateIndexBuffer();
    this->generateVertexArray();
+   this->generateTextureBuffer();
+   this->setMaterialProperties();
 }
 
 void Mesh::Component::generateVertexArray() {
@@ -344,6 +387,39 @@ void Mesh::Component::generateIndexBuffer() {
     faces.data(), GL_STATIC_DRAW);
 }
 
+void Mesh::Component::generateTextureBuffer() {
+   GLint format;
+   int components = this->texture->getComponents();
+   if (components == 1) {
+      format = GL_LUMINANCE;
+   } else if (components == 2) {
+      format = GL_LUMINANCE_ALPHA;
+   } else if (components == 3) {
+      format = GL_RGB;
+   } else { // components == 4
+      format = GL_RGBA;
+   }
+
+   glBindTexture(GL_TEXTURE_2D, this->tbo);
+   glTexImage2D(GL_TEXTURE_2D,
+    /* level of detail */ 0, /* texture format */ format,
+    this->texture->getWidth(), this->texture->getHeight(),
+    /* border */ 0, /* data format */ format, /* data type */ GL_FLOAT,
+    this->texture->getData().data());
+   glGenerateMipmap(GL_TEXTURE_2D);
+
+   // Repeat with extra space in x-direction.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   // Repeat with extra space in y-direction.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   // Use mipmaps when down-sampling.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+    GL_LINEAR_MIPMAP_LINEAR);
+   // Use mipmaps when up-sampling.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+    GL_LINEAR_MIPMAP_LINEAR);
+}
+
 void Mesh::Component::bindAttributes(const ShaderProgram& program) const {
    glBindBuffer(GL_ARRAY_BUFFER, vbo);
    glBindVertexArray(this->vao);
@@ -357,68 +433,69 @@ void Mesh::Component::render(const ShaderProgram& program,
  const VariableSignature& sig, const glm::mat4& transform) const {
    program.setUniformVariableMatrix4(sig.transform, glm::value_ptr(transform), 1);
 
-   glm::vec4 ambient, diffuse, specular;
-   float shininess;
-   std::tie(ambient, diffuse, specular, shininess) =
-    this->getMaterialProperties();
-
-   program.setUniformVariable4f(sig.ambient, glm::value_ptr(ambient), 1);
-   program.setUniformVariable4f(sig.diffuse, glm::value_ptr(diffuse), 1);
-   program.setUniformVariable4f(sig.specular, glm::value_ptr(specular), 1);
-   program.setUniformVariable1f(sig.shininess, &shininess, 1);
+   program.setUniformVariable4f(sig.ambient, glm::value_ptr(this->ambient), 1);
+   program.setUniformVariable4f(sig.diffuse, glm::value_ptr(this->diffuse), 1);
+   program.setUniformVariable4f(sig.specular, glm::value_ptr(this->specular), 1);
+   program.setUniformVariable1f(sig.shininess, &this->shininess, 1);
 
    glBindVertexArray(this->vao);
    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ibo);
 
+   GLuint hasTexture = (this->texture != nullptr) ? 1 : 0;
+   program.setUniformVariable1ui(sig.hasTexture, &hasTexture, 1);
+   if (hasTexture) {
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, this->tbo);
+      int activeTexture = 0;
+      program.setUniformVariable1i(sig.texture, &activeTexture, 1);
+   }
+
+   if (this->twoSided) {
+      glDisable(GL_CULL_FACE);
+   } else {
+      glEnable(GL_CULL_FACE);
+   }
+
    glDrawElements(GL_TRIANGLES, this->mesh->mNumFaces * 3, GL_UNSIGNED_INT,
     reinterpret_cast< const GLvoid* >(0));
 }
 
-std::tuple< glm::vec4, glm::vec4, glm::vec4, float >
- Mesh::Component::getMaterialProperties() const {
-   glm::vec4 ambient, diffuse, specular;
-   float shininess;
-
+void Mesh::Component::setMaterialProperties() {
    if (this->material == nullptr) {
-      ambient = Mesh::defaultAmbientColor;
-      diffuse = Mesh::defaultDiffuseColor;
-      specular = Mesh::defaultSpecularColor;
-      shininess = Mesh::defaultShininess;
-   } else {
-      aiColor4D aiAmbient(0.0f, 0.0f, 0.0f, 1.0f);
-      this->material->Get(AI_MATKEY_COLOR_AMBIENT, aiAmbient);
-      if (aiAmbient.IsBlack()) {
-         ambient = Mesh::defaultAmbientColor;
-      } else {
-         ambient = glm::vec4(aiAmbient.r, aiAmbient.g, aiAmbient.g, aiAmbient.a);
-      }
-
-      aiColor4D aiDiffuse(0.0f, 0.0f, 0.0f, 1.0f);
-      this->material->Get(AI_MATKEY_COLOR_DIFFUSE, aiDiffuse);
-      if (aiDiffuse.IsBlack()) {
-         diffuse = Mesh::defaultDiffuseColor;
-      } else {
-         diffuse = glm::vec4(aiDiffuse.r, aiDiffuse.g, aiDiffuse.g, aiDiffuse.a);
-      }
-
-      aiColor4D aiSpecular(0.0f, 0.0f, 0.0f, 1.0f);
-      this->material->Get(AI_MATKEY_COLOR_SPECULAR, aiSpecular);
-      if (aiSpecular.IsBlack()) {
-         specular = Mesh::defaultSpecularColor;
-      } else {
-         specular = glm::vec4(aiSpecular.r, aiSpecular.g, aiSpecular.g,
-          aiSpecular.a);
-      }
-
-      shininess = 0.0f;
-      this->material->Get(AI_MATKEY_SHININESS, shininess);
-      if (shininess == 0.0f) {
-         shininess = Mesh::defaultShininess;
-      }
+      return;
    }
 
-   return std::make_tuple(ambient, diffuse, specular, shininess);
+   aiColor4D aiAmbient(0.0f, 0.0f, 0.0f, 1.0f);
+   this->material->Get(AI_MATKEY_COLOR_AMBIENT, aiAmbient);
+   if (!aiAmbient.IsBlack()) {
+      this->ambient = glm::vec4(aiAmbient.r, aiAmbient.g, aiAmbient.g,
+       aiAmbient.a);
+   }
+
+   aiColor4D aiDiffuse(0.0f, 0.0f, 0.0f, 1.0f);
+   this->material->Get(AI_MATKEY_COLOR_DIFFUSE, aiDiffuse);
+   if (!aiDiffuse.IsBlack()) {
+      this->diffuse = glm::vec4(aiDiffuse.r, aiDiffuse.g, aiDiffuse.g,
+       aiDiffuse.a);
+   }
+
+   aiColor4D aiSpecular(0.0f, 0.0f, 0.0f, 1.0f);
+   this->material->Get(AI_MATKEY_COLOR_SPECULAR, aiSpecular);
+   if (!aiSpecular.IsBlack()) {
+      this->specular = glm::vec4(aiSpecular.r, aiSpecular.g, aiSpecular.g,
+       aiSpecular.a);
+   }
+
+   float shininess = 0.0f;
+   this->material->Get(AI_MATKEY_SHININESS, shininess);
+   if (shininess != 0.0f) {
+      this->shininess = shininess;
+   }
+
+   int iTwoSided;
+   this->material->Get(AI_MATKEY_TWOSIDED, iTwoSided);
+   this->twoSided = (iTwoSided != 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

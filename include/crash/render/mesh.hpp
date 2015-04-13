@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include <assimp/scene.h>
@@ -17,6 +18,7 @@
 
 #include <crash/math/transformer.hpp>
 #include <crash/math/transformable.hpp>
+#include <crash/render/texture.hpp>
 
 namespace crash {
 namespace render {
@@ -34,12 +36,15 @@ public:
    struct VariableSignature {
       VariableSignature(const std::string& transform,
         const std::string& ambient, const std::string& diffuse,
-        const std::string& specular, const std::string& shininess);
+        const std::string& specular, const std::string& shininess,
+        const std::string& hasTexture, const std::string& texture);
       std::string transform;
       std::string ambient;
       std::string diffuse;
       std::string specular;
       std::string shininess;
+      std::string hasTexture;
+      std::string texture;
    };
 
    static const glm::vec4 defaultAmbientColor;
@@ -80,24 +85,31 @@ private:
    struct Component {
       Component(const Component& component);
       Component(const aiMesh* mesh, const aiMaterial* material,
-       const GLuint& vao,
-       const GLuint& vbo, const GLuint& ibo);
+       std::shared_ptr< Texture > texture, const GLuint& vao,
+       const GLuint& vbo, const GLuint& ibo, const GLuint& tbo);
 
       void generateVertexArray();
       void generateVertexBuffer();
       void generateIndexBuffer();
+      void generateTextureBuffer();
 
       void bindAttributes(const ShaderProgram& program) const;
       void render(const ShaderProgram& program, const VariableSignature& sig,
        const glm::mat4& transform) const;
-      std::tuple< glm::vec4, glm::vec4, glm::vec4, float >
-       getMaterialProperties() const;
+      void setMaterialProperties();
 
       const aiMesh* mesh;
       const aiMaterial* material;
+      glm::vec4 ambient;
+      glm::vec4 diffuse;
+      glm::vec4 specular;
+      float shininess;
+      bool twoSided;
+      std::shared_ptr< Texture > texture;
       GLuint vao;
       GLuint vbo;
       GLuint ibo;
+      GLuint tbo;
 
       struct Vertex {
          Vertex(const Vertex& v);
@@ -131,6 +143,7 @@ private:
    void importScene();
    void releaseScene();
 
+   void importTextures();
    void normalizeScene();
 
    void buildComponents();
@@ -148,7 +161,9 @@ private:
    std::vector< GLuint > _vaos;
    std::vector< GLuint > _vbos;
    std::vector< GLuint > _ibos;
+   std::vector< GLuint > _tbos;
    std::map< const aiMesh*, Component > _components;
+   std::vector< std::shared_ptr< Texture > > _textures;
 };
 
 } // namespace render

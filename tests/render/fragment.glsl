@@ -12,6 +12,8 @@ uniform vec4 uAmbientColor;
 uniform vec4 uDiffuseColor;
 uniform vec4 uSpecularColor;
 uniform float uShininess;
+uniform bool uHasTexture;
+uniform sampler2D uTexture;
 
 in vec3 vPosition;
 in vec3 vNormal;
@@ -28,12 +30,16 @@ void main() {
    float shininess;
 
    ambientColor = uAmbientColor;
-   diffuseColor = uDiffuseColor;
+   if (uHasTexture) {
+      diffuseColor = texture(uTexture, vTexCoord);
+   } else {
+      diffuseColor = uDiffuseColor;
+   }
    specularColor = uSpecularColor;
    shininess = uShininess;
 
    oColor = ambientColor;
-   for (int i = 0; i < 2; ++i) {
+   for (int i = 0; i < 8; ++i) {
       vec3 L = normalize(uLightPosition[i] - vPosition);
       vec3 R = normalize(-reflect(L, vNormal));
       vec3 V = normalize(vPosition - uCameraPosition);

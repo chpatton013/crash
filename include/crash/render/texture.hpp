@@ -17,7 +17,8 @@ public:
    Texture(const boost::filesystem::path& path);
    virtual ~Texture();
 
-   std::vector< unsigned char > getData() const;
+   const boost::filesystem::path& getPath() const;
+   const std::vector< float >& getData() const;
    int getWidth() const;
    int getHeight() const;
    int getComponents() const;
@@ -26,7 +27,7 @@ private:
    void importTexture();
 
    boost::filesystem::path _path;
-   std::vector< unsigned char > _data;
+   std::vector< float > _data;
    int _width;
    int _height;
    int _components;

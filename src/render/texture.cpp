@@ -22,7 +22,11 @@ Texture::Texture(const boost::filesystem::path& path) :
 
 /* virtual */ Texture::~Texture() {}
 
-std::vector< unsigned char > Texture::getData() const {
+const boost::filesystem::path& Texture::getPath() const {
+   return this->_path;
+}
+
+const std::vector< float >& Texture::getData() const {
    return this->_data;
 }
 
@@ -39,15 +43,15 @@ int Texture::getComponents() const {
 }
 
 void Texture::importTexture() {
-   unsigned char* data = stbi_load(this->_path.string().c_str(),
+   float* data = stbi_loadf(this->_path.string().c_str(),
     &this->_width, &this->_height, &this->_components, 0);
    if (data == nullptr) {
       throw ImportFailure(this->_path.string());
    }
 
-   int dataSize = this->_width * this->_height;
-   this->_data.reserve(dataSize);
-   ::memcpy(data, this->_data.data(), sizeof(unsigned char) * dataSize);
+   int dataSize = this->_width * this->_height * this->_components;
+   this->_data.resize(dataSize);
+   ::memcpy(this->_data.data(), data, sizeof(float) * dataSize);
 
    stbi_image_free(data);
 }
