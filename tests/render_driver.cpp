@@ -72,7 +72,6 @@ int main(int argc, char** argv) {
       return 3;
    }
 
-
    LightManager lightManager = LightManager("uLightPosition",
     "uLightDiffuse", "uLightSpecular", lights);
    MatrixStack stack;
@@ -127,7 +126,7 @@ Window initializeOpenGl() {
    }
 
    glViewport(0, 0, 900, 600);
-   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
    // culling
    glEnable(GL_CULL_FACE);
@@ -175,12 +174,36 @@ std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
 
    std::vector< Light > lights = {{
       Light(
-       /* position */ glm::vec3(1000.0f, 1000.0f, 100.0f),
-       /* diffuse */ glm::vec4(0.6f, 0.3f, 0.3f, 1.0f),
+       /* position */ glm::vec3(1000.0f, 1000.0f, 1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
        /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
       Light(
-       /* position */ glm::vec3(-1000.0f, -1000.0f, 100.0f),
-       /* diffuse */ glm::vec4(0.3f, 0.3f, 0.6f, 1.0f),
+       /* position */ glm::vec3(1000.0f, 1000.0f, -1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(1000.0f, -1000.0f, 1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(1000.0f, -1000.0f, -1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(-1000.0f, 1000.0f, 1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(-1000.0f, 1000.0f, -1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(-1000.0f, -1000.0f, 1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
+       /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
+      Light(
+       /* position */ glm::vec3(-1000.0f, -1000.0f, -1000.0f),
+       /* diffuse */ glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
        /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
    }};
 
