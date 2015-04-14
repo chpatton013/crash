@@ -12,8 +12,18 @@ uniform vec4 uAmbientColor;
 uniform vec4 uDiffuseColor;
 uniform vec4 uSpecularColor;
 uniform float uShininessValue;
+uniform bool uHasDisplacementTexture;
+uniform bool uHasNormalTexture;
+uniform bool uHasAmbientTexture;
 uniform bool uHasDiffuseTexture;
+uniform bool uHasSpecularTexture;
+uniform bool uHasShininessTexture;
+uniform sampler2D uDisplacementTexture;
+uniform sampler2D uNormalTexture;
+uniform sampler2D uAmbientTexture;
 uniform sampler2D uDiffuseTexture;
+uniform sampler2D uSpecularTexture;
+uniform sampler2D uShininessTexture;
 
 in vec3 vPosition;
 in vec3 vNormal;
@@ -25,14 +35,27 @@ out vec4 oColor;
 
 vec3 getPosition() {
    return vPosition;
+   if (uHasDisplacementTexture) {
+      return vPosition + vec3(texture(uDisplacementTexture, vTexCoord));
+   } else {
+      return vPosition;
+   }
 }
 
 vec3 getNormal() {
-   return vNormal;
+   if (uHasNormalTexture) {
+      return vec3(texture(uNormalTexture, vTexCoord));
+   } else {
+      return vNormal;
+   }
 }
 
 vec4 getAmbientColor() {
-   return uAmbientColor;
+   if (uHasAmbientTexture) {
+      return texture(uAmbientTexture, vTexCoord);
+   } else {
+      return uAmbientColor;
+   }
 }
 
 vec4 getDiffuseColor() {
@@ -44,11 +67,19 @@ vec4 getDiffuseColor() {
 }
 
 vec4 getSpecularColor() {
-   return uSpecularColor;
+   if (uHasSpecularTexture) {
+      return texture(uSpecularTexture, vTexCoord);
+   } else {
+      return uSpecularColor;
+   }
 }
 
 float getShininessValue() {
-   return uShininessValue;
+   if (uHasShininessTexture) {
+      return texture(uShininessTexture, vTexCoord).w;
+   } else {
+      return uShininessValue;
+   }
 }
 
 vec4 getColorForLight(vec3 P, vec3 N, vec4 kD, vec4 kS, float n, int i) {

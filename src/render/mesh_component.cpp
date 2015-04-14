@@ -23,8 +23,13 @@ TextureUnit::TextureUnit(std::shared_ptr< Texture > texture, const GLuint& tbo,
    texture(texture), tbo(tbo), index(index)
 {}
 
-TextureGroupUnit::TextureGroupUnit(const TextureUnit& diffuse) :
-   diffuse(diffuse)
+TextureGroupUnit::TextureGroupUnit(
+ const TextureUnit& displacement, const TextureUnit& normal,
+ const TextureUnit& ambient, const TextureUnit& diffuse,
+ const TextureUnit& specular, const TextureUnit& shininess) :
+   displacement(displacement), normal(normal),
+   ambient(ambient), diffuse(diffuse),
+   specular(specular), shininess(shininess)
 {}
 
 /* static */ const glm::vec4 MeshComponent::defaultAmbientColor =
@@ -114,10 +119,19 @@ void MeshComponent::generateIndexBuffer() {
 }
 
 void MeshComponent::generateTextureBuffers() {
+   this->generateTextureBuffer(this->_textureGroupUnit.displacement);
+   this->generateTextureBuffer(this->_textureGroupUnit.normal);
+   this->generateTextureBuffer(this->_textureGroupUnit.ambient);
    this->generateTextureBuffer(this->_textureGroupUnit.diffuse);
+   this->generateTextureBuffer(this->_textureGroupUnit.specular);
+   this->generateTextureBuffer(this->_textureGroupUnit.ambient);
 }
 
 void MeshComponent::generateTextureBuffer(const TextureUnit& textureUnit) {
+   if (textureUnit.texture == nullptr) {
+      return;
+   }
+
    GLint format;
    int components = textureUnit.texture->getComponents();
    if (components == 1) {
@@ -191,21 +205,33 @@ void MeshComponent::activateMaterial(const ShaderProgram& program,
 
 void MeshComponent::activateTextures(const ShaderProgram& program,
  const UniformVariable& vars) const {
-   this->activateTexture(program, vars, this->_textureGroupUnit.diffuse);
+   this->activateTexture(program, vars.has_displacement_texture,
+    vars.displacement_texture, this->_textureGroupUnit.displacement);
+   this->activateTexture(program, vars.has_normal_texture,
+    vars.normal_texture, this->_textureGroupUnit.normal);
+   this->activateTexture(program, vars.has_ambient_texture,
+    vars.ambient_texture, this->_textureGroupUnit.ambient);
+   this->activateTexture(program, vars.has_diffuse_texture,
+    vars.diffuse_texture, this->_textureGroupUnit.diffuse);
+   this->activateTexture(program, vars.has_specular_texture,
+    vars.specular_texture, this->_textureGroupUnit.specular);
+   this->activateTexture(program, vars.has_shininess_texture,
+    vars.shininess_texture, this->_textureGroupUnit.shininess);
 }
 
 void MeshComponent::activateTexture(const ShaderProgram& program,
- const UniformVariable& vars, const TextureUnit& textureUnit) const {
+ const std::string& hasTextureVar, const std::string& textureVar,
+ const TextureUnit& textureUnit) const {
    if (textureUnit.texture == nullptr) {
       GLuint hasTexture = 0;
-      program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
+      program.setUniformVariable1ui(hasTextureVar, &hasTexture, 1);
    } else {
       GLuint hasTexture = 1;
-      program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
+      program.setUniformVariable1ui(hasTextureVar, &hasTexture, 1);
 
       glActiveTexture(GL_TEXTURE0 + textureUnit.index);
       glBindTexture(GL_TEXTURE_2D, textureUnit.tbo);
-      program.setUniformVariable1i(vars.diffuse_texture, &textureUnit.index, 1);
+      program.setUniformVariable1i(textureVar, &textureUnit.index, 1);
    }
 }
 

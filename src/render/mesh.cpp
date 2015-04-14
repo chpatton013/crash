@@ -147,9 +147,20 @@ void Mesh::releaseScene() {
 
 void Mesh::importTextures() {
    for (unsigned int i = 0; i < this->_scene->mNumMaterials; ++i) {
+      auto displacement = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_DISPLACEMENT, /* index */ 0);
+      auto normal = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_NORMALS, /* index */ 0);
+      auto ambient = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_AMBIENT, /* index */ 0);
       auto diffuse = this->importTexture(this->_scene->mMaterials[i],
        aiTextureType_DIFFUSE, /* index */ 0);
-      this->_textureGroups.push_back(TextureGroup(diffuse));
+      auto specular = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_SPECULAR, /* index */ 0);
+      auto shininess = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_SHININESS, /* index */ 0);
+      this->_textureGroups.push_back(TextureGroup(displacement, normal,
+       ambient, diffuse, specular, shininess));
    }
 }
 
@@ -206,7 +217,12 @@ void Mesh::buildComponents() {
 
       TextureGroup texGroup = this->_textureGroups[mesh->mMaterialIndex];
       TextureGroupUnit tex(
-         TextureUnit(texGroup.diffuse, tbos[0], 0)
+         TextureUnit(texGroup.displacement,  tbos[0], 0),
+         TextureUnit(texGroup.normal,        tbos[1], 1),
+         TextureUnit(texGroup.ambient,       tbos[2], 2),
+         TextureUnit(texGroup.diffuse,       tbos[3], 3),
+         TextureUnit(texGroup.specular,      tbos[4], 4),
+         TextureUnit(texGroup.shininess,     tbos[5], 5)
       );
 
       this->_components.insert(std::make_pair(mesh,

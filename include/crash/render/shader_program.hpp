@@ -36,8 +36,18 @@ struct UniformVariable {
    std::string diffuse_color;
    std::string specular_color;
    std::string shininess_value;
+   std::string has_displacement_texture;
+   std::string has_normal_texture;
+   std::string has_ambient_texture;
    std::string has_diffuse_texture;
+   std::string has_specular_texture;
+   std::string has_shininess_texture;
+   std::string displacement_texture;
+   std::string normal_texture;
+   std::string ambient_texture;
    std::string diffuse_texture;
+   std::string specular_texture;
+   std::string shininess_texture;
 };
 
 class ShaderProgram {

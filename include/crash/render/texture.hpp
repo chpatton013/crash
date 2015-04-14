@@ -34,8 +34,19 @@ private:
 };
 
 struct TextureGroup {
-   TextureGroup(const std::shared_ptr< Texture >& diffuse);
+   TextureGroup(
+    const std::shared_ptr< Texture >& displacement,
+    const std::shared_ptr< Texture >& normal,
+    const std::shared_ptr< Texture >& ambient,
+    const std::shared_ptr< Texture >& diffuse,
+    const std::shared_ptr< Texture >& specular,
+    const std::shared_ptr< Texture >& shininess);
+   std::shared_ptr< Texture > displacement;
+   std::shared_ptr< Texture > normal;
+   std::shared_ptr< Texture > ambient;
    std::shared_ptr< Texture > diffuse;
+   std::shared_ptr< Texture > specular;
+   std::shared_ptr< Texture > shininess;
 };
 
 } // namespace render

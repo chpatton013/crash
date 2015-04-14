@@ -89,8 +89,18 @@ int main(int argc, char** argv) {
    program->createUniformVariable(uniforms.specular_color);
    program->createUniformVariable(uniforms.shininess_value);
 
+   program->createUniformVariable(uniforms.has_displacement_texture);
+   program->createUniformVariable(uniforms.has_normal_texture);
+   program->createUniformVariable(uniforms.has_ambient_texture);
    program->createUniformVariable(uniforms.has_diffuse_texture);
+   program->createUniformVariable(uniforms.has_specular_texture);
+   program->createUniformVariable(uniforms.has_shininess_texture);
+   program->createUniformVariable(uniforms.displacement_texture);
+   program->createUniformVariable(uniforms.normal_texture);
+   program->createUniformVariable(uniforms.ambient_texture);
    program->createUniformVariable(uniforms.diffuse_texture);
+   program->createUniformVariable(uniforms.specular_texture);
+   program->createUniformVariable(uniforms.shininess_texture);
 
    boost::timer::cpu_timer timer;
    const boost::timer::nanosecond_type interval = 10E9 / 60.0f;
@@ -191,8 +201,18 @@ std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
       "uDiffuseColor",
       "uSpecularColor",
       "uShininessValue",
+      "uHasDisplacementTexture",
+      "uHasNormalTexture",
+      "uHasAmbientTexture",
       "uHasDiffuseTexture",
+      "uHasSpecularTexture",
+      "uHasShininessTexture",
+      "uDisplacementTexture",
+      "uNormalTexture",
+      "uAmbientTexture",
       "uDiffuseTexture",
+      "uSpecularTexture",
+      "uShininessTexture",
    };
 
    std::shared_ptr< Camera > camera = std::make_shared< Camera >(

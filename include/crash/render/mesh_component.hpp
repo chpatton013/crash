@@ -47,8 +47,19 @@ struct TextureUnit {
 };
 
 struct TextureGroupUnit {
-   TextureGroupUnit(const TextureUnit& diffuse);
+   TextureGroupUnit(
+    const TextureUnit& displacement,
+    const TextureUnit& normal,
+    const TextureUnit& ambient,
+    const TextureUnit& diffuse,
+    const TextureUnit& specular,
+    const TextureUnit& shininess);
+   TextureUnit displacement;
+   TextureUnit normal;
+   TextureUnit ambient;
    TextureUnit diffuse;
+   TextureUnit specular;
+   TextureUnit shininess;
 };
 
 class MeshComponent {
@@ -79,7 +90,8 @@ private:
    void activateTextures(const ShaderProgram& program,
     const UniformVariable& vars) const;
    void activateTexture(const ShaderProgram& program,
-    const UniformVariable& vars, const TextureUnit& textureUnit) const;
+    const std::string& hasTextureVar, const std::string& textureVar,
+    const TextureUnit& textureUnit) const;
    void activateGeometry() const;
 
    static MaterialUnit extractMaterialUnit(const aiMaterial* material);

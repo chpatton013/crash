@@ -56,6 +56,14 @@ void Texture::importTexture() {
    stbi_image_free(data);
 }
 
-TextureGroup::TextureGroup(const std::shared_ptr< Texture >& diffuse) :
-   diffuse(diffuse)
+TextureGroup::TextureGroup(
+ const std::shared_ptr< Texture >& displacement,
+ const std::shared_ptr< Texture >& normal,
+ const std::shared_ptr< Texture >& ambient,
+ const std::shared_ptr< Texture >& diffuse,
+ const std::shared_ptr< Texture >& specular,
+ const std::shared_ptr< Texture >& shininess) :
+   displacement(displacement), normal(normal),
+   ambient(ambient), diffuse(diffuse),
+   specular(specular), shininess(shininess)
 {}
