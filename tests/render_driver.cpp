@@ -35,15 +35,24 @@ using namespace crash::space;
 using namespace crash::window;
 
 Window initializeOpenGl();
-std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
- std::shared_ptr< ShaderProgram >, AttributeVariable, UniformVariable,
- std::shared_ptr< Mesh > > initializeRender(
+
+std::tuple<
+   std::shared_ptr< Camera >,
+   std::shared_ptr< LightManager >,
+   std::shared_ptr< ShaderProgram >,
+   std::shared_ptr< AttributeVariable >,
+   std::shared_ptr< UniformVariable >,
+   std::shared_ptr< Mesh >
+> initializeRender(
  const boost::filesystem::path& vertexShaderPath,
  const boost::filesystem::path& fragmentShaderPath,
  const boost::filesystem::path& meshPath);
-void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,
- std::shared_ptr< ShaderProgram > program, const UniformVariable& vars,
- std::shared_ptr< Mesh > mesh, MatrixStack& stack);
+
+void render(const std::shared_ptr< Camera >& camera,
+ const std::shared_ptr< LightManager >& lightManager,
+ const std::shared_ptr< ShaderProgram >& program,
+ const std::shared_ptr< UniformVariable >& uniforms,
+ const std::shared_ptr< Mesh >& mesh, MatrixStack& stack);
 
 int main(int argc, char** argv) {
    if (argc < 2) {
@@ -57,13 +66,13 @@ int main(int argc, char** argv) {
    Keyboard keyboard(window);
 
    std::shared_ptr< Camera > camera;
-   std::vector< Light > lights;
+   std::shared_ptr< LightManager > lightManager;
    std::shared_ptr< ShaderProgram > program;
-   AttributeVariable attributes;
-   UniformVariable uniforms;
+   std::shared_ptr< AttributeVariable > attributes;
+   std::shared_ptr< UniformVariable > uniforms;
    std::shared_ptr< Mesh > mesh;
    try {
-      std::tie(camera, lights, program, attributes, uniforms, mesh) =
+      std::tie(camera, lightManager, program, attributes, uniforms, mesh) =
        initializeRender(
        boost::filesystem::path("tests/render/vertex.glsl"),
        boost::filesystem::path("tests/render/fragment.glsl"),
@@ -76,31 +85,7 @@ int main(int argc, char** argv) {
       return 3;
    }
 
-   LightManager lightManager = LightManager(uniforms.light_position,
-    uniforms.light_diffuse, uniforms.light_specular, lights);
    MatrixStack stack;
-
-   lightManager.createUniforms(*program);
-   program->createUniformVariable(uniforms.camera_position);
-   program->createUniformVariable(uniforms.transform_matrix);
-
-   program->createUniformVariable(uniforms.ambient_color);
-   program->createUniformVariable(uniforms.diffuse_color);
-   program->createUniformVariable(uniforms.specular_color);
-   program->createUniformVariable(uniforms.shininess_value);
-
-   program->createUniformVariable(uniforms.has_displacement_texture);
-   program->createUniformVariable(uniforms.has_normal_texture);
-   program->createUniformVariable(uniforms.has_ambient_texture);
-   program->createUniformVariable(uniforms.has_diffuse_texture);
-   program->createUniformVariable(uniforms.has_specular_texture);
-   program->createUniformVariable(uniforms.has_shininess_texture);
-   program->createUniformVariable(uniforms.displacement_texture);
-   program->createUniformVariable(uniforms.normal_texture);
-   program->createUniformVariable(uniforms.ambient_texture);
-   program->createUniformVariable(uniforms.diffuse_texture);
-   program->createUniformVariable(uniforms.specular_texture);
-   program->createUniformVariable(uniforms.shininess_texture);
 
    boost::timer::cpu_timer timer;
    const boost::timer::nanosecond_type interval = 10E9 / 60.0f;
@@ -157,9 +142,14 @@ Window initializeOpenGl() {
    return window;
 }
 
-std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
- std::shared_ptr< ShaderProgram >, AttributeVariable, UniformVariable,
- std::shared_ptr< Mesh > > initializeRender(
+std::tuple<
+   std::shared_ptr< Camera >,
+   std::shared_ptr< LightManager >,
+   std::shared_ptr< ShaderProgram >,
+   std::shared_ptr< AttributeVariable >,
+   std::shared_ptr< UniformVariable >,
+   std::shared_ptr< Mesh >
+> initializeRender(
  const boost::filesystem::path& vertexShaderPath,
  const boost::filesystem::path& fragmentShaderPath,
  const boost::filesystem::path& meshPath) {
@@ -175,45 +165,63 @@ std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
    std::shared_ptr< ShaderProgram > program =
     std::make_shared< ShaderProgram >(shaders);
 
-   AttributeVariable attributes = {
-      "aPosition",
-      "aNormal",
-      "aTangent",
-      "aBitangent",
-      "aTexCoords",
-   };
+   std::shared_ptr< AttributeVariable > attributes =
+    std::make_shared< AttributeVariable >(
+    "aPosition", "aNormal", "aTangent", "aBitangent", "aTexCoords");
 
    // @throws Texture::ImportFailure
    std::shared_ptr< Mesh > mesh = std::make_shared< Mesh >(meshPath);
    mesh->initialize();
-   mesh->bindAttributes(*program, attributes);
+   mesh->bindAttributes(*program, *attributes);
 
    // @throws ShaderProgram::LinkFailure
    program->link();
 
-   UniformVariable uniforms = {
-      "uTransformMatrix",
-      "uCameraPosition",
-      "uLightPosition",
-      "uLightDiffuse",
-      "uLightSpecular",
-      "uAmbientColor",
-      "uDiffuseColor",
-      "uSpecularColor",
-      "uShininessValue",
-      "uHasDisplacementTexture",
-      "uHasNormalTexture",
-      "uHasAmbientTexture",
-      "uHasDiffuseTexture",
-      "uHasSpecularTexture",
-      "uHasShininessTexture",
-      "uDisplacementTexture",
-      "uNormalTexture",
-      "uAmbientTexture",
-      "uDiffuseTexture",
-      "uSpecularTexture",
-      "uShininessTexture",
-   };
+   std::shared_ptr< UniformVariable > uniforms =
+    std::make_shared< UniformVariable >(
+    "uTransformMatrix",
+    "uCameraPosition",
+    "uLightPosition",
+    "uLightDiffuse",
+    "uLightSpecular",
+    "uAmbientColor",
+    "uDiffuseColor",
+    "uSpecularColor",
+    "uShininessValue",
+    "uHasDisplacementTexture",
+    "uHasNormalTexture",
+    "uHasAmbientTexture",
+    "uHasDiffuseTexture",
+    "uHasSpecularTexture",
+    "uHasShininessTexture",
+    "uDisplacementTexture",
+    "uNormalTexture",
+    "uAmbientTexture",
+    "uDiffuseTexture",
+    "uSpecularTexture",
+    "uShininessTexture");
+
+   program->createUniformVariable(uniforms->transform_matrix);
+   program->createUniformVariable(uniforms->camera_position);
+   program->createUniformVariable(uniforms->light_position);
+   program->createUniformVariable(uniforms->light_diffuse);
+   program->createUniformVariable(uniforms->light_specular);
+   program->createUniformVariable(uniforms->ambient_color);
+   program->createUniformVariable(uniforms->diffuse_color);
+   program->createUniformVariable(uniforms->specular_color);
+   program->createUniformVariable(uniforms->shininess_value);
+   program->createUniformVariable(uniforms->has_displacement_texture);
+   program->createUniformVariable(uniforms->has_normal_texture);
+   program->createUniformVariable(uniforms->has_ambient_texture);
+   program->createUniformVariable(uniforms->has_diffuse_texture);
+   program->createUniformVariable(uniforms->has_specular_texture);
+   program->createUniformVariable(uniforms->has_shininess_texture);
+   program->createUniformVariable(uniforms->displacement_texture);
+   program->createUniformVariable(uniforms->normal_texture);
+   program->createUniformVariable(uniforms->ambient_texture);
+   program->createUniformVariable(uniforms->diffuse_texture);
+   program->createUniformVariable(uniforms->specular_texture);
+   program->createUniformVariable(uniforms->shininess_texture);
 
    std::shared_ptr< Camera > camera = std::make_shared< Camera >(
     /* position */ glm::vec3(0.0f, 0.0f, 1.0f),
@@ -257,24 +265,30 @@ std::tuple< std::shared_ptr< Camera >, std::vector< Light >,
        /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
    }};
 
-   return std::make_tuple(camera, lights, program, attributes, uniforms, mesh);
+   std::shared_ptr< LightManager > lm = std::make_shared< LightManager >(
+    uniforms->light_position, uniforms->light_diffuse,
+    uniforms->light_specular, lights);
+
+   return std::make_tuple(camera, lm, program, attributes, uniforms, mesh);
 }
 
-void render(std::shared_ptr< Camera > camera, const LightManager& lightManager,
- std::shared_ptr< ShaderProgram > program, const UniformVariable& vars,
- std::shared_ptr< Mesh > mesh, MatrixStack& stack) {
+void render(const std::shared_ptr< Camera >& camera,
+ const std::shared_ptr< LightManager >& lightManager,
+ const std::shared_ptr< ShaderProgram >& program,
+ const std::shared_ptr< UniformVariable >& uniforms,
+ const std::shared_ptr< Mesh >& mesh, MatrixStack& stack) {
    auto perspective = camera->getPerspective();
    auto view = camera->getLookAt();
    stack.push(perspective * view);
 
    program->use();
 
-   program->setUniformVariable3f(vars.camera_position,
+   program->setUniformVariable3f(uniforms->camera_position,
     glm::value_ptr(camera->getPosition()), 1);
 
-   lightManager.setUniforms(*program);
+   lightManager->setUniforms(*program);
 
-   mesh->render(*program, vars, stack);
+   mesh->render(*program, *uniforms, stack);
 
    stack.pop(); // view, perspective
 }

@@ -19,6 +19,10 @@ namespace crash {
 namespace render {
 
 struct AttributeVariable {
+   AttributeVariable(const std::string& position, const std::string& normal,
+    const std::string& tangent, const std::string& bitangent,
+    const std::string& texture_coordinates);
+
    std::string position;
    std::string normal;
    std::string tangent;
@@ -27,6 +31,29 @@ struct AttributeVariable {
 };
 
 struct UniformVariable {
+   UniformVariable(
+    const std::string& transform_matrix,
+    const std::string& camera_position,
+    const std::string& light_position,
+    const std::string& light_diffuse,
+    const std::string& light_specular,
+    const std::string& ambient_color,
+    const std::string& diffuse_color,
+    const std::string& specular_color,
+    const std::string& shininess_value,
+    const std::string& has_displacement_texture,
+    const std::string& has_normal_texture,
+    const std::string& has_ambient_texture,
+    const std::string& has_diffuse_texture,
+    const std::string& has_specular_texture,
+    const std::string& has_shininess_texture,
+    const std::string& displacement_texture,
+    const std::string& normal_texture,
+    const std::string& ambient_texture,
+    const std::string& diffuse_texture,
+    const std::string& specular_texture,
+    const std::string& shininess_texture);
+
    std::string transform_matrix;
    std::string camera_position;
    std::string light_position;

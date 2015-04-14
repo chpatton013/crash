@@ -52,13 +52,7 @@ void LightManager::setLight(unsigned int index, const Light& light) {
    this->_specular[index] = light.getSpecular();
 }
 
-void LightManager::createUniforms(ShaderProgram& program) const {
-   program.createUniformVariable(this->_positionHandle);
-   program.createUniformVariable(this->_diffuseHandle);
-   program.createUniformVariable(this->_specularHandle);
-}
-
-void LightManager::setUniforms(ShaderProgram& program) const {
+void LightManager::setUniforms(const ShaderProgram& program) const {
    program.setUniformVariable3f(this->_positionHandle,
     reinterpret_cast< const GLfloat* >(this->_position.data()),
     LightManager::NUM_LIGHTS);

@@ -34,8 +34,7 @@ public:
    Light getLight(unsigned int index) const;
    void setLight(unsigned int index, const Light& light);
 
-   void createUniforms(ShaderProgram& program) const;
-   void setUniforms(ShaderProgram& program) const;
+   void setUniforms(const ShaderProgram& program) const;
 
 private:
    const std::string _positionHandle;
