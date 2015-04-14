@@ -51,7 +51,8 @@ struct TextureGroupUnit {
    TextureUnit diffuse;
 };
 
-struct MeshComponent {
+class MeshComponent {
+public:
    static const glm::vec4 defaultAmbientColor;
    static const glm::vec4 defaultDiffuseColor;
    static const glm::vec4 defaultSpecularColor;
@@ -72,6 +73,7 @@ struct MeshComponent {
    void render(const ShaderProgram& program, const UniformVariable& vars,
     const glm::mat4& transform) const;
 
+private:
    void activateMaterial(const ShaderProgram& program,
     const UniformVariable& vars) const;
    void activateTextures(const ShaderProgram& program,
@@ -82,11 +84,11 @@ struct MeshComponent {
 
    static MaterialUnit extractMaterialUnit(const aiMaterial* material);
 
-   const aiMesh* mesh;
-   const aiMaterial* material;
-   MaterialUnit materialUnit;
-   GeometryUnit geometryUnit;
-   TextureGroupUnit textureGroupUnit;
+   const aiMesh* _mesh;
+   const aiMaterial* _material;
+   MaterialUnit _materialUnit;
+   GeometryUnit _geometryUnit;
+   TextureGroupUnit _textureGroupUnit;
 };
 
 } // namespace render

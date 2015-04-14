@@ -36,17 +36,17 @@ TextureGroupUnit::TextureGroupUnit(const TextureUnit& diffuse) :
 /* static */ const float MeshComponent::defaultShininess = 250.0f;
 
 MeshComponent::MeshComponent(const MeshComponent& component) :
-   mesh(component.mesh), material(component.material),
-    materialUnit(component.materialUnit),
-    geometryUnit(component.geometryUnit),
-    textureGroupUnit(component.textureGroupUnit)
+   _mesh(component._mesh), _material(component._material),
+    _materialUnit(component._materialUnit),
+    _geometryUnit(component._geometryUnit),
+    _textureGroupUnit(component._textureGroupUnit)
 {}
 
 MeshComponent::MeshComponent(const aiMesh* mesh, const aiMaterial* material,
  const GeometryUnit& geometryUnit, const TextureGroupUnit& textureGroupUnit) :
-   mesh(mesh), material(material),
-    materialUnit(MeshComponent::extractMaterialUnit(material)),
-    geometryUnit(geometryUnit), textureGroupUnit(textureGroupUnit)
+   _mesh(mesh), _material(material),
+    _materialUnit(MeshComponent::extractMaterialUnit(material)),
+    _geometryUnit(geometryUnit), _textureGroupUnit(textureGroupUnit)
 {
    this->generateVertexBuffer();
    this->generateIndexBuffer();
@@ -55,8 +55,8 @@ MeshComponent::MeshComponent(const aiMesh* mesh, const aiMaterial* material,
 }
 
 void MeshComponent::generateVertexArray() {
-   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
-   glBindVertexArray(this->geometryUnit.vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
+   glBindVertexArray(this->_geometryUnit.vao);
 
    Vertex::defineAttributes();
 }
@@ -66,24 +66,24 @@ void MeshComponent::generateVertexBuffer() {
 
    const aiVector3D zero(0.0f, 0.0f, 0.0f);
 
-   for (unsigned int i = 0; i < this->mesh->mNumVertices; ++i) {
-      auto position = this->mesh->mVertices[i];
+   for (unsigned int i = 0; i < this->_mesh->mNumVertices; ++i) {
+      auto position = this->_mesh->mVertices[i];
 
       auto normal = zero;
-      if (this->mesh->HasNormals()) {
-         normal = this->mesh->mNormals[i];
+      if (this->_mesh->HasNormals()) {
+         normal = this->_mesh->mNormals[i];
       }
 
       auto tangent = zero;
       auto bitangent = zero;
-      if (this->mesh->HasTangentsAndBitangents()) {
-         tangent = this->mesh->mTangents[i];
-         bitangent = this->mesh->mBitangents[i];
+      if (this->_mesh->HasTangentsAndBitangents()) {
+         tangent = this->_mesh->mTangents[i];
+         bitangent = this->_mesh->mBitangents[i];
       }
 
       auto textureCoordinates = aiVector2D(0.0f, 0.0f);
-      if (this->mesh->HasTextureCoords(0)) {
-         auto texture = this->mesh->mTextureCoords[0][i];
+      if (this->_mesh->HasTextureCoords(0)) {
+         auto texture = this->_mesh->mTextureCoords[0][i];
          textureCoordinates.x = texture.x;
          textureCoordinates.y = texture.y;
       }
@@ -92,29 +92,29 @@ void MeshComponent::generateVertexBuffer() {
        textureCoordinates));
    }
 
-   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
+   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(),
     vertices.data(), GL_STATIC_DRAW);
 }
 
 void MeshComponent::generateIndexBuffer() {
    std::vector< GLuint > faces;
-   faces.resize(this->mesh->mNumFaces * 3);
+   faces.resize(this->_mesh->mNumFaces * 3);
 
-   for (unsigned int i = 0; i < this->mesh->mNumFaces; i++) {
-      const aiFace& face = this->mesh->mFaces[i];
+   for (unsigned int i = 0; i < this->_mesh->mNumFaces; i++) {
+      const aiFace& face = this->_mesh->mFaces[i];
       for (unsigned int j = 0; j < 3; ++j) {
          faces[i * 3 + j] = face.mIndices[j];
       }
    }
 
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->geometryUnit.ibo);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_geometryUnit.ibo);
    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * faces.size(),
     faces.data(), GL_STATIC_DRAW);
 }
 
 void MeshComponent::generateTextureBuffers() {
-   this->generateTextureBuffer(this->textureGroupUnit.diffuse);
+   this->generateTextureBuffer(this->_textureGroupUnit.diffuse);
 }
 
 void MeshComponent::generateTextureBuffer(const TextureUnit& textureUnit) {
@@ -152,8 +152,8 @@ void MeshComponent::generateTextureBuffer(const TextureUnit& textureUnit) {
 
 void MeshComponent::bindAttributes(const ShaderProgram& program,
  const AttributeVariable& vars) const {
-   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
-   glBindVertexArray(this->geometryUnit.vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
+   glBindVertexArray(this->_geometryUnit.vao);
 
    Vertex::bindAttributes(program, vars);
 }
@@ -167,22 +167,22 @@ void MeshComponent::render(const ShaderProgram& program,
    this->activateTextures(program, vars);
    this->activateGeometry();
 
-   glDrawElements(GL_TRIANGLES, this->mesh->mNumFaces * 3, GL_UNSIGNED_INT,
+   glDrawElements(GL_TRIANGLES, this->_mesh->mNumFaces * 3, GL_UNSIGNED_INT,
     reinterpret_cast< const GLvoid* >(0));
 }
 
 void MeshComponent::activateMaterial(const ShaderProgram& program,
  const UniformVariable& vars) const {
    program.setUniformVariable4f(vars.ambient_color,
-    glm::value_ptr(this->materialUnit.ambient), 1);
+    glm::value_ptr(this->_materialUnit.ambient), 1);
    program.setUniformVariable4f(vars.diffuse_color,
-    glm::value_ptr(this->materialUnit.diffuse), 1);
+    glm::value_ptr(this->_materialUnit.diffuse), 1);
    program.setUniformVariable4f(vars.specular_color,
-    glm::value_ptr(this->materialUnit.specular), 1);
+    glm::value_ptr(this->_materialUnit.specular), 1);
    program.setUniformVariable1f(vars.shininess_value,
-    &this->materialUnit.shininess, 1);
+    &this->_materialUnit.shininess, 1);
 
-   if (this->materialUnit.twoSided) {
+   if (this->_materialUnit.twoSided) {
       glDisable(GL_CULL_FACE);
    } else {
       glEnable(GL_CULL_FACE);
@@ -191,7 +191,7 @@ void MeshComponent::activateMaterial(const ShaderProgram& program,
 
 void MeshComponent::activateTextures(const ShaderProgram& program,
  const UniformVariable& vars) const {
-   this->activateTexture(program, vars, this->textureGroupUnit.diffuse);
+   this->activateTexture(program, vars, this->_textureGroupUnit.diffuse);
 }
 
 void MeshComponent::activateTexture(const ShaderProgram& program,
@@ -210,9 +210,9 @@ void MeshComponent::activateTexture(const ShaderProgram& program,
 }
 
 void MeshComponent::activateGeometry() const {
-   glBindVertexArray(this->geometryUnit.vao);
-   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->geometryUnit.ibo);
+   glBindVertexArray(this->_geometryUnit.vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_geometryUnit.ibo);
 }
 
 /* static */ MaterialUnit MeshComponent::extractMaterialUnit(
