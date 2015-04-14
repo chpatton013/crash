@@ -16,16 +16,18 @@ Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
    error(error)
 {}
 
+/* static */ const unsigned int Mesh::NUM_TEXTURE_TYPES = 6;
+
 Mesh::Mesh(const Mesh& mesh) :
    _path(mesh._path), _scene(mesh._scene), _transformer(mesh._transformer),
     _vaos(mesh._vaos), _vbos(mesh._vbos), _ibos(mesh._ibos), _tbos(mesh._tbos),
-    _components(mesh._components), _textures(mesh._textures)
+    _components(mesh._components), _textureGroups(mesh._textureGroups)
 {}
 
 Mesh::Mesh(const boost::filesystem::path& path) :
    _path(path), _scene(nullptr),
     _transformer(glm::vec3(), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)),
-    _vaos(), _vbos(), _ibos(), _tbos(), _components()
+    _vaos(), _vbos(), _ibos(), _tbos(), _components(), _textureGroups()
 {
    this->importScene();
    this->importTextures();
@@ -145,20 +147,27 @@ void Mesh::releaseScene() {
 
 void Mesh::importTextures() {
    for (unsigned int i = 0; i < this->_scene->mNumMaterials; ++i) {
-      aiMaterial* mat = this->_scene->mMaterials[i];
-
-      aiString textureFileName;
-      mat->GetTexture(aiTextureType_DIFFUSE, /* index */ 0, &textureFileName,
-       /* mapping */ nullptr, /* uv index */ nullptr, /* blend */ nullptr,
-       /* operator */ nullptr, /* map mode */ nullptr);
-
-      boost::filesystem::path texturePath =
-       boost::filesystem::path(this->_path).parent_path() /
-       boost::filesystem::path(textureFileName.C_Str());
-
-      this->_textures.push_back(std::make_shared< Texture >(
-       Texture(texturePath)));
+      auto diffuse = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_DIFFUSE, /* index */ 0);
+      this->_textureGroups.push_back(TextureGroup(diffuse));
    }
+}
+
+std::shared_ptr< Texture > Mesh::importTexture(const aiMaterial* material,
+ const aiTextureType& type, unsigned int index) {
+   aiString textureFileName;
+   aiReturn ret = material->GetTexture(type, index, &textureFileName,
+    /* mapping */ nullptr, /* uv index */ nullptr, /* blend */ nullptr,
+    /* operator */ nullptr, /* map mode */ nullptr);
+   if (ret != aiReturn_SUCCESS) {
+      return nullptr;
+   }
+
+   boost::filesystem::path texturePath =
+    boost::filesystem::path(this->_path).parent_path() /
+    boost::filesystem::path(textureFileName.C_Str());
+
+   return std::make_shared< Texture >(Texture(texturePath));
 }
 
 void Mesh::normalizeScene() {
@@ -188,46 +197,42 @@ void Mesh::buildComponents() {
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
       aiMesh* mesh = this->_scene->mMeshes[i];
       aiMaterial* material = this->_scene->mMaterials[mesh->mMaterialIndex];
-      std::shared_ptr< Texture > texture;
-      if (mesh->mMaterialIndex < this->_textures.size()) {
-         texture = this->_textures[mesh->mMaterialIndex];
-      } else {
-         texture = nullptr;
-      }
 
-      GLuint vao = this->_vaos[i];
-      GLuint vbo = this->_vbos[i];
-      GLuint ibo = this->_ibos[i];
-      GLuint tbo = this->_tbos[mesh->mMaterialIndex];
+      GeometryUnit geo(this->_vaos[i], this->_vbos[i], this->_ibos[i]);
+
+      unsigned int tboOffset = mesh->mMaterialIndex *
+       Mesh::NUM_TEXTURE_TYPES;
+      GLuint* tbos = this->_tbos.data() + tboOffset;
+
+      TextureGroup texGroup = this->_textureGroups[mesh->mMaterialIndex];
+      TextureGroupUnit tex(
+         TextureUnit(texGroup.diffuse, tbos[0], 0)
+      );
 
       this->_components.insert(std::make_pair(mesh,
-       MeshComponent(mesh, material, GeometryUnit(vao, vbo, ibo),
-       TextureUnit(texture, tbo, 0))));
+       MeshComponent(mesh, material, geo, tex)));
    }
 }
 
 void Mesh::allocateBuffers() {
    unsigned int numBuffers = this->_scene->mNumMeshes;
-   unsigned int numTextures = this->_scene->mNumMaterials;
+   unsigned int numTextures = this->_scene->mNumMaterials *
+    Mesh::NUM_TEXTURE_TYPES;
 
    this->_vaos.clear();
-   this->_vaos.resize(numBuffers);
-   this->_vaos.insert(this->_vaos.end(), 0);
+   this->_vaos.resize(numBuffers, 0);
    glGenVertexArrays(numBuffers, this->_vaos.data());
 
    this->_vbos.clear();
-   this->_vbos.resize(numBuffers);
-   this->_vbos.insert(this->_vbos.end(), 0);
+   this->_vbos.resize(numBuffers, 0);
    glGenBuffers(numBuffers, this->_vbos.data());
 
    this->_ibos.clear();
-   this->_ibos.resize(numBuffers);
-   this->_ibos.insert(this->_ibos.end(), 0);
+   this->_ibos.resize(numBuffers, 0);
    glGenBuffers(numBuffers, this->_ibos.data());
 
    this->_tbos.clear();
-   this->_tbos.resize(numTextures);
-   this->_tbos.insert(this->_tbos.end(), 0);
+   this->_tbos.resize(numTextures, 0);
    glGenTextures(numTextures, this->_tbos.data());
 }
 

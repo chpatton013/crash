@@ -55,3 +55,7 @@ void Texture::importTexture() {
 
    stbi_image_free(data);
 }
+
+TextureGroup::TextureGroup(const std::shared_ptr< Texture >& diffuse) :
+   diffuse(diffuse)
+{}

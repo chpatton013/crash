@@ -19,8 +19,12 @@ GeometryUnit::GeometryUnit(const GLuint& vao, const GLuint& vbo,
 {}
 
 TextureUnit::TextureUnit(std::shared_ptr< Texture > texture, const GLuint& tbo,
- unsigned int index) :
+ const GLint& index) :
    texture(texture), tbo(tbo), index(index)
+{}
+
+TextureGroupUnit::TextureGroupUnit(const TextureUnit& diffuse) :
+   diffuse(diffuse)
 {}
 
 /* static */ const glm::vec4 MeshComponent::defaultAmbientColor =
@@ -35,19 +39,19 @@ MeshComponent::MeshComponent(const MeshComponent& component) :
    mesh(component.mesh), material(component.material),
     materialUnit(component.materialUnit),
     geometryUnit(component.geometryUnit),
-    textureUnit(component.textureUnit)
+    textureGroupUnit(component.textureGroupUnit)
 {}
 
 MeshComponent::MeshComponent(const aiMesh* mesh, const aiMaterial* material,
- const GeometryUnit& geometryUnit, const TextureUnit& textureUnit) :
+ const GeometryUnit& geometryUnit, const TextureGroupUnit& textureGroupUnit) :
    mesh(mesh), material(material),
     materialUnit(MeshComponent::extractMaterialUnit(material)),
-    geometryUnit(geometryUnit), textureUnit(textureUnit)
+    geometryUnit(geometryUnit), textureGroupUnit(textureGroupUnit)
 {
    this->generateVertexBuffer();
    this->generateIndexBuffer();
    this->generateVertexArray();
-   this->generateTextureBuffer();
+   this->generateTextureBuffers();
 }
 
 void MeshComponent::generateVertexArray() {
@@ -109,9 +113,13 @@ void MeshComponent::generateIndexBuffer() {
     faces.data(), GL_STATIC_DRAW);
 }
 
-void MeshComponent::generateTextureBuffer() {
+void MeshComponent::generateTextureBuffers() {
+   this->generateTextureBuffer(this->textureGroupUnit.diffuse);
+}
+
+void MeshComponent::generateTextureBuffer(const TextureUnit& textureUnit) {
    GLint format;
-   int components = this->textureUnit.texture->getComponents();
+   int components = textureUnit.texture->getComponents();
    if (components == 1) {
       format = GL_LUMINANCE;
    } else if (components == 2) {
@@ -122,12 +130,12 @@ void MeshComponent::generateTextureBuffer() {
       format = GL_RGBA;
    }
 
-   glBindTexture(GL_TEXTURE_2D, this->textureUnit.tbo);
+   glBindTexture(GL_TEXTURE_2D, textureUnit.tbo);
    glTexImage2D(GL_TEXTURE_2D,
     /* level of detail */ 0, /* texture format */ format,
-    this->textureUnit.texture->getWidth(), this->textureUnit.texture->getHeight(),
+    textureUnit.texture->getWidth(), textureUnit.texture->getHeight(),
     /* border */ 0, /* data format */ format, /* data type */ GL_FLOAT,
-    this->textureUnit.texture->getData().data());
+    textureUnit.texture->getData().data());
    glGenerateMipmap(GL_TEXTURE_2D);
 
    // Repeat with extra space in x-direction.
@@ -155,6 +163,16 @@ void MeshComponent::render(const ShaderProgram& program,
    program.setUniformVariableMatrix4(vars.transform_matrix,
     glm::value_ptr(transform), 1);
 
+   this->activateMaterial(program, vars);
+   this->activateTextures(program, vars);
+   this->activateGeometry();
+
+   glDrawElements(GL_TRIANGLES, this->mesh->mNumFaces * 3, GL_UNSIGNED_INT,
+    reinterpret_cast< const GLvoid* >(0));
+}
+
+void MeshComponent::activateMaterial(const ShaderProgram& program,
+ const UniformVariable& vars) const {
    program.setUniformVariable4f(vars.ambient_color,
     glm::value_ptr(this->materialUnit.ambient), 1);
    program.setUniformVariable4f(vars.diffuse_color,
@@ -164,27 +182,37 @@ void MeshComponent::render(const ShaderProgram& program,
    program.setUniformVariable1f(vars.shininess_value,
     &this->materialUnit.shininess, 1);
 
-   glBindVertexArray(this->geometryUnit.vao);
-   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->geometryUnit.ibo);
-
-   GLuint hasTexture = (this->textureUnit.texture != nullptr) ? 1 : 0;
-   program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
-   if (hasTexture) {
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, this->textureUnit.tbo);
-      int activeTexture = 0;
-      program.setUniformVariable1i(vars.diffuse_texture, &activeTexture, 1);
-   }
-
    if (this->materialUnit.twoSided) {
       glDisable(GL_CULL_FACE);
    } else {
       glEnable(GL_CULL_FACE);
    }
+}
 
-   glDrawElements(GL_TRIANGLES, this->mesh->mNumFaces * 3, GL_UNSIGNED_INT,
-    reinterpret_cast< const GLvoid* >(0));
+void MeshComponent::activateTextures(const ShaderProgram& program,
+ const UniformVariable& vars) const {
+   this->activateTexture(program, vars, this->textureGroupUnit.diffuse);
+}
+
+void MeshComponent::activateTexture(const ShaderProgram& program,
+ const UniformVariable& vars, const TextureUnit& textureUnit) const {
+   if (textureUnit.texture == nullptr) {
+      GLuint hasTexture = 0;
+      program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
+   } else {
+      GLuint hasTexture = 1;
+      program.setUniformVariable1ui(vars.has_diffuse_texture, &hasTexture, 1);
+
+      glActiveTexture(GL_TEXTURE0 + textureUnit.index);
+      glBindTexture(GL_TEXTURE_2D, textureUnit.tbo);
+      program.setUniformVariable1i(vars.diffuse_texture, &textureUnit.index, 1);
+   }
+}
+
+void MeshComponent::activateGeometry() const {
+   glBindVertexArray(this->geometryUnit.vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->geometryUnit.vbo);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->geometryUnit.ibo);
 }
 
 /* static */ MaterialUnit MeshComponent::extractMaterialUnit(

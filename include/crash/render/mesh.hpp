@@ -18,8 +18,8 @@
 
 #include <crash/math/transformer.hpp>
 #include <crash/math/transformable.hpp>
-#include <crash/render/texture.hpp>
 #include <crash/render/mesh_component.hpp>
+#include <crash/render/texture.hpp>
 
 namespace crash {
 namespace render {
@@ -35,6 +35,8 @@ public:
       SceneImportFailure(const std::string& error);
       std::string error;
    };
+
+   static const unsigned int NUM_TEXTURE_TYPES;
 
    Mesh(const Mesh& mesh);
    Mesh(const boost::filesystem::path& path);
@@ -72,6 +74,8 @@ private:
    void releaseScene();
 
    void importTextures();
+   std::shared_ptr< Texture > importTexture(const aiMaterial* material,
+    const aiTextureType& type, unsigned int index);
    void normalizeScene();
 
    void buildComponents();
@@ -91,7 +95,7 @@ private:
    std::vector< GLuint > _ibos;
    std::vector< GLuint > _tbos;
    std::map< const aiMesh*, MeshComponent > _components;
-   std::vector< std::shared_ptr< Texture > > _textures;
+   std::vector< TextureGroup > _textureGroups;
 };
 
 } // namespace render

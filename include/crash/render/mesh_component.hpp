@@ -40,10 +40,15 @@ struct GeometryUnit {
 
 struct TextureUnit {
    TextureUnit(std::shared_ptr< Texture > texture, const GLuint& tbo,
-    unsigned int index);
+    const GLint& index);
    std::shared_ptr< Texture > texture;
    GLuint tbo;
-   unsigned int index;
+   GLint index;
+};
+
+struct TextureGroupUnit {
+   TextureGroupUnit(const TextureUnit& diffuse);
+   TextureUnit diffuse;
 };
 
 struct MeshComponent {
@@ -54,17 +59,26 @@ struct MeshComponent {
 
    MeshComponent(const MeshComponent& component);
    MeshComponent(const aiMesh* mesh, const aiMaterial* material,
-    const GeometryUnit& geomtryUnit, const TextureUnit& textureUnit);
+    const GeometryUnit& geomtryUnit, const TextureGroupUnit& textureGroupUnit);
 
    void generateVertexArray();
    void generateVertexBuffer();
    void generateIndexBuffer();
-   void generateTextureBuffer();
+   void generateTextureBuffers();
+   void generateTextureBuffer(const TextureUnit& textureUnit);
 
    void bindAttributes(const ShaderProgram& program,
     const AttributeVariable& vars) const;
    void render(const ShaderProgram& program, const UniformVariable& vars,
     const glm::mat4& transform) const;
+
+   void activateMaterial(const ShaderProgram& program,
+    const UniformVariable& vars) const;
+   void activateTextures(const ShaderProgram& program,
+    const UniformVariable& vars) const;
+   void activateTexture(const ShaderProgram& program,
+    const UniformVariable& vars, const TextureUnit& textureUnit) const;
+   void activateGeometry() const;
 
    static MaterialUnit extractMaterialUnit(const aiMaterial* material);
 
@@ -72,7 +86,7 @@ struct MeshComponent {
    const aiMaterial* material;
    MaterialUnit materialUnit;
    GeometryUnit geometryUnit;
-   TextureUnit textureUnit;
+   TextureGroupUnit textureGroupUnit;
 };
 
 } // namespace render

@@ -33,5 +33,10 @@ private:
    int _components;
 };
 
+struct TextureGroup {
+   TextureGroup(const std::shared_ptr< Texture >& diffuse);
+   std::shared_ptr< Texture > diffuse;
+};
+
 } // namespace render
 } // namespace crash
