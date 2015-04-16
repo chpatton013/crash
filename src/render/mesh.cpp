@@ -104,11 +104,14 @@ void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
  *    aiProcess_FindDegenerates
  *    aiProcess_FindInstances
  *    aiProcess_FindInvalidData
+ *    aiProcess_FlipUVs
+ *    aiProcess_FlipWindingOrder
  *    aiProcess_GenSmoothNormals
  *    aiProcess_GenUVCoords
  *    aiProcess_ImproveCacheLocality
  *    aiProcess_JoinIdenticalVertices
  *    aiProcess_LimitBoneWeights
+ *    aiProcess_MakeLeftHanded
  *    aiProcess_OptimizeMeshes
  *    aiProcess_OptimizeGraph
  *    aiProcess_RemoveRedundantMaterials
@@ -116,11 +119,12 @@ void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
  *    aiProcess_SplitLargeMeshes
  *    aiProcess_TransformUVCoords
  *    aiProcess_Triangulate
- *    aiProcess_ValidateDataStructure;
+ *    aiProcess_ValidateDataStructure
  */
 void Mesh::importScene() {
    static const unsigned int postProcessingFlags =
       aiProcessPreset_TargetRealtime_MaxQuality
+    | aiProcess_ConvertToLeftHanded // Macro for FlipUVs, FlipWindingOrder, and MakeLeftHanded.
     | aiProcess_FixInfacingNormals
     | aiProcess_OptimizeGraph
     | aiProcess_TransformUVCoords;
