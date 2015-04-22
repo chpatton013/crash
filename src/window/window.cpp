@@ -866,7 +866,7 @@ boost::optional< Window::mouseScrollCallback >
    }
 
    auto window = itr->second;
-   if (window->_keyCb == nullptr) {
+   if (window->_charCb == nullptr) {
       return;
    }
 
