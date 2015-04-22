@@ -26,7 +26,7 @@ Mesh::Mesh(const Mesh& mesh) :
 
 Mesh::Mesh(const boost::filesystem::path& path) :
    _path(path), _scene(nullptr),
-    _transformer(glm::vec3(), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)),
+    _transformer(glm::vec3(), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)),
     _vaos(), _vbos(), _ibos(), _tbos(), _components(), _textureGroups()
 {
    this->importScene();

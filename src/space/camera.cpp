@@ -1,5 +1,7 @@
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
+#include <crash/math/symbols.hpp>
 #include <crash/space/camera.hpp>
 
 using namespace crash::math;
@@ -10,35 +12,75 @@ using namespace crash::space;
 ////////////////////////////////////////////////////////////////////////////////
 
 Camera::Camera(const Camera& camera) :
-   _position(camera._position), _forward(camera._forward), _up(camera._up),
+   _position(camera._position), _orientation(camera._orientation),
+    _translationalVelocity(camera._translationalVelocity),
+    _rotationalVelocity(camera._rotationalVelocity),
     _fieldOfView(camera._fieldOfView), _aspectRatio(camera._aspectRatio),
     _nearPlane(camera._nearPlane), _farPlane(camera._farPlane)
 {}
 
-Camera::Camera(const glm::vec3& position, const glm::vec3& forward,
- const glm::vec3& up, float fieldOfView, float aspectRatio,
- float nearPlane, float farPlane) :
-   _position(position), _forward(glm::normalize(forward)),
-    _up(glm::normalize(up)),
+Camera::Camera(const glm::vec3& position, const glm::quat& orientation,
+ float fieldOfView, float aspectRatio, float nearPlane, float farPlane) :
+   _position(position), _orientation(orientation),
+    _translationalVelocity(),
+    _rotationalVelocity(),
     _fieldOfView(fieldOfView), _aspectRatio(aspectRatio),
     _nearPlane(nearPlane), _farPlane(farPlane)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Data access.
+// Movable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3& Camera::getPosition() const {
+glm::vec3 Camera::getPosition() const {
    return this->_position;
 }
 
-const glm::vec3& Camera::getForward() const {
-   return this->_forward;
+glm::quat Camera::getOrientation() const {
+   return this->_orientation;
 }
 
-const glm::vec3& Camera::getUp() const {
-   return this->_up;
+glm::vec3 Camera::getSize() const {
+   return glm::vec3(1.0f);
 }
+
+glm::vec3 Camera::getTranslationalVelocity() const {
+   return this->_translationalVelocity;
+}
+
+glm::quat Camera::getRotationalVelocity() const {
+   return this->_rotationalVelocity;
+}
+
+glm::vec3 Camera::getScaleVelocity() const {
+   return glm::vec3(0.0f);
+}
+
+void Camera::setPosition(const glm::vec3& position) {
+   this->_position = position;
+   this->invalidate();
+}
+
+void Camera::setOrientation(const glm::quat& orientation) {
+   this->_orientation = orientation;
+   this->invalidate();
+}
+
+void Camera::setSize(const glm::vec3&) { /* No-op. */ }
+
+void Camera::setTranslationalVelocity(const glm::vec3& translationalVelocity) {
+   this->_translationalVelocity = translationalVelocity;
+}
+
+void Camera::setRotationalVelocity(const glm::quat& rotationalVelocity) {
+   this->_rotationalVelocity = rotationalVelocity;
+}
+
+void Camera::setScaleVelocity(const glm::vec3&) { /* No-op. */ }
+
+////////////////////////////////////////////////////////////////////////////////
+// Data access.
+////////////////////////////////////////////////////////////////////////////////
 
 float Camera::getFieldOfView() const {
    return this->_fieldOfView;
@@ -54,21 +96,6 @@ float Camera::getNearPlane() const {
 
 float Camera::getFarPlane() const {
    return this->_farPlane;
-}
-
-void Camera::setPosition(const glm::vec3& position) {
-   this->_position = position;
-   this->invalidate();
-}
-
-void Camera::setForward(const glm::vec3& forward) {
-   this->_forward = glm::normalize(forward);
-   this->invalidate();
-}
-
-void Camera::setUp(const glm::vec3& up) {
-   this->_up = glm::normalize(up);
-   this->invalidate();
 }
 
 void Camera::setFieldOfView(float fieldOfView) {
@@ -151,8 +178,8 @@ void Camera::calculatePerspective() {
 }
 
 void Camera::calculateLookAt() {
-   this->_lookAt = glm::lookAt(this->_position,
-    this->_position + this->_forward, this->_up);
+   this->_lookAt = glm::lookAt(this->getPosition(),
+    this->getPosition() + this->getForward(), this->getUp());
 }
 
 void Camera::calculateViewFrustum() {

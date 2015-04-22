@@ -1,38 +1,51 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <boost/optional.hpp>
 #include <crash/space/view_frustum.hpp>
+#include <crash/space/movable.hpp>
 
 namespace crash {
 namespace space {
 
-class Camera {
+class Camera : public Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
    Camera(const Camera& camera);
-   Camera(const glm::vec3& position, const glm::vec3& forward,
-    const glm::vec3& up, float fieldOfView, float aspectRatio,
-    float nearPlane, float farPlane);
+   Camera(const glm::vec3& position, const glm::quat& orientation,
+    float fieldOfView, float aspectRatio, float nearPlane, float farPlane);
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Movable interface.
+   /////////////////////////////////////////////////////////////////////////////
+
+   glm::vec3 getPosition() const;
+   glm::quat getOrientation() const;
+   glm::vec3 getSize() const;
+   glm::vec3 getTranslationalVelocity() const;
+   glm::quat getRotationalVelocity() const;
+   glm::vec3 getScaleVelocity() const;
+
+   void setPosition(const glm::vec3& position);
+   void setOrientation(const glm::quat& orientation);
+   void setSize(const glm::vec3& size);
+   void setTranslationalVelocity(const glm::vec3& translationalVelocity);
+   void setRotationalVelocity(const glm::quat& rotationalVelocity);
+   void setScaleVelocity(const glm::vec3& scaleVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
    // Data access.
    /////////////////////////////////////////////////////////////////////////////
 
-   const glm::vec3& getPosition() const;
-   const glm::vec3& getForward() const;
-   const glm::vec3& getUp() const;
    float getFieldOfView() const;
    float getAspectRatio() const;
    float getNearPlane() const;
    float getFarPlane() const;
 
-   void setPosition(const glm::vec3& position);
-   void setForward(const glm::vec3& forward);
-   void setUp(const glm::vec3& up);
    void setFieldOfView(float fieldOfView);
    void setAspectRatio(float aspectRatio);
    void setNearPlane(float nearPlane);
@@ -53,8 +66,9 @@ public:
 private:
    // Data members
    glm::vec3 _position;
-   glm::vec3 _forward;
-   glm::vec3 _up;
+   glm::quat _orientation;
+   glm::vec3 _translationalVelocity;
+   glm::quat _rotationalVelocity;
    float _fieldOfView;
    float _aspectRatio;
    float _nearPlane;

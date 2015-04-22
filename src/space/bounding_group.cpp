@@ -16,7 +16,7 @@ BoundingGroup::BoundingGroup(const BoundingGroup& boundingGroup) :
 {}
 
 BoundingGroup::BoundingGroup(const Transformer& transformer) :
-   _boundingBox(transformer, glm::vec3(), glm::vec4(xAxis, 0.0f))
+   _boundingBox(transformer, glm::vec3(), glm::vec4(X_AXIS, 0.0f))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////

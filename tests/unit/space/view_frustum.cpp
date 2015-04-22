@@ -35,8 +35,8 @@ static void assertPlaneLocation(const Plane& plane,
 }
 
 TEST_CASE("crash/space/view_frustum") {
-   glm::vec3 position = origin;
-   glm::vec4 orientation = glm::vec4(xAxis, 0.0f);
+   glm::vec3 position = ORIGIN;
+   glm::vec4 orientation = glm::vec4(X_AXIS, 0.0f);
    float fov = glm::radians(60.0f);
    float aspect = 1.0f;
    float tanX = tan(fov * aspect * 0.5f);

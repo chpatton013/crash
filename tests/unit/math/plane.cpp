@@ -21,9 +21,9 @@ TEST_CASE("math/plane/fromPoints") {
 }
 
 TEST_CASE("math/plane/distance") {
-   Plane xyPlane = Plane(origin, zAxis);
-   Plane xzPlane = Plane(origin, yAxis);
-   Plane yzPlane = Plane(origin, xAxis);
+   Plane xyPlane = Plane(ORIGIN, Z_AXIS);
+   Plane xzPlane = Plane(ORIGIN, Y_AXIS);
+   Plane yzPlane = Plane(ORIGIN, X_AXIS);
 
    glm::vec3 xPoint = glm::vec3(1.0f, 0.0f, 0.0f);
    glm::vec3 yPoint = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -33,7 +33,7 @@ TEST_CASE("math/plane/distance") {
    glm::vec3 yzPoint = glm::vec3(0.0f, 1.0f, 1.0f);
    glm::vec3 xyzPoint = glm::vec3(1.0f, 1.0f, 1.0f);
 
-   REQUIRE(xyPlane.distance(origin) == 0.0f);
+   REQUIRE(xyPlane.distance(ORIGIN) == 0.0f);
    REQUIRE(xyPlane.distance(xPoint) == 0.0f);
    REQUIRE(xyPlane.distance(yPoint) == 0.0f);
    REQUIRE(xyPlane.distance(zPoint) == 1.0f);
@@ -42,7 +42,7 @@ TEST_CASE("math/plane/distance") {
    REQUIRE(xyPlane.distance(yzPoint) == 1.0f);
    REQUIRE(xyPlane.distance(xyzPoint) == 1.0f);
 
-   REQUIRE(xzPlane.distance(origin) == 0.0f);
+   REQUIRE(xzPlane.distance(ORIGIN) == 0.0f);
    REQUIRE(xzPlane.distance(xPoint) == 0.0f);
    REQUIRE(xzPlane.distance(yPoint) == 1.0f);
    REQUIRE(xzPlane.distance(zPoint) == 0.0f);
@@ -51,7 +51,7 @@ TEST_CASE("math/plane/distance") {
    REQUIRE(xzPlane.distance(yzPoint) == 1.0f);
    REQUIRE(xzPlane.distance(xyzPoint) == 1.0f);
 
-   REQUIRE(yzPlane.distance(origin) == 0.0f);
+   REQUIRE(yzPlane.distance(ORIGIN) == 0.0f);
    REQUIRE(yzPlane.distance(xPoint) == 1.0f);
    REQUIRE(yzPlane.distance(yPoint) == 0.0f);
    REQUIRE(yzPlane.distance(zPoint) == 0.0f);

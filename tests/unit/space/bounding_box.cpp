@@ -56,7 +56,7 @@ TEST_CASE("crash/space/bounding_box/is_visible") {
    glm::vec3 near = glm::vec3(tanX, tanY, 1.0f);
    glm::vec3 far = 10.0f * near;
 
-   Camera c = Camera(origin, -zAxis, yAxis, fov, aspect, near.z, far.z);
+   Camera c = Camera(ORIGIN, NO_ROTATION, fov, aspect, near.z, far.z);
    ViewFrustum vf = c.getViewFrustum();
 
    std::array< glm::vec3, 8 > corners = {{
@@ -98,11 +98,11 @@ TEST_CASE("crash/space/bounding_box/is_visible") {
           pointSet[pointNdx] + pointSetOffsets[setNdx];
 
          inView.push_back(BoundingBox(Transformer(
-          position, glm::vec4(zAxis, 0.0f), glm::vec3(1.0f)),
-          glm::vec3(), glm::vec4(xAxis, 0.0f)));
+          position, glm::vec4(Z_AXIS, 0.0f), glm::vec3(1.0f)),
+          glm::vec3(), glm::vec4(X_AXIS, 0.0f)));
          outOfView.push_back(BoundingBox(Transformer(
-          transformedPosition, glm::vec4(zAxis, 0.0f), glm::vec3(1.0f)),
-          glm::vec3(), glm::vec4(xAxis, 0.0f)));
+          transformedPosition, glm::vec4(Z_AXIS, 0.0f), glm::vec3(1.0f)),
+          glm::vec3(), glm::vec4(X_AXIS, 0.0f)));
       }
    }
 
@@ -111,98 +111,98 @@ TEST_CASE("crash/space/bounding_box/is_visible") {
 
 TEST_CASE("crash/space/bounding_box/intersect") {
    BoundingBox reference = BoundingBox(
-    Transformer(glm::vec3(), glm::vec4(xAxis, 0.0f), glm::vec3()),
-    glm::vec3(), glm::vec4(xAxis, 0.0f));
+    Transformer(glm::vec3(), glm::vec4(X_AXIS, 0.0f), glm::vec3()),
+    glm::vec3(), glm::vec4(X_AXIS, 0.0f));
 
    glm::vec3 xPosition = glm::vec3(1.0f, 0.0f, 0.0f);
    glm::vec3 yPosition = glm::vec3(0.0f, 1.0f, 0.0f);
    glm::vec3 zPosition = glm::vec3(0.0f, 0.0f, 1.0f);
 
-   glm::vec4 nOrientation = glm::vec4(xAxis,  0.0f);
-   glm::vec4 xOrientation = glm::vec4(xAxis, 45.0f);
-   glm::vec4 yOrientation = glm::vec4(yAxis, 45.0f);
-   glm::vec4 zOrientation = glm::vec4(zAxis, 45.0f);
+   glm::vec4 nOrientation = glm::vec4(X_AXIS,  0.0f);
+   glm::vec4 xOrientation = glm::vec4(X_AXIS, 45.0f);
+   glm::vec4 yOrientation = glm::vec4(Y_AXIS, 45.0f);
+   glm::vec4 zOrientation = glm::vec4(Z_AXIS, 45.0f);
 
    glm::vec3 smallSize = glm::vec3(0.5f);
    glm::vec3 mediumSize = glm::vec3(1.0f);
    glm::vec3 bigSize = glm::vec3(2.0f);
 
    std::vector< BoundingBox > intersecting = {{
-      BoundingBox(Transformer(xPosition, nOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, nOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, nOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, xOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, xOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, xOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, yOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, yOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, yOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, zOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, zOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, zOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, nOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, nOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, nOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, xOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, xOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, xOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, yOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, yOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, yOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, zOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, zOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, zOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, nOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, nOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, nOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, xOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, xOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, xOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, yOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, yOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, yOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, zOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, zOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, zOrientation, mediumSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, nOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, nOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, nOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, xOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, xOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, xOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, yOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, yOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, yOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, zOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, zOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, zOrientation, bigSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+      BoundingBox(Transformer(xPosition, nOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, nOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, nOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, xOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, xOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, xOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, yOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, yOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, yOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, zOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, zOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, zOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, nOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, nOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, nOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, xOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, xOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, xOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, yOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, yOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, yOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, zOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, zOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, zOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, nOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, nOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, nOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, xOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, xOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, xOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, yOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, yOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, yOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, zOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, zOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, zOrientation, mediumSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, nOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, nOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, nOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, xOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, xOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, xOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, yOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, yOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, yOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, zOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, zOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, zOrientation, bigSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
    }};
 
    std::vector< BoundingBox > notIntersecting = {{
-      BoundingBox(Transformer(xPosition, nOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, nOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, nOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, xOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, xOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, xOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, yOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, yOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, yOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition, zOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition, zOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition, zOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, nOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, nOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, nOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, xOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, xOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, xOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, yOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, yOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, yOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(xPosition * -1.0f, zOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(yPosition * -1.0f, zOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
-      BoundingBox(Transformer(zPosition * -1.0f, zOrientation, smallSize), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+      BoundingBox(Transformer(xPosition, nOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, nOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, nOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, xOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, xOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, xOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, yOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, yOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, yOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition, zOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition, zOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition, zOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, nOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, nOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, nOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, xOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, xOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, xOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, yOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, yOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, yOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(xPosition * -1.0f, zOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(yPosition * -1.0f, zOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
+      BoundingBox(Transformer(zPosition * -1.0f, zOrientation, smallSize), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
    }};
 
    assertIntersection(reference, intersecting, notIntersecting);

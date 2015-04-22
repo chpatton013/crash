@@ -107,13 +107,13 @@ static void assertCamera(Camera c) {
 }
 
 TEST_CASE("crash/space/camera/simple") {
-   assertCamera(Camera(origin, -zAxis, yAxis,
+   assertCamera(Camera(ORIGIN, NO_ROTATION,
     /* fov */ glm::radians(60.0f), /* aspect ratio */ 1.0f,
     /* near */ 1.0f, /* far */ 10.0f));
 }
 
 TEST_CASE("crash/space/camera/wide") {
-   assertCamera(Camera(origin, -zAxis, yAxis,
+   assertCamera(Camera(ORIGIN, NO_ROTATION,
     /* fov */ glm::radians(60.0f), /* aspect ratio */ 2.0f,
     /* near */ 1.0f, /* far */ 10.0f));
 }

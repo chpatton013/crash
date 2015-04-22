@@ -18,7 +18,7 @@ BoundingPartition::BoundingPartition(const BoundingPartition& spatialManager) :
 
 BoundingPartition::BoundingPartition(const Transformer& transformer,
  const glm::ivec3& partitions) :
-   _boundingBox(transformer, glm::vec3(), glm::vec4(xAxis, 0.0f)),
+   _boundingBox(transformer, glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
     _numBoundingBoxes(0)
 {
    this->partition(transformer, partitions);

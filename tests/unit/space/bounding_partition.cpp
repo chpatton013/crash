@@ -10,7 +10,7 @@ using namespace crash::space;
 
 TEST_CASE("crash/space/bounding_partition/size") {
    glm::vec3 size = glm::vec3(4.0f);
-   Transformer transformer(origin, glm::vec4(xAxis, 0.0f), size);
+   Transformer transformer(ORIGIN, glm::vec4(X_AXIS, 0.0f), size);
    glm::ivec3 partitions = glm::ivec3(1);
    BoundingPartition partition = BoundingPartition(transformer, partitions);
 
@@ -18,7 +18,7 @@ TEST_CASE("crash/space/bounding_partition/size") {
    REQUIRE(partition.getPartitions() == partitions);
 
    size = glm::vec3(16.0f);
-   transformer = Transformer(origin, glm::vec4(xAxis, 0.0f), size);
+   transformer = Transformer(ORIGIN, glm::vec4(X_AXIS, 0.0f), size);
    partitions = glm::ivec3(4);
    partition.resize(transformer, partitions);
 
@@ -28,13 +28,13 @@ TEST_CASE("crash/space/bounding_partition/size") {
 
 TEST_CASE("crash/space/bounding_partition/bounding_boxes") {
    glm::vec3 size = glm::vec3(4.0f);
-   Transformer transformer(origin, glm::vec4(xAxis, 0.0f), size);
+   Transformer transformer(ORIGIN, glm::vec4(X_AXIS, 0.0f), size);
    BoundingPartition partition = BoundingPartition(transformer, glm::ivec3(1));
 
    const unsigned int numBoundingBoxes = 4;
    for (unsigned int ndx = 0; ndx < numBoundingBoxes; ++ndx) {
-      REQUIRE(partition.add(new BoundingBox(Transformer(origin, glm::vec4(xAxis, 0.0f),
-       glm::vec3(1.0f)), glm::vec3(), glm::vec4(xAxis, 0.0f))));
+      REQUIRE(partition.add(new BoundingBox(Transformer(ORIGIN, glm::vec4(X_AXIS, 0.0f),
+       glm::vec3(1.0f)), glm::vec3(), glm::vec4(X_AXIS, 0.0f))));
    }
 
    REQUIRE(partition.getNumBoundingGroups() == 1);
@@ -80,59 +80,59 @@ TEST_CASE("crash/space/bounding_partition/bounding_boxes") {
 
 TEST_CASE("crash/space/bounding_partition/visible_elements") {
    glm::vec3 size = glm::vec3(32.0f);
-   Transformer transformer(origin, glm::vec4(xAxis, 0.0f), size);
+   Transformer transformer(ORIGIN, glm::vec4(X_AXIS, 0.0f), size);
    BoundingPartition partition = BoundingPartition(transformer, glm::ivec3(1));
 
-   Camera c = Camera(origin, -zAxis, yAxis,
+   Camera c = Camera(ORIGIN, NO_ROTATION,
     /* fov */ glm::radians(60.0f), /* aspect */ 1.0f,
     /* near */ 3.0f, /* far */ 32.0f);
 
    std::set< BoundingBox* > inView = {{
       new BoundingBox(Transformer(
-         glm::vec3( 0.0f,  0.0f, size.z * 0.5f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3( 0.0f,  0.0f, size.z * 0.5f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3( 0.0f,  0.0f, size.z * 0.5f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3( 0.0f,  0.0f, size.z * 0.5f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3( 1.0f,  1.0f,          5.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3( 1.0f,  1.0f,          5.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3( 1.0f, -1.0f,          5.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3( 1.0f, -1.0f,          5.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(-1.0f,  1.0f,          5.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(-1.0f,  1.0f,          5.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(-1.0f, -1.0f,          5.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(-1.0f, -1.0f,          5.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
    }};
 
    std::set< BoundingBox* > outOfView = {{
       new BoundingBox(Transformer(
-         glm::vec3(         0.0f,          0.0f,           0.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(         0.0f,          0.0f,           0.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(         0.0f,          0.0f, -size.z * 0.05), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(         0.0f,          0.0f, -size.z * 0.05), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(         0.0f, size.y * 0.5f,           0.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(         0.0f, size.y * 0.5f,           0.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(         0.0f, size.y * 0.5f, -size.z * 0.05), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(         0.0f, size.y * 0.5f, -size.z * 0.05), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(size.x * 0.5f,          0.0f,           0.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(size.x * 0.5f,          0.0f,           0.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(size.x * 0.5f,          0.0f, -size.z * 0.05), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(size.x * 0.5f,          0.0f, -size.z * 0.05), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(size.x * 0.5f, size.y * 0.5f,           0.0f), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(size.x * 0.5f, size.y * 0.5f,           0.0f), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
       new BoundingBox(Transformer(
-         glm::vec3(size.x * 0.5f, size.y * 0.5f, -size.z * 0.05), glm::vec4(xAxis, 0.0f), glm::vec3(1.0f)
-      ), glm::vec3(), glm::vec4(xAxis, 0.0f)),
+         glm::vec3(size.x * 0.5f, size.y * 0.5f, -size.z * 0.05), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)
+      ), glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
    }};
 
    for (auto boundingBox : inView) {

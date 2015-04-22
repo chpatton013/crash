@@ -15,6 +15,7 @@
 #  include <GL/gl.h>
 #endif
 
+#include <crash/math/arithmetic.hpp>
 #include <crash/math/symbols.hpp>
 #include <crash/math/util.hpp>
 #include <crash/render/light.hpp>
@@ -33,6 +34,24 @@ using namespace crash::math;
 using namespace crash::render;
 using namespace crash::space;
 using namespace crash::window;
+
+struct controls_t {
+   bool move_left;
+   bool move_right;
+   bool move_up;
+   bool move_down;
+   bool move_forward;
+   bool move_backward;
+   bool turn_left;
+   bool turn_right;
+   bool lean_forward;
+   bool lean_backward;
+   bool roll_left;
+   bool roll_right;
+};
+
+controls_t controls;
+std::shared_ptr< Camera > camera;
 
 Window initializeOpenGl();
 
@@ -54,6 +73,10 @@ void render(const std::shared_ptr< Camera >& camera,
  const std::shared_ptr< UniformVariable >& uniforms,
  const std::shared_ptr< Mesh >& mesh, MatrixStack& stack);
 
+void update(float delta_t);
+
+void keyCb(const Window& window, int key, int, int action, int mods);
+
 int main(int argc, char** argv) {
    if (argc < 2) {
       std::cerr << "usage: " << argv[0] << " <filename>" << std::endl;
@@ -62,10 +85,10 @@ int main(int argc, char** argv) {
    const std::string file = argv[1];
 
    Window window = initializeOpenGl();
+   window.setKeyCallback(keyCb);
    window.setVisible(true);
    Keyboard keyboard(window);
 
-   std::shared_ptr< Camera > camera;
    std::shared_ptr< LightManager > lightManager;
    std::shared_ptr< ShaderProgram > program;
    std::shared_ptr< AttributeVariable > attributes;
@@ -86,21 +109,28 @@ int main(int argc, char** argv) {
    }
 
    MatrixStack stack;
+   mesh->setOrientation(glm::vec4(Y_AXIS, glm::radians(180.0f)));
 
-   boost::timer::cpu_timer timer;
-   const boost::timer::nanosecond_type interval = 10E9 / 60.0f;
+   boost::timer::cpu_timer renderTimer;
+   boost::timer::cpu_timer updateTimer;
+   const float renderInterval = 1.0f / 60.0f;
+   const float updateInterval = 1.0f / 25.0f;
    while (!window.shouldClose()) {
-      if (timer.elapsed().wall > interval) {
-         timer.resume();
+      float renderElapsed = renderTimer.elapsed().wall * 10E-9;
+      float updateElapsed = updateTimer.elapsed().wall * 10E-9;
+
+      if (renderElapsed > renderInterval) {
+         renderTimer.start();
 
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
          render(camera, lightManager, program, uniforms, mesh, stack);
          window.swapBuffers();
       }
 
-      glfwPollEvents();
-      if (keyboard.getKey(GLFW_KEY_ESCAPE)) {
-         window.setShouldClose(true);
+      if (updateElapsed > updateInterval) {
+         updateTimer.start();
+         glfwPollEvents();
+         update(/* delta t */ updateElapsed);
       }
    }
 
@@ -224,9 +254,7 @@ std::tuple<
    program->createUniformVariable(uniforms->shininess_texture);
 
    std::shared_ptr< Camera > camera = std::make_shared< Camera >(
-    /* position */ glm::vec3(0.0f, 0.0f, 1.0f),
-    /* forward */ glm::vec3(0.0f, 0.0f, -1.0f),
-    /* up */ glm::vec3(0.0f, 1.0f, 0.0f),
+    /* position */ glm::vec3(0.0f, 0.0f, 1.0f), NO_ROTATION,
     /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
     /* near */ 0.1f, /* far */ 10.0f);
 
@@ -291,4 +319,114 @@ void render(const std::shared_ptr< Camera >& camera,
    mesh->render(*program, *uniforms, stack);
 
    stack.pop(); // view, perspective
+}
+
+static glm::vec3 getTranslationalVelocity() {
+   glm::vec3 t_vel(0.0f);
+
+   if (controls.move_forward) {
+      t_vel += camera->getForward();
+   }
+   if (controls.move_backward) {
+      t_vel += -camera->getForward();
+   }
+   if (controls.move_left) {
+      t_vel += -glm::normalize(glm::cross(
+       camera->getForward(), camera->getUp()));
+   }
+   if (controls.move_right) {
+      t_vel += glm::normalize(glm::cross(
+       camera->getForward(), camera->getUp()));
+   }
+   if (controls.move_up) {
+      t_vel += camera->getUp();
+   }
+   if (controls.move_down) {
+      t_vel += -camera->getUp();
+   }
+
+   if (t_vel != glm::vec3(0.0f)) {
+      t_vel = glm::normalize(t_vel);
+   }
+
+   return t_vel;
+}
+
+static glm::quat getRotationalVelocity() {
+   glm::vec3 axis(0.0f);
+
+   if (controls.turn_left) {
+      axis += camera->getUp();
+   }
+   if (controls.turn_right) {
+      axis += -camera->getUp();
+   }
+   if (controls.lean_forward) {
+      axis += glm::normalize(glm::cross(
+       camera->getUp(), camera->getForward()));
+   }
+   if (controls.lean_backward) {
+      axis += -glm::normalize(glm::cross(
+       camera->getUp(), camera->getForward()));
+   }
+   if (controls.roll_left) {
+      axis += -camera->getForward();
+   }
+   if (controls.roll_right) {
+      axis += camera->getForward();
+   }
+
+   if (axis == glm::vec3(0.0f)) {
+      return NO_ROTATION;
+   }
+
+   return axisAngleToQuat(glm::vec4(glm::normalize(axis), glm::radians(45.0f)));
+}
+
+void update(float delta_t) {
+   camera->setTranslationalVelocity(getTranslationalVelocity());
+   camera->setRotationalVelocity(getRotationalVelocity());
+
+   camera->move(delta_t);
+}
+
+void keyCb(const Window& window, int key, int, int action, int mods) {
+   if (action == GLFW_REPEAT) {
+      return;
+   }
+
+   if (key == GLFW_KEY_ESCAPE) {
+      window.setShouldClose(true);
+      return;
+   }
+
+   bool control = action == GLFW_PRESS;
+
+   if (key == GLFW_KEY_W) {
+      controls.move_forward = control;
+   } else if (key == GLFW_KEY_S) {
+      controls.move_backward = control;
+   } else if (key == GLFW_KEY_A) {
+      controls.turn_left = control;
+   } else if (key == GLFW_KEY_D) {
+      controls.turn_right = control;
+   } else if (key == GLFW_KEY_Q) {
+      controls.move_left = control;
+   } else if (key == GLFW_KEY_E) {
+      controls.move_right = control;
+   } else if (key == GLFW_KEY_I) {
+      controls.lean_forward = control;
+   } else if (key == GLFW_KEY_K) {
+      controls.lean_backward = control;
+   } else if (key == GLFW_KEY_J) {
+      controls.roll_left = control;
+   } else if (key == GLFW_KEY_L) {
+      controls.roll_right = control;
+   } else if (key == GLFW_KEY_SPACE) {
+      if (mods & GLFW_MOD_SHIFT) {
+         controls.move_down = control;
+      } else {
+         controls.move_up = control;
+      }
+   }
 }

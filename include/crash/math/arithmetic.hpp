@@ -5,6 +5,8 @@
 namespace crash {
 namespace math {
 
+glm::quat axisAngleToQuat(const glm::vec4& aa);
+
 /**
  * Compute the average between two numeric parameters.
  *

@@ -21,7 +21,7 @@ static void testTransformation(const glm::vec3& position,
 
 TEST_CASE("math/transform/identity") {
    glm::vec3 position = glm::vec3(0.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, 0.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, 0.0f);
    glm::vec3 size = glm::vec3(1.0f);
    glm::mat4 identity;
    glm::vec4 point = glm::vec4(1.0f);
@@ -31,7 +31,7 @@ TEST_CASE("math/transform/identity") {
 
 TEST_CASE("math/transform/translate") {
    glm::vec3 position = glm::vec3(2.0f, 3.0f, 4.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, 0.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, 0.0f);
    glm::vec3 size = glm::vec3(1.0f);
 
    float expectedArray[16] = {
@@ -48,7 +48,7 @@ TEST_CASE("math/transform/translate") {
 
 TEST_CASE("math/transform/rotate") {
    glm::vec3 position = glm::vec3(0.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, pi / 4.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, pi / 4.0f);
    glm::vec3 size = glm::vec3(1.0f);
 
    float root2 = std::sqrt(2);
@@ -66,7 +66,7 @@ TEST_CASE("math/transform/rotate") {
 
 TEST_CASE("math/transform/scale") {
    glm::vec3 position = glm::vec3(0.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, 0.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, 0.0f);
    glm::vec3 size = glm::vec3(2.0f, 3.0f, 4.0f);
 
    glm::mat4 trans = Transformer(position, orientation, size).getTransform();
@@ -84,7 +84,7 @@ TEST_CASE("math/transform/scale") {
 
 TEST_CASE("math/transform/translate-rotate") {
    glm::vec3 position = glm::vec3(2.0f, 3.0f, 4.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, pi / 4.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, pi / 4.0f);
    glm::vec3 size = glm::vec3(1.0f);
 
    float root2 = std::sqrt(2);
@@ -103,7 +103,7 @@ TEST_CASE("math/transform/translate-rotate") {
 
 TEST_CASE("math/transform/translate-scale") {
    glm::vec3 position = glm::vec3(2.0f, 3.0f, 4.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, 0.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, 0.0f);
    glm::vec3 size = glm::vec3(2.0f, 3.0f, 4.0f);
 
    float expectedArray[16] = {
@@ -120,7 +120,7 @@ TEST_CASE("math/transform/translate-scale") {
 
 TEST_CASE("math/transform/rotate-scale") {
    glm::vec3 position = glm::vec3(0.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, pi / 4.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, pi / 4.0f);
    glm::vec3 size = glm::vec3(2.0f, 3.0f, 4.0f);
 
    float root2 = std::sqrt(2);
@@ -139,7 +139,7 @@ TEST_CASE("math/transform/rotate-scale") {
 
 TEST_CASE("math/transform/translate-rotate-scale") {
    glm::vec3 position = glm::vec3(2.0f, 3.0f, 4.0f);
-   glm::vec4 orientation = glm::vec4(xAxis, pi / 4.0f);
+   glm::vec4 orientation = glm::vec4(X_AXIS, pi / 4.0f);
    glm::vec3 size = glm::vec3(2.0f, 3.0f, 4.0f);
 
    float root2 = std::sqrt(2);
