@@ -40,6 +40,18 @@ void crash::math::print(const glm::vec4& v, bool newline) {
    }
 }
 
+void crash::math::print(const glm::quat& q) {
+   print(q, true);
+}
+
+void crash::math::print(const glm::quat& q, bool newline) {
+   if (newline) {
+      printf("%.4f %.4f %.4f %.4f\n", q.w, q.x, q.y, q.z);
+   } else {
+      printf("%.4f %.4f %.4f %.4f", q.w, q.x, q.y, q.z);
+   }
+}
+
 void crash::math::print(const glm::mat4& m) {
    const float* v = glm::value_ptr(m);
    printf(

@@ -51,6 +51,21 @@ void print(const glm::vec4& v);
 void print(const glm::vec4& v, bool newline);
 
 /**
+ * Print the given quaternion to stdout.
+ *
+ * :param v:   The quaternion to print.
+ */
+void print(const glm::quat& q);
+
+/**
+ * Print the given quaternion to stdout.
+ *
+ * :param v:         The quaternion to print.
+ * :param newline:   Should a trailing newline be printed.
+ */
+void print(const glm::quat& q, bool newline);
+
+/**
  * Print the given matrix to stdout.
  *
  * :param m:   The matrix to print.
