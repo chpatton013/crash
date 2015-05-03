@@ -12,6 +12,10 @@
 using namespace crash::math;
 using namespace crash::render;
 
+AnimationUnit::AnimationUnit(unsigned int index, float duration) :
+   index(index), duration(duration)
+{}
+
 Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
    error(error)
 {}
@@ -73,6 +77,10 @@ const glm::mat4& Mesh::getTransform() {
 // Rendering.
 ////////////////////////////////////////////////////////////////////////////////
 
+const std::vector< Animation >& Mesh::getAnimations() const {
+   return this->_animations;
+}
+
 void Mesh::initialize() {
    this->allocateBuffers();
    this->buildComponents();
@@ -91,9 +99,11 @@ void Mesh::bindAttributes(const ShaderProgram& program,
 }
 
 void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
- MatrixStack& matrixStack) {
+ MatrixStack& matrixStack,
+ const std::vector< AnimationUnit >& activeAnimations) {
    matrixStack.push(this->getTransform());
-   this->renderNode(program, vars, matrixStack, this->_scene->mRootNode);
+   this->renderNode(program, vars, matrixStack, this->_scene->mRootNode,
+    activeAnimations);
    matrixStack.pop();
 }
 
@@ -138,6 +148,7 @@ void Mesh::importScene() {
 
    this->_scene = scene;
    this->normalizeScene();
+   this->buildAnimations();
 }
 
 void Mesh::releaseScene() {
@@ -208,6 +219,14 @@ void Mesh::normalizeScene() {
    this->setSize(glm::vec3(scale));
 }
 
+void Mesh::buildAnimations() {
+   this->_animations.clear();
+   this->_animations.reserve(this->_scene->mNumAnimations);
+   for (unsigned int i = 0; i < this->_scene->mNumAnimations; ++i) {
+      this->_animations.push_back(this->_scene->mAnimations[i]);
+   }
+}
+
 void Mesh::buildComponents() {
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
       aiMesh* mesh = this->_scene->mMeshes[i];
@@ -268,17 +287,9 @@ void Mesh::releaseBuffers() {
 }
 
 void Mesh::renderNode(const ShaderProgram& program,
- const UniformVariable& vars, MatrixStack& matrixStack,
- const aiNode* node) const {
-   auto m = node->mTransformation;
-   glm::mat4 transform = glm::mat4(
-      m.a1, m.a2, m.a3, m.a4,
-      m.b1, m.b2, m.b3, m.b4,
-      m.c1, m.c2, m.c3, m.c4,
-      m.d1, m.d2, m.d3, m.d4
-   );
-
-   matrixStack.push(transform);
+ const UniformVariable& vars, MatrixStack& matrixStack, const aiNode* node,
+ const std::vector< AnimationUnit >& activeAnimations) const {
+   matrixStack.push(this->getNodeTransform(node, activeAnimations));
 
    for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
       auto mesh = this->_scene->mMeshes[node->mMeshes[i]];
@@ -290,8 +301,28 @@ void Mesh::renderNode(const ShaderProgram& program,
    }
 
    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-      this->renderNode(program, vars, matrixStack, node->mChildren[i]);
+      this->renderNode(program, vars, matrixStack, node->mChildren[i],
+       activeAnimations);
    }
 
    matrixStack.pop();
+}
+
+glm::mat4 Mesh::getNodeTransform(const aiNode* node,
+ const std::vector< AnimationUnit >& activeAnimations) const {
+   for (auto& unit : activeAnimations) {
+      auto& animation = this->_animations[unit.index];
+      auto transformOpt = animation.getNodeTransform(node, unit.duration);
+      if (transformOpt) {
+         return transformOpt.get();
+      }
+   }
+
+   aiMatrix4x4 m = node->mTransformation;
+   return glm::mat4(
+      m.a1, m.a2, m.a3, m.a4,
+      m.b1, m.b2, m.b3, m.b4,
+      m.c1, m.c2, m.c3, m.c4,
+      m.d1, m.d2, m.d3, m.d4
+   );
 }

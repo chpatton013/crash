@@ -18,6 +18,7 @@
 
 #include <crash/math/transformer.hpp>
 #include <crash/math/transformable.hpp>
+#include <crash/render/animation.hpp>
 #include <crash/render/mesh_component.hpp>
 #include <crash/render/texture.hpp>
 
@@ -28,6 +29,12 @@ class MatrixStack;
 class ShaderProgram;
 struct AttributeVariable;
 struct UniformVariable;
+
+struct AnimationUnit {
+   AnimationUnit(unsigned int index, float duration);
+   unsigned int index;
+   float duration;
+};
 
 class Mesh : public math::Transformable {
 public:
@@ -60,6 +67,8 @@ public:
    // Rendering.
    /////////////////////////////////////////////////////////////////////////////
 
+   const std::vector< Animation >& getAnimations() const;
+
    void initialize();
    void teardown();
 
@@ -67,7 +76,8 @@ public:
     const AttributeVariable& vars) const;
 
    void render(const ShaderProgram& program, const UniformVariable& vars,
-    MatrixStack& matrixStack);
+    MatrixStack& matrixStack,
+    const std::vector< AnimationUnit >& activeAnimations);
 
 private:
    void importScene();
@@ -77,6 +87,7 @@ private:
    std::shared_ptr< Texture > importTexture(const aiMaterial* material,
     const aiTextureType& type, unsigned int index);
    void normalizeScene();
+   void buildAnimations();
 
    void buildComponents();
    void destroyComponents();
@@ -85,10 +96,14 @@ private:
    void releaseBuffers();
 
    void renderNode(const ShaderProgram& program, const UniformVariable& sig,
-     MatrixStack& matrixStack, const aiNode* node) const;
+     MatrixStack& matrixStack, const aiNode* node,
+     const std::vector< AnimationUnit >& activeAnimations) const;
+   glm::mat4 getNodeTransform(const aiNode* node,
+    const std::vector< AnimationUnit >& activeAnimations) const;
 
    boost::filesystem::path _path;
    const aiScene* _scene;
+   std::vector< Animation > _animations;
    math::Transformer _transformer;
    std::vector< GLuint > _vaos;
    std::vector< GLuint > _vbos;
