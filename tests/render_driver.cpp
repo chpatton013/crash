@@ -52,6 +52,8 @@ struct controls_t {
 
 controls_t controls;
 std::shared_ptr< Camera > camera;
+std::vector< AnimationUnit > animations;
+float duration;
 
 Window initializeOpenGl();
 
@@ -67,7 +69,10 @@ std::tuple<
  const boost::filesystem::path& fragmentShaderPath,
  const boost::filesystem::path& meshPath);
 
-void render(const std::shared_ptr< Camera >& camera,
+void progressAnimations(std::vector< AnimationUnit >& animations, float delta_t);
+
+void render(std::vector< AnimationUnit >& animations,
+ const std::shared_ptr< Camera >& camera,
  const std::shared_ptr< LightManager >& lightManager,
  const std::shared_ptr< ShaderProgram >& program,
  const std::shared_ptr< UniformVariable >& uniforms,
@@ -100,12 +105,20 @@ int main(int argc, char** argv) {
        boost::filesystem::path("tests/render/vertex.glsl"),
        boost::filesystem::path("tests/render/fragment.glsl"),
        boost::filesystem::path(file));
-   } catch (Shader::CompileFailure e) {
-      std::cerr << e.error << std::endl;
+   } catch (Mesh::SceneImportFailure e) {
+      std::cerr << "Scene Import Failure: " << e.error << std::endl;
       return 2;
-   } catch (ShaderProgram::LinkFailure e) {
-      std::cerr << e.error << std::endl;
+   } catch (Shader::CompileFailure e) {
+      std::cerr << "Shader Compile Failure: " << e.error << std::endl;
       return 3;
+   } catch (ShaderProgram::LinkFailure e) {
+      std::cerr << "Shader Program Link Failure: " << e.error << std::endl;
+      return 4;
+   }
+
+   if (mesh->getAnimations().size() > 0) {
+      duration = mesh->getAnimations()[0].getDuration();
+      std::cout << "duration: " << duration << std::endl;
    }
 
    MatrixStack stack;
@@ -123,7 +136,9 @@ int main(int argc, char** argv) {
          renderTimer.start();
 
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         render(camera, lightManager, program, uniforms, mesh, stack);
+         progressAnimations(animations, renderElapsed);
+         render(animations, camera, lightManager, program,
+          uniforms, mesh, stack);
          window.swapBuffers();
       }
 
@@ -300,7 +315,14 @@ std::tuple<
    return std::make_tuple(camera, lm, program, attributes, uniforms, mesh);
 }
 
-void render(const std::shared_ptr< Camera >& camera,
+void progressAnimations(std::vector< AnimationUnit >& animations, float delta_t) {
+   for (auto& animation : animations) {
+      animation.duration += delta_t;
+   }
+}
+
+void render(std::vector< AnimationUnit >& animations,
+ const std::shared_ptr< Camera >& camera,
  const std::shared_ptr< LightManager >& lightManager,
  const std::shared_ptr< ShaderProgram >& program,
  const std::shared_ptr< UniformVariable >& uniforms,
@@ -316,7 +338,7 @@ void render(const std::shared_ptr< Camera >& camera,
 
    lightManager->setUniforms(*program);
 
-   mesh->render(*program, *uniforms, stack);
+   mesh->render(*program, *uniforms, stack, animations);
 
    stack.pop(); // view, perspective
 }
@@ -346,7 +368,7 @@ static glm::vec3 getTranslationalVelocity() {
    }
 
    if (t_vel != glm::vec3(0.0f)) {
-      t_vel = glm::normalize(t_vel);
+      t_vel = glm::normalize(t_vel) * 2.0f;
    }
 
    return t_vel;
@@ -380,7 +402,7 @@ static glm::quat getRotationalVelocity() {
       return NO_ROTATION;
    }
 
-   return axisAngleToQuat(glm::vec4(glm::normalize(axis), glm::radians(45.0f)));
+   return axisAngleToQuat(glm::vec4(glm::normalize(axis), glm::radians(90.0f)));
 }
 
 void update(float delta_t) {
@@ -388,6 +410,11 @@ void update(float delta_t) {
    camera->setRotationalVelocity(getRotationalVelocity());
 
    camera->move(delta_t);
+
+   if ((animations.size() > 0) && (animations[0].duration > duration)) {
+      animations.clear();
+      std::cout << "animation ended" << std::endl;
+   }
 }
 
 void keyCb(const Window& window, int key, int, int action, int mods) {
@@ -427,6 +454,11 @@ void keyCb(const Window& window, int key, int, int action, int mods) {
          controls.move_down = control;
       } else {
          controls.move_up = control;
+      }
+   } else if (key == GLFW_KEY_1) {
+      if (animations.size() == 0) {
+         animations.push_back(AnimationUnit(0, 0.0f));
+         std::cout << "animation started" << std::endl;
       }
    }
 }
