@@ -116,8 +116,8 @@ int main(int argc, char** argv) {
    const float renderInterval = 1.0f / 60.0f;
    const float updateInterval = 1.0f / 25.0f;
    while (!window.shouldClose()) {
-      float renderElapsed = renderTimer.elapsed().wall * 10E-9;
-      float updateElapsed = updateTimer.elapsed().wall * 10E-9;
+      float renderElapsed = renderTimer.elapsed().wall * 1E-9;
+      float updateElapsed = updateTimer.elapsed().wall * 1E-9;
 
       if (renderElapsed > renderInterval) {
          renderTimer.start();
