@@ -21,18 +21,24 @@ namespace render {
 struct AttributeVariable {
    AttributeVariable(const std::string& position, const std::string& normal,
     const std::string& tangent, const std::string& bitangent,
-    const std::string& texture_coordinates);
+    const std::string& texture_coordinates,
+    const std::string& bone_ids, const std::string& bone_weights);
 
    std::string position;
    std::string normal;
    std::string tangent;
    std::string bitangent;
    std::string texture_coordinates;
+   std::string bone_ids;
+   std::string bone_weights;
 };
 
 struct UniformVariable {
    UniformVariable(
-    const std::string& transform_matrix,
+    const std::string& model_transform,
+    const std::string& view_transform,
+    const std::string& perspective_transform,
+    const std::string& bones,
     const std::string& camera_position,
     const std::string& light_position,
     const std::string& light_diffuse,
@@ -54,7 +60,10 @@ struct UniformVariable {
     const std::string& specular_texture,
     const std::string& shininess_texture);
 
-   std::string transform_matrix;
+   std::string model_transform;
+   std::string view_transform;
+   std::string perspective_transform;
+   std::string bones;
    std::string camera_position;
    std::string light_position;
    std::string light_diffuse;

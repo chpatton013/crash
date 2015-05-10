@@ -1,8 +1,11 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <crash/render/animation.hpp>
+#include <crash/render/util.hpp>
 
 using namespace crash::render;
+
+/* static */ const unsigned int Animation::DEFAULT_TICKS_PER_SECOND = 24;
 
 Animation::Animation(const aiAnimation* animation) :
    animation(animation)
@@ -12,8 +15,16 @@ float Animation::getDuration() const {
    return this->animation->mDuration;
 }
 
+float Animation::getTicksPerSecond() const {
+   if (this->animation->mTicksPerSecond == 0.0f) {
+      return Animation::DEFAULT_TICKS_PER_SECOND;
+   } else {
+      return this->animation->mTicksPerSecond;
+   }
+}
+
 float Animation::getTick(float delta_t) const {
-   return delta_t * this->animation->mTicksPerSecond;
+   return delta_t * this->getTicksPerSecond();
 }
 
 boost::optional< glm::mat4 > Animation::getNodeTransform(const aiNode* node,
@@ -63,14 +74,14 @@ glm::vec3 Animation::interpolateVectorKey(
    }
 
    const aiVectorKey* keyA = keys + a;
-   glm::vec3 vecA(keyA->mValue.x, keyA->mValue.y, keyA->mValue.z);
+   glm::vec3 vecA = vec3AiToGlm(keyA->mValue);
 
    if (b >= numKeys) {
       return vecA;
    }
 
    const aiVectorKey* keyB = keys + b;
-   glm::vec3 vecB(keyB->mValue.x, keyB->mValue.y, keyB->mValue.z);
+   glm::vec3 vecB = vec3AiToGlm(keyB->mValue);
 
    float tween = (tick - keyA->mTime) / (keyB->mTime - keyA->mTime);
    return (vecA * (1 - tween)) + (vecB * tween);
@@ -87,16 +98,14 @@ glm::quat Animation::interpolateQuatKey(
    }
 
    const aiQuatKey* keyA = keys + a;
-   glm::quat quatA(keyA->mValue.w, keyA->mValue.x, keyA->mValue.y,
-    keyA->mValue.z);
+   glm::quat quatA = quatAiToGlm(keyA->mValue);
 
    if (b >= numKeys) {
       return quatA;
    }
 
    const aiQuatKey* keyB = keys + b;
-   glm::quat quatB(keyB->mValue.w, keyB->mValue.x, keyB->mValue.y,
-    keyB->mValue.z);
+   glm::quat quatB = quatAiToGlm(keyB->mValue);
 
    float tween = (tick - keyA->mTime) / (keyB->mTime - keyA->mTime);
    return glm::slerp(quatA, quatB, tween);

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <map>
 #include <memory>
+#include <tuple>
+#include <vector>
 #include <assimp/scene.h>
 #include <glm/glm.hpp>
 
@@ -11,6 +14,8 @@
 #else
 #  include <GL/gl.h>
 #endif
+
+#include <crash/render/vertex.hpp>
 
 namespace crash {
 namespace render {
@@ -62,45 +67,93 @@ struct TextureGroupUnit {
    TextureUnit shininess;
 };
 
+struct BoneWeightUnit {
+   BoneWeightUnit(unsigned int index, float weight);
+   unsigned int index;
+   float weight;
+};
+
+typedef std::vector< BoneWeightUnit > BoneWeightGroupUnit;
+
+struct BoneTransformUnit {
+   BoneTransformUnit(const glm::mat4& offset, const glm::mat4& transform);
+   glm::mat4 offset;
+   glm::mat4 transform;
+};
+
+typedef std::map< const aiBone*, const aiNode* > BoneNodeMap;
+typedef std::map< const aiNode*, glm::mat4 > NodeTransformMap;
+
 class MeshComponent {
 public:
-   static const glm::vec4 defaultAmbientColor;
-   static const glm::vec4 defaultDiffuseColor;
-   static const glm::vec4 defaultSpecularColor;
-   static const float defaultShininess;
+   static const glm::vec4 DEFAULT_AMBIENT_COLOR;
+   static const glm::vec4 DEFAULT_DIFFUSE_COLOR;
+   static const glm::vec4 DEFAULT_SPECULAR_COLOR;
+   static const float DEFAULT_SHININESS;
 
    MeshComponent(const MeshComponent& component);
-   MeshComponent(const aiMesh* mesh, const aiMaterial* material,
-    const GeometryUnit& geomtryUnit, const TextureGroupUnit& textureGroupUnit);
-
-   void generateVertexArray();
-   void generateVertexBuffer();
-   void generateIndexBuffer();
-   void generateTextureBuffers();
-   void generateTextureBuffer(const TextureUnit& textureUnit);
+   MeshComponent(const aiNode* node, const aiMesh* mesh,
+    const aiMaterial* material, const GeometryUnit& geometryUnit,
+    const TextureGroupUnit& textureGroupUnit);
 
    void bindAttributes(const ShaderProgram& program,
     const AttributeVariable& vars) const;
+
    void render(const ShaderProgram& program, const UniformVariable& vars,
-    const glm::mat4& transform) const;
+    const glm::mat4& modelTransform, const BoneNodeMap& boneNodes,
+    const NodeTransformMap& nodeTransforms) const;
 
 private:
+   /////////////////////////////////////////////////////////////////////////////
+   // Initialization.
+   /////////////////////////////////////////////////////////////////////////////
+
+   void fillVertexBones();
+   void generateVertexArray() const;
+   void generateVertexBuffer() const;
+   void generateIndexBuffer() const;
+   void generateTextureBuffers() const;
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Rendering.
+   /////////////////////////////////////////////////////////////////////////////
+
+   void activateBones(const ShaderProgram& program,
+    const UniformVariable& vars,
+    const BoneNodeMap& boneNodes,
+    const NodeTransformMap& nodeTransforms) const;
    void activateMaterial(const ShaderProgram& program,
     const UniformVariable& vars) const;
    void activateTextures(const ShaderProgram& program,
     const UniformVariable& vars) const;
+   void activateGeometry() const;
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Helpers.
+   /////////////////////////////////////////////////////////////////////////////
+
+   std::tuple< glm::ivec4, glm::vec4 > getVertexBones(
+    const BoneWeightGroupUnit& bone) const;
+
+   void generateTextureBuffer(const TextureUnit& textureUnit) const;
+
    void activateTexture(const ShaderProgram& program,
     const std::string& hasTextureVar, const std::string& textureVar,
     const TextureUnit& textureUnit) const;
-   void activateGeometry() const;
 
    static MaterialUnit extractMaterialUnit(const aiMaterial* material);
 
+   /////////////////////////////////////////////////////////////////////////////
+   // Members.
+   /////////////////////////////////////////////////////////////////////////////
+
+   const aiNode* _node;
    const aiMesh* _mesh;
    const aiMaterial* _material;
    MaterialUnit _materialUnit;
    GeometryUnit _geometryUnit;
    TextureGroupUnit _textureGroupUnit;
+   std::vector< BoneWeightGroupUnit > _vertexBones;
 };
 
 } // namespace render

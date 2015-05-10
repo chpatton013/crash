@@ -9,9 +9,12 @@ namespace render {
 
 class Animation {
 public:
+   static const unsigned int DEFAULT_TICKS_PER_SECOND;
+
    Animation(const aiAnimation* animation);
 
    float getDuration() const;
+   float getTicksPerSecond() const;
    float getTick(float delta_t) const;
    boost::optional< glm::mat4 > getNodeTransform(const aiNode* node,
     float delta_t) const;

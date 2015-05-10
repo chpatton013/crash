@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <assimp/scene.h>
+#include <glm/gtc/quaternion.hpp>
 #include <crash/render/util.hpp>
 
 void crash::render::printScene(const aiScene* scene, const std::string& prefix) {
@@ -319,3 +320,36 @@ void crash::render::printColor(const aiColor4D& c, const std::string& prefix) {
 void crash::render::printColor(const aiColor3D& c, const std::string& prefix) {
    std::cout << prefix << c.r << "," << c.g << "," << c.b << std::endl;
 };
+
+std::string crash::render::stringAiToStd(const aiString& s) {
+   return std::string(s.C_Str());
+}
+
+glm::vec2 crash::render::vec2AiToGlm(const aiVector2D& v) {
+   return glm::vec2(v.x, v.y);
+}
+
+glm::vec3 crash::render::vec3AiToGlm(const aiVector3D& v) {
+   return glm::vec3(v.x, v.y, v.z);
+}
+
+glm::vec3 crash::render::color3AiToGlm(const aiColor3D& c) {
+   return glm::vec3(c.r, c.g, c.g);
+}
+
+glm::vec4 crash::render::color4AiToGlm(const aiColor4D& c) {
+   return glm::vec4(c.r, c.g, c.g, c.a);
+}
+
+glm::quat crash::render::quatAiToGlm(const aiQuaternion& q) {
+   return glm::quat(q.w, q.x, q.y, q.z);
+}
+
+glm::mat4 crash::render::mat4AiToGlm(const aiMatrix4x4& m) {
+   return glm::mat4(
+      m.a1, m.b1, m.c1, m.d1,
+      m.a2, m.b2, m.c2, m.d2,
+      m.a3, m.b3, m.c3, m.d3,
+      m.a4, m.b4, m.c4, m.d4
+   );
+}

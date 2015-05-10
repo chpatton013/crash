@@ -20,8 +20,8 @@
 #include <crash/math/util.hpp>
 #include <crash/render/light.hpp>
 #include <crash/render/light_manager.hpp>
-#include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
+#include <crash/render/mesh_instance.hpp>
 #include <crash/render/shader.hpp>
 #include <crash/render/shader_program.hpp>
 #include <crash/render/util.hpp>
@@ -52,8 +52,10 @@ struct controls_t {
 
 controls_t controls;
 std::shared_ptr< Camera > camera;
-std::vector< AnimationUnit > animations;
-float duration;
+std::vector< MeshInstance > meshes;
+
+glm::vec3 getStartingPosition();
+glm::quat getStartingRotation();
 
 Window initializeOpenGl();
 
@@ -69,14 +71,14 @@ std::tuple<
  const boost::filesystem::path& fragmentShaderPath,
  const boost::filesystem::path& meshPath);
 
-void progressAnimations(std::vector< AnimationUnit >& animations, float delta_t);
+void progressAnimations(float delta_t);
 
-void render(std::vector< AnimationUnit >& animations,
+void render(
+ float delta_t,
  const std::shared_ptr< Camera >& camera,
  const std::shared_ptr< LightManager >& lightManager,
  const std::shared_ptr< ShaderProgram >& program,
- const std::shared_ptr< UniformVariable >& uniforms,
- const std::shared_ptr< Mesh >& mesh, MatrixStack& stack);
+ const std::shared_ptr< UniformVariable >& uniforms);
 
 void update(float delta_t);
 
@@ -114,15 +116,19 @@ int main(int argc, char** argv) {
    } catch (ShaderProgram::LinkFailure e) {
       std::cerr << "Shader Program Link Failure: " << e.error << std::endl;
       return 4;
+   } catch (ShaderProgram::VariableAllocationFailure e) {
+      std::cerr << "Shader Program Variable Allocation Failure: " <<
+       e.error << std::endl;
+      return 5;
    }
 
-   if (mesh->getAnimations().size() > 0) {
-      duration = mesh->getAnimations()[0].getDuration();
-      std::cout << "duration: " << duration << std::endl;
-   }
-
-   MatrixStack stack;
-   mesh->setOrientation(glm::vec4(Y_AXIS, glm::radians(180.0f)));
+   /* meshes.push_back(MeshInstance(*mesh, */
+   /*  crash::space::Transformer(glm::vec3(0.0f, 0.0f, 1.0f), NO_ROTATION, UNIT_SIZE, */
+   /*  glm::vec3(), NO_ROTATION, glm::vec3(1.0f)))); */
+   meshes.push_back(MeshInstance(*mesh,
+    crash::space::Transformer(glm::vec3(0.0f, 0.0f, -1.0f),
+    axisAngleToQuat(glm::vec4(Y_AXIS, glm::radians(180.0f))), UNIT_SIZE,
+    glm::vec3(), NO_ROTATION, glm::vec3(1.0f))));
 
    boost::timer::cpu_timer renderTimer;
    boost::timer::cpu_timer updateTimer;
@@ -136,9 +142,7 @@ int main(int argc, char** argv) {
          renderTimer.start();
 
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         progressAnimations(animations, renderElapsed);
-         render(animations, camera, lightManager, program,
-          uniforms, mesh, stack);
+         render(renderElapsed, camera, lightManager, program, uniforms);
          window.swapBuffers();
       }
 
@@ -212,7 +216,8 @@ std::tuple<
 
    std::shared_ptr< AttributeVariable > attributes =
     std::make_shared< AttributeVariable >(
-    "aPosition", "aNormal", "aTangent", "aBitangent", "aTexCoords");
+    "aPosition", "aNormal", "aTangent", "aBitangent",
+    "aTexCoord", "aBoneIds", "aBoneWeights");
 
    // @throws Texture::ImportFailure
    std::shared_ptr< Mesh > mesh = std::make_shared< Mesh >(meshPath);
@@ -224,7 +229,10 @@ std::tuple<
 
    std::shared_ptr< UniformVariable > uniforms =
     std::make_shared< UniformVariable >(
-    "uTransformMatrix",
+    "uModelTransform",
+    "uViewTransform",
+    "uPerspectiveTransform",
+    "uBones",
     "uCameraPosition",
     "uLightPosition",
     "uLightDiffuse",
@@ -246,7 +254,10 @@ std::tuple<
     "uSpecularTexture",
     "uShininessTexture");
 
-   program->createUniformVariable(uniforms->transform_matrix);
+   program->createUniformVariable(uniforms->model_transform);
+   program->createUniformVariable(uniforms->view_transform);
+   program->createUniformVariable(uniforms->perspective_transform);
+   program->createUniformVariable(uniforms->bones);
    program->createUniformVariable(uniforms->camera_position);
    program->createUniformVariable(uniforms->light_position);
    program->createUniformVariable(uniforms->light_diffuse);
@@ -269,9 +280,9 @@ std::tuple<
    program->createUniformVariable(uniforms->shininess_texture);
 
    std::shared_ptr< Camera > camera = std::make_shared< Camera >(
-    /* position */ glm::vec3(0.0f, 0.0f, 1.0f), NO_ROTATION,
+    getStartingPosition(), getStartingRotation(),
     /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
-    /* near */ 0.1f, /* far */ 10.0f);
+    /* near */ 0.01f, /* far */ 100.0f);
 
    std::vector< Light > lights = {{
       Light(
@@ -315,32 +326,58 @@ std::tuple<
    return std::make_tuple(camera, lm, program, attributes, uniforms, mesh);
 }
 
-void progressAnimations(std::vector< AnimationUnit >& animations, float delta_t) {
-   for (auto& animation : animations) {
-      animation.duration += delta_t;
+glm::vec3 getStartingPosition() {
+   return glm::vec3(0.0f, 0.0f, 0.0f);
+}
+
+glm::quat getStartingRotation() {
+   return NO_ROTATION;
+}
+
+void progressAnimations(float delta_t) {
+   for (auto& instance : meshes) {
+      instance.progressAnimations(delta_t);
+   }
+
+   for (auto& instance : meshes) {
+      auto& mesh = instance.getMesh();
+      auto& animations = mesh.getAnimations();
+      auto& animationProgress = instance.getAnimationProgress();
+
+      for (unsigned int i = 0; i < animations.size(); ++i) {
+         auto& progress = animationProgress[i];
+         auto& animation = animations[i];
+         if (progress.active && progress.progress > animation.getDuration()) {
+            std::cout << "animation ended" << std::endl;
+            instance.stopAnimation(i);
+         }
+      }
    }
 }
 
-void render(std::vector< AnimationUnit >& animations,
+void render(
+ float delta_t,
  const std::shared_ptr< Camera >& camera,
  const std::shared_ptr< LightManager >& lightManager,
  const std::shared_ptr< ShaderProgram >& program,
- const std::shared_ptr< UniformVariable >& uniforms,
- const std::shared_ptr< Mesh >& mesh, MatrixStack& stack) {
+ const std::shared_ptr< UniformVariable >& uniforms) {
+   program->use();
+
    auto perspective = camera->getPerspective();
    auto view = camera->getLookAt();
-   stack.push(perspective * view);
-
-   program->use();
+   program->setUniformVariableMatrix4(uniforms->perspective_transform,
+    glm::value_ptr(perspective), 1);
+   program->setUniformVariableMatrix4(uniforms->view_transform,
+    glm::value_ptr(view), 1);
 
    program->setUniformVariable3f(uniforms->camera_position,
     glm::value_ptr(camera->getPosition()), 1);
 
    lightManager->setUniforms(*program);
 
-   mesh->render(*program, *uniforms, stack, animations);
-
-   stack.pop(); // view, perspective
+   for (auto& mesh : meshes) {
+      mesh.render(*program, *uniforms, glm::mat4(), delta_t);
+   }
 }
 
 static glm::vec3 getTranslationalVelocity() {
@@ -411,10 +448,7 @@ void update(float delta_t) {
 
    camera->move(delta_t);
 
-   if ((animations.size() > 0) && (animations[0].duration > duration)) {
-      animations.clear();
-      std::cout << "animation ended" << std::endl;
-   }
+   progressAnimations(delta_t);
 }
 
 void keyCb(const Window& window, int key, int, int action, int mods) {
@@ -455,10 +489,17 @@ void keyCb(const Window& window, int key, int, int action, int mods) {
       } else {
          controls.move_up = control;
       }
+   } else if (key == GLFW_KEY_0) {
+      if (control) {
+         camera->setPosition(getStartingPosition());
+         camera->setOrientation(getStartingRotation());
+      }
    } else if (key == GLFW_KEY_1) {
-      if (animations.size() == 0) {
-         animations.push_back(AnimationUnit(0, 0.0f));
-         std::cout << "animation started" << std::endl;
+      if (control) {
+         for (auto& mesh : meshes) {
+            std::cout << "animation started" << std::endl;
+            mesh.startAnimation(0);
+         }
       }
    }
 }

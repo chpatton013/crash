@@ -84,6 +84,7 @@ files({
 })
 links({
    'crash_math',
+   'crash_space',
    'assimp',
    'boost_filesystem',
    'boost_system',

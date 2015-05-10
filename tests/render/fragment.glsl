@@ -2,9 +2,11 @@
 
 // FRAGMENT SHADER
 
-uniform vec3 uLightPosition[8];
-uniform vec4 uLightDiffuse[8];
-uniform vec4 uLightSpecular[8];
+const uint MAX_NUM_LIGHTS = 8;
+
+uniform vec3 uLightPosition[MAX_NUM_LIGHTS];
+uniform vec4 uLightDiffuse[MAX_NUM_LIGHTS];
+uniform vec4 uLightSpecular[MAX_NUM_LIGHTS];
 
 uniform vec3 uCameraPosition;
 
@@ -109,7 +111,7 @@ void main() {
    float shininessValue = getShininessValue();
 
    oColor = ambientColor;
-   for (int i = 0; i < 8; ++i) {
+   for (int i = 0; i < MAX_NUM_LIGHTS; ++i) {
       oColor += getColorForLight(position, normal, diffuseColor, specularColor,
        shininessValue, i);
    }

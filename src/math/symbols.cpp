@@ -4,6 +4,7 @@
 
 const float crash::math::pi = boost::math::constants::pi< float >();
 const glm::vec3 crash::math::ORIGIN = glm::vec3(0.0f, 0.0f, 0.0f);
+const glm::vec3 crash::math::UNIT_SIZE = glm::vec3(1.0f, 1.0f, 1.0f);
 const glm::vec3 crash::math::X_AXIS = glm::vec3(1.0f, 0.0f, 0.0f);
 const glm::vec3 crash::math::Y_AXIS = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 crash::math::Z_AXIS = glm::vec3(0.0f, 0.0f, 1.0f);

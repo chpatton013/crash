@@ -16,8 +16,7 @@
 #  include <GL/gl.h>
 #endif
 
-#include <crash/math/transformer.hpp>
-#include <crash/math/transformable.hpp>
+#include <crash/space/movable.hpp>
 #include <crash/render/animation.hpp>
 #include <crash/render/mesh_component.hpp>
 #include <crash/render/texture.hpp>
@@ -25,18 +24,13 @@
 namespace crash {
 namespace render {
 
-class MatrixStack;
 class ShaderProgram;
 struct AttributeVariable;
 struct UniformVariable;
 
-struct AnimationUnit {
-   AnimationUnit(unsigned int index, float duration);
-   unsigned int index;
-   float duration;
-};
+typedef std::map< std::string, const aiNode* > NodeNameMap;
 
-class Mesh : public math::Transformable {
+class Mesh : public space::Movable {
 public:
    struct SceneImportFailure {
       SceneImportFailure(const std::string& error);
@@ -50,23 +44,28 @@ public:
    virtual ~Mesh();
 
    /////////////////////////////////////////////////////////////////////////////
-   // Transformable interface.
+   // Movable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const glm::vec3& getPosition() const;
-   const glm::vec4& getOrientation() const;
-   const glm::vec3& getSize() const;
+   glm::vec3 getPosition() const;
+   glm::quat getOrientation() const;
+   glm::vec3 getSize() const;
+   glm::vec3 getTranslationalVelocity() const;
+   glm::quat getRotationalVelocity() const;
+   glm::vec3 getScaleVelocity() const;
 
    void setPosition(const glm::vec3& position);
-   void setOrientation(const glm::vec4& orientation);
+   void setOrientation(const glm::quat& orientation);
    void setSize(const glm::vec3& size);
-
-   const glm::mat4& getTransform();
+   void setTranslationalVelocity(const glm::vec3& translationalVelocity);
+   void setRotationalVelocity(const glm::quat& rotationalVelocity);
+   void setScaleVelocity(const glm::vec3& scaleVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
    // Rendering.
    /////////////////////////////////////////////////////////////////////////////
 
+   const aiScene* getScene() const;
    const std::vector< Animation >& getAnimations() const;
 
    void initialize();
@@ -76,41 +75,67 @@ public:
     const AttributeVariable& vars) const;
 
    void render(const ShaderProgram& program, const UniformVariable& vars,
-    MatrixStack& matrixStack,
-    const std::vector< AnimationUnit >& activeAnimations);
+    const glm::mat4& parentTransform,
+    const NodeTransformMap& nodeTransforms) const;
 
 private:
-   void importScene();
-   void releaseScene();
+   /////////////////////////////////////////////////////////////////////////////
+   // Allocation.
+   /////////////////////////////////////////////////////////////////////////////
 
-   void importTextures();
-   std::shared_ptr< Texture > importTexture(const aiMaterial* material,
-    const aiTextureType& type, unsigned int index);
+   const aiScene* importScene();
    void normalizeScene();
    void buildAnimations();
+   void buildBoneNodeMap();
+   void importTextures();
 
-   void buildComponents();
-   void destroyComponents();
+   /////////////////////////////////////////////////////////////////////////////
+   // Graphics card export.
+   /////////////////////////////////////////////////////////////////////////////
 
    void allocateBuffers();
+   void buildComponents();
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Deallocation.
+   /////////////////////////////////////////////////////////////////////////////
+
+   void releaseScene();
    void releaseBuffers();
+   void destroyComponents();
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Helpers.
+   /////////////////////////////////////////////////////////////////////////////
+
+   std::shared_ptr< Texture > importTexture(const aiMaterial* material,
+    const aiTextureType& type, unsigned int index);
+
+   void buildComponentsHelper(const aiNode* node);
+   void buildComponentHelper(const aiNode* node);
+
+   NodeNameMap getNodeNameMap() const;
+   void getNodeNameMapHelper(const aiNode* node, NodeNameMap& nodeNames) const;
 
    void renderNode(const ShaderProgram& program, const UniformVariable& sig,
-     MatrixStack& matrixStack, const aiNode* node,
-     const std::vector< AnimationUnit >& activeAnimations) const;
-   glm::mat4 getNodeTransform(const aiNode* node,
-    const std::vector< AnimationUnit >& activeAnimations) const;
+    const glm::mat4& parentTransform, const NodeTransformMap& nodeTransforms,
+    const aiNode* node) const;
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Members.
+   /////////////////////////////////////////////////////////////////////////////
 
    boost::filesystem::path _path;
    const aiScene* _scene;
+   space::Transformer _transformer;
+   BoneNodeMap _boneNodes;
    std::vector< Animation > _animations;
-   math::Transformer _transformer;
+   std::vector< TextureGroup > _textureGroups;
    std::vector< GLuint > _vaos;
    std::vector< GLuint > _vbos;
    std::vector< GLuint > _ibos;
    std::vector< GLuint > _tbos;
    std::map< const aiMesh*, MeshComponent > _components;
-   std::vector< TextureGroup > _textureGroups;
 };
 
 } // namespace render

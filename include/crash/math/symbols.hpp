@@ -16,6 +16,11 @@ extern const float pi;
 extern const glm::vec3 ORIGIN;
 
 /**
+ * A vector representing no change in scale.
+ */
+extern const glm::vec3 UNIT_SIZE;
+
+/**
  * A vector marking the primary x-axis.
  */
 extern const glm::vec3 X_AXIS;

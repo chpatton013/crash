@@ -7,14 +7,11 @@
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/shader_program.hpp>
+#include <crash/render/util.hpp>
 #include <crash/render/vertex.hpp>
 
 using namespace crash::math;
 using namespace crash::render;
-
-AnimationUnit::AnimationUnit(unsigned int index, float duration) :
-   index(index), duration(duration)
-{}
 
 Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
    error(error)
@@ -24,16 +21,27 @@ Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
 
 Mesh::Mesh(const Mesh& mesh) :
    _path(mesh._path), _scene(mesh._scene), _transformer(mesh._transformer),
+    _boneNodes(), _animations(), _textureGroups(mesh._textureGroups),
     _vaos(mesh._vaos), _vbos(mesh._vbos), _ibos(mesh._ibos), _tbos(mesh._tbos),
-    _components(mesh._components), _textureGroups(mesh._textureGroups)
+    _components(mesh._components)
 {}
 
 Mesh::Mesh(const boost::filesystem::path& path) :
    _path(path), _scene(nullptr),
-    _transformer(glm::vec3(), glm::vec4(X_AXIS, 0.0f), glm::vec3(1.0f)),
-    _vaos(), _vbos(), _ibos(), _tbos(), _components(), _textureGroups()
+    _transformer(ORIGIN, NO_ROTATION, UNIT_SIZE,
+    glm::vec3(), NO_ROTATION, glm::vec3()),
+    _boneNodes(), _animations(), _textureGroups(),
+    _vaos(), _vbos(), _ibos(), _tbos(), _components()
 {
-   this->importScene();
+   const aiScene* scene = this->importScene();
+   if (scene == nullptr) {
+      throw SceneImportFailure(aiGetErrorString());
+   }
+   this->_scene = scene;
+
+   this->normalizeScene();
+   this->buildBoneNodeMap();
+   this->buildAnimations();
    this->importTextures();
 }
 
@@ -42,26 +50,38 @@ Mesh::Mesh(const boost::filesystem::path& path) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Transformable interface.
+// Movable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3& Mesh::getPosition() const {
+glm::vec3 Mesh::getPosition() const {
    return this->_transformer.getPosition();
 }
 
-const glm::vec4& Mesh::getOrientation() const {
+glm::quat Mesh::getOrientation() const {
    return this->_transformer.getOrientation();
 }
 
-const glm::vec3& Mesh::getSize() const {
+glm::vec3 Mesh::getSize() const {
    return this->_transformer.getSize();
+}
+
+glm::vec3 Mesh::getTranslationalVelocity() const {
+   return this->_transformer.getTranslationalVelocity();
+}
+
+glm::quat Mesh::getRotationalVelocity() const {
+   return this->_transformer.getRotationalVelocity();
+}
+
+glm::vec3 Mesh::getScaleVelocity() const {
+   return this->_transformer.getScaleVelocity();
 }
 
 void Mesh::setPosition(const glm::vec3& position) {
    this->_transformer.setPosition(position);
 }
 
-void Mesh::setOrientation(const glm::vec4& orientation) {
+void Mesh::setOrientation(const glm::quat& orientation) {
    this->_transformer.setOrientation(orientation);
 }
 
@@ -69,13 +89,25 @@ void Mesh::setSize(const glm::vec3& size) {
    this->_transformer.setSize(size);
 }
 
-const glm::mat4& Mesh::getTransform() {
-   return this->_transformer.getTransform();
+void Mesh::setTranslationalVelocity(const glm::vec3& translationalVelocity) {
+   this->setTranslationalVelocity(translationalVelocity);
+}
+
+void Mesh::setRotationalVelocity(const glm::quat& rotationalVelocity) {
+   this->setRotationalVelocity(rotationalVelocity);
+}
+
+void Mesh::setScaleVelocity(const glm::vec3& scaleVelocity) {
+   this->setScaleVelocity(scaleVelocity);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rendering.
 ////////////////////////////////////////////////////////////////////////////////
+
+const aiScene* Mesh::getScene() const {
+   return this->_scene;
+}
 
 const std::vector< Animation >& Mesh::getAnimations() const {
    return this->_animations;
@@ -99,17 +131,17 @@ void Mesh::bindAttributes(const ShaderProgram& program,
 }
 
 void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
- MatrixStack& matrixStack,
- const std::vector< AnimationUnit >& activeAnimations) {
-   matrixStack.push(this->getTransform());
-   this->renderNode(program, vars, matrixStack, this->_scene->mRootNode,
-    activeAnimations);
-   matrixStack.pop();
+ const glm::mat4& parentTransform,
+ const NodeTransformMap& nodeTransforms) const {
+   glm::mat4 modelTransform = parentTransform * this->getTransform();
+   this->renderNode(program, vars, modelTransform, nodeTransforms,
+    this->_scene->mRootNode);
 }
 
 /**
  * Post-processing flags:
  *    aiProcess_CalcTangentSpace
+ *    aiProcess_Debone
  *    aiProcess_FixInfacingNormals
  *    aiProcess_FindDegenerates
  *    aiProcess_FindInstances
@@ -131,8 +163,8 @@ void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
  *    aiProcess_Triangulate
  *    aiProcess_ValidateDataStructure
  */
-void Mesh::importScene() {
-   static const unsigned int postProcessingFlags =
+const aiScene* Mesh::importScene() {
+   static const unsigned int POST_PROCESSING_FLAGS =
       aiProcessPreset_TargetRealtime_MaxQuality
     | aiProcess_ConvertToLeftHanded // Macro for FlipUVs, FlipWindingOrder, and MakeLeftHanded.
     | aiProcess_FixInfacingNormals
@@ -141,59 +173,7 @@ void Mesh::importScene() {
 
    this->releaseScene();
 
-   auto scene = aiImportFile(this->_path.string().data(), postProcessingFlags);
-   if (scene == nullptr) {
-      throw SceneImportFailure(aiGetErrorString());
-   }
-
-   this->_scene = scene;
-   this->normalizeScene();
-   this->buildAnimations();
-}
-
-void Mesh::releaseScene() {
-   if (this->_scene == nullptr) {
-      return;
-   }
-
-   aiReleaseImport(this->_scene);
-   this->_scene = nullptr;
-}
-
-void Mesh::importTextures() {
-   for (unsigned int i = 0; i < this->_scene->mNumMaterials; ++i) {
-      auto displacement = this->importTexture(this->_scene->mMaterials[i],
-       aiTextureType_DISPLACEMENT, /* index */ 0);
-      auto normal = this->importTexture(this->_scene->mMaterials[i],
-       aiTextureType_NORMALS, /* index */ 0);
-      auto ambient = this->importTexture(this->_scene->mMaterials[i],
-       aiTextureType_AMBIENT, /* index */ 0);
-      auto diffuse = this->importTexture(this->_scene->mMaterials[i],
-       aiTextureType_DIFFUSE, /* index */ 0);
-      auto specular = this->importTexture(this->_scene->mMaterials[i],
-       aiTextureType_SPECULAR, /* index */ 0);
-      auto shininess = this->importTexture(this->_scene->mMaterials[i],
-       aiTextureType_SHININESS, /* index */ 0);
-      this->_textureGroups.push_back(TextureGroup(displacement, normal,
-       ambient, diffuse, specular, shininess));
-   }
-}
-
-std::shared_ptr< Texture > Mesh::importTexture(const aiMaterial* material,
- const aiTextureType& type, unsigned int index) {
-   aiString textureFileName;
-   aiReturn ret = material->GetTexture(type, index, &textureFileName,
-    /* mapping */ nullptr, /* uv index */ nullptr, /* blend */ nullptr,
-    /* operator */ nullptr, /* map mode */ nullptr);
-   if (ret != aiReturn_SUCCESS) {
-      return nullptr;
-   }
-
-   boost::filesystem::path texturePath =
-    boost::filesystem::path(this->_path).parent_path() /
-    boost::filesystem::path(textureFileName.C_Str());
-
-   return std::make_shared< Texture >(Texture(texturePath));
+   return aiImportFile(this->_path.string().data(), POST_PROCESSING_FLAGS);
 }
 
 void Mesh::normalizeScene() {
@@ -202,8 +182,7 @@ void Mesh::normalizeScene() {
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
       aiMesh* mesh = this->_scene->mMeshes[i];
       for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
-         aiVector3D aiVertex = mesh->mVertices[j];
-         glm::vec3 vertex(aiVertex.x, aiVertex.y, aiVertex.z);
+         glm::vec3 vertex = vec3AiToGlm(mesh->mVertices[j]);
          min = glm::min(min, vertex);
          max = glm::max(max, vertex);
       }
@@ -222,34 +201,48 @@ void Mesh::normalizeScene() {
 void Mesh::buildAnimations() {
    this->_animations.clear();
    this->_animations.reserve(this->_scene->mNumAnimations);
+
    for (unsigned int i = 0; i < this->_scene->mNumAnimations; ++i) {
-      this->_animations.push_back(this->_scene->mAnimations[i]);
+      this->_animations.push_back(Animation(this->_scene->mAnimations[i]));
    }
 }
 
-void Mesh::buildComponents() {
+void Mesh::buildBoneNodeMap() {
+   NodeNameMap nodeNames = this->getNodeNameMap();
+
+   this->_boneNodes.clear();
    for (unsigned int i = 0; i < this->_scene->mNumMeshes; ++i) {
-      aiMesh* mesh = this->_scene->mMeshes[i];
-      aiMaterial* material = this->_scene->mMaterials[mesh->mMaterialIndex];
+      const aiMesh* mesh = this->_scene->mMeshes[i];
 
-      GeometryUnit geo(this->_vaos[i], this->_vbos[i], this->_ibos[i]);
+      for (unsigned int j = 0; j < mesh->mNumBones; ++j) {
+         const aiBone* bone = mesh->mBones[j];
+         std::string name = stringAiToStd(bone->mName);
+         const aiNode* node = nodeNames.find(name)->second;
+         this->_boneNodes.insert(std::make_pair(bone, node));
+      }
+   }
+}
 
-      unsigned int tboOffset = mesh->mMaterialIndex *
-       Mesh::NUM_TEXTURE_TYPES;
-      GLuint* tbos = this->_tbos.data() + tboOffset;
+void Mesh::importTextures() {
+   this->_textureGroups.clear();
+   this->_textureGroups.reserve(this->_scene->mNumTextures);
 
-      TextureGroup texGroup = this->_textureGroups[mesh->mMaterialIndex];
-      TextureGroupUnit tex(
-         TextureUnit(texGroup.displacement,  tbos[0], 0),
-         TextureUnit(texGroup.normal,        tbos[1], 1),
-         TextureUnit(texGroup.ambient,       tbos[2], 2),
-         TextureUnit(texGroup.diffuse,       tbos[3], 3),
-         TextureUnit(texGroup.specular,      tbos[4], 4),
-         TextureUnit(texGroup.shininess,     tbos[5], 5)
-      );
+   for (unsigned int i = 0; i < this->_scene->mNumMaterials; ++i) {
+      auto displacement = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_DISPLACEMENT, /* index */ 0);
+      auto normal = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_NORMALS, /* index */ 0);
+      auto ambient = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_AMBIENT, /* index */ 0);
+      auto diffuse = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_DIFFUSE, /* index */ 0);
+      auto specular = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_SPECULAR, /* index */ 0);
+      auto shininess = this->importTexture(this->_scene->mMaterials[i],
+       aiTextureType_SHININESS, /* index */ 0);
 
-      this->_components.insert(std::make_pair(mesh,
-       MeshComponent(mesh, material, geo, tex)));
+      this->_textureGroups.push_back(TextureGroup(displacement, normal,
+       ambient, diffuse, specular, shininess));
    }
 }
 
@@ -275,8 +268,17 @@ void Mesh::allocateBuffers() {
    glGenTextures(numTextures, this->_tbos.data());
 }
 
-void Mesh::destroyComponents() {
-   this->_components.clear();
+void Mesh::buildComponents() {
+   this->buildComponentsHelper(this->_scene->mRootNode);
+}
+
+void Mesh::releaseScene() {
+   if (this->_scene == nullptr) {
+      return;
+   }
+
+   aiReleaseImport(this->_scene);
+   this->_scene = nullptr;
 }
 
 void Mesh::releaseBuffers() {
@@ -286,43 +288,97 @@ void Mesh::releaseBuffers() {
    glDeleteTextures(this->_tbos.size(), this->_tbos.data());
 }
 
+void Mesh::destroyComponents() {
+   this->_components.clear();
+}
+
+std::shared_ptr< Texture > Mesh::importTexture(const aiMaterial* material,
+ const aiTextureType& type, unsigned int index) {
+   aiString textureFileName;
+   aiReturn ret = material->GetTexture(type, index, &textureFileName,
+    /* mapping */ nullptr, /* uv index */ nullptr, /* blend */ nullptr,
+    /* operator */ nullptr, /* map mode */ nullptr);
+   if (ret != aiReturn_SUCCESS) {
+      return nullptr;
+   }
+
+   boost::filesystem::path texturePath =
+    boost::filesystem::path(this->_path).parent_path() /
+    boost::filesystem::path(stringAiToStd(textureFileName));
+
+   return std::make_shared< Texture >(Texture(texturePath));
+}
+
+void Mesh::buildComponentsHelper(const aiNode* node) {
+   this->buildComponentHelper(node);
+
+   for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+      this->buildComponentsHelper(node->mChildren[i]);
+   }
+}
+
+void Mesh::buildComponentHelper(const aiNode* node) {
+   for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
+      unsigned int meshIndex = node->mMeshes[i];
+      aiMesh* mesh = this->_scene->mMeshes[meshIndex];
+
+      unsigned int materialIndex = mesh->mMaterialIndex;
+      aiMaterial* material = this->_scene->mMaterials[materialIndex];
+
+      GeometryUnit geo(this->_vaos[meshIndex], this->_vbos[meshIndex],
+       this->_ibos[meshIndex]);
+
+      unsigned int tboOffset = materialIndex * Mesh::NUM_TEXTURE_TYPES;
+      GLuint* tbos = this->_tbos.data() + tboOffset;
+
+      TextureGroup texGroup = this->_textureGroups[materialIndex];
+      TextureGroupUnit tex(
+         TextureUnit(texGroup.displacement,  tbos[0], 0),
+         TextureUnit(texGroup.normal,        tbos[1], 1),
+         TextureUnit(texGroup.ambient,       tbos[2], 2),
+         TextureUnit(texGroup.diffuse,       tbos[3], 3),
+         TextureUnit(texGroup.specular,      tbos[4], 4),
+         TextureUnit(texGroup.shininess,     tbos[5], 5)
+      );
+
+      this->_components.insert(std::make_pair(mesh,
+       MeshComponent(node, mesh, material, geo, tex)));
+   }
+}
+
+NodeNameMap Mesh::getNodeNameMap() const {
+   NodeNameMap nodeNames;
+   this->getNodeNameMapHelper(this->_scene->mRootNode, nodeNames);
+   return nodeNames;
+}
+
+void Mesh::getNodeNameMapHelper(
+ const aiNode* node, NodeNameMap& nodeNames) const {
+   nodeNames.insert(std::make_pair(stringAiToStd(node->mName), node));
+
+   for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+      this->getNodeNameMapHelper(node->mChildren[i], nodeNames);
+   }
+}
+
 void Mesh::renderNode(const ShaderProgram& program,
- const UniformVariable& vars, MatrixStack& matrixStack, const aiNode* node,
- const std::vector< AnimationUnit >& activeAnimations) const {
-   matrixStack.push(this->getNodeTransform(node, activeAnimations));
+ const UniformVariable& vars, const glm::mat4& parentTransform,
+ const NodeTransformMap& nodeTransforms, const aiNode* node) const {
+   glm::mat4 localTransform = nodeTransforms.find(node)->second;
+   glm::mat4 modelTransform = parentTransform * localTransform;
 
    for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
-      auto mesh = this->_scene->mMeshes[node->mMeshes[i]];
+      const aiMesh* mesh = this->_scene->mMeshes[node->mMeshes[i]];
       auto itr = this->_components.find(mesh);
       if (itr != this->_components.end()) {
-         auto component = itr->second;
-         component.render(program, vars, matrixStack.top());
+         const MeshComponent& component = itr->second;
+         component.render(program, vars, modelTransform, this->_boneNodes,
+          nodeTransforms);
       }
    }
 
    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-      this->renderNode(program, vars, matrixStack, node->mChildren[i],
-       activeAnimations);
+      this->renderNode(program, vars, parentTransform, nodeTransforms,
+       node->mChildren[i]);
    }
-
-   matrixStack.pop();
-}
-
-glm::mat4 Mesh::getNodeTransform(const aiNode* node,
- const std::vector< AnimationUnit >& activeAnimations) const {
-   for (auto& unit : activeAnimations) {
-      auto& animation = this->_animations[unit.index];
-      auto transformOpt = animation.getNodeTransform(node, unit.duration);
-      if (transformOpt) {
-         return transformOpt.get();
-      }
-   }
-
-   aiMatrix4x4 m = node->mTransformation;
-   return glm::mat4(
-      m.a1, m.a2, m.a3, m.a4,
-      m.b1, m.b2, m.b3, m.b4,
-      m.c1, m.c2, m.c3, m.c4,
-      m.d1, m.d2, m.d3, m.d4
-   );
 }

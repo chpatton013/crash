@@ -1,10 +1,13 @@
+#include <iostream>
 #include <glm/gtc/type_ptr.hpp>
+#include <crash/math/util.hpp>
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/mesh_component.hpp>
 #include <crash/render/shader_program.hpp>
-#include <crash/render/vertex.hpp>
+#include <crash/render/util.hpp>
 
+using namespace crash::math;
 using namespace crash::render;
 
 MaterialUnit::MaterialUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
@@ -28,73 +31,132 @@ TextureGroupUnit::TextureGroupUnit(
  const TextureUnit& ambient, const TextureUnit& diffuse,
  const TextureUnit& specular, const TextureUnit& shininess) :
    displacement(displacement), normal(normal),
-   ambient(ambient), diffuse(diffuse),
-   specular(specular), shininess(shininess)
+    ambient(ambient), diffuse(diffuse),
+    specular(specular), shininess(shininess)
 {}
 
-/* static */ const glm::vec4 MeshComponent::defaultAmbientColor =
+BoneWeightUnit::BoneWeightUnit(unsigned int index, float weight) :
+   index(index), weight(weight)
+{}
+
+BoneTransformUnit::BoneTransformUnit(
+ const glm::mat4& offset, const glm::mat4& transform) :
+   offset(offset), transform(transform)
+{}
+
+/* static */ const glm::vec4 MeshComponent::DEFAULT_AMBIENT_COLOR =
  glm::vec4(glm::vec3(0.1f), 1.0f);
-/* static */ const glm::vec4 MeshComponent::defaultDiffuseColor =
+/* static */ const glm::vec4 MeshComponent::DEFAULT_DIFFUSE_COLOR =
  glm::vec4(glm::vec3(0.7f), 1.0f);
-/* static */ const glm::vec4 MeshComponent::defaultSpecularColor =
+/* static */ const glm::vec4 MeshComponent::DEFAULT_SPECULAR_COLOR =
  glm::vec4(glm::vec3(0.9f), 1.0f);
-/* static */ const float MeshComponent::defaultShininess = 250.0f;
+/* static */ const float MeshComponent::DEFAULT_SHININESS = 250.0f;
 
 MeshComponent::MeshComponent(const MeshComponent& component) :
-   _mesh(component._mesh), _material(component._material),
-    _materialUnit(component._materialUnit),
+   _node(component._node), _mesh(component._mesh),
+    _material(component._material), _materialUnit(component._materialUnit),
     _geometryUnit(component._geometryUnit),
     _textureGroupUnit(component._textureGroupUnit)
 {}
 
-MeshComponent::MeshComponent(const aiMesh* mesh, const aiMaterial* material,
- const GeometryUnit& geometryUnit, const TextureGroupUnit& textureGroupUnit) :
-   _mesh(mesh), _material(material),
+MeshComponent::MeshComponent(const aiNode* node, const aiMesh* mesh,
+ const aiMaterial* material, const GeometryUnit& geometryUnit,
+ const TextureGroupUnit& textureGroupUnit) :
+   _node(node), _mesh(mesh), _material(material),
     _materialUnit(MeshComponent::extractMaterialUnit(material)),
     _geometryUnit(geometryUnit), _textureGroupUnit(textureGroupUnit)
 {
+   this->fillVertexBones();
    this->generateVertexBuffer();
    this->generateIndexBuffer();
    this->generateVertexArray();
    this->generateTextureBuffers();
 }
 
-void MeshComponent::generateVertexArray() {
+void MeshComponent::bindAttributes(const ShaderProgram& program,
+ const AttributeVariable& vars) const {
+   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
+   glBindVertexArray(this->_geometryUnit.vao);
+
+   Vertex::bindAttributes(program, vars);
+}
+
+void MeshComponent::render(const ShaderProgram& program,
+ const UniformVariable& vars, const glm::mat4& modelTransform,
+ const BoneNodeMap& boneNodes, const NodeTransformMap& nodeTransforms) const {
+   program.setUniformVariableMatrix4(vars.model_transform,
+    glm::value_ptr(modelTransform), 1);
+
+   this->activateBones(program, vars, boneNodes, nodeTransforms);
+   this->activateMaterial(program, vars);
+   this->activateTextures(program, vars);
+   this->activateGeometry();
+
+   glDrawElements(GL_TRIANGLES, this->_mesh->mNumFaces * 3, GL_UNSIGNED_INT,
+    reinterpret_cast< const GLvoid* >(0));
+}
+
+void MeshComponent::fillVertexBones() {
+   this->_vertexBones.clear();
+   this->_vertexBones.resize(this->_mesh->mNumVertices);
+
+   for (unsigned int i = 0; i < this->_mesh->mNumBones; i++) {
+      const aiBone* bone = this->_mesh->mBones[i];
+
+      for (unsigned int j = 0; j < bone->mNumWeights; ++j) {
+         const aiVertexWeight* vertexWeight = bone->mWeights + j;
+         float weight = vertexWeight->mWeight;
+
+         if (weight > 0.0f) {
+            unsigned int vertex = vertexWeight->mVertexId;
+            this->_vertexBones[vertex].push_back(BoneWeightUnit(i, weight));
+         }
+      }
+   }
+}
+
+void MeshComponent::generateVertexArray() const {
    glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
    glBindVertexArray(this->_geometryUnit.vao);
 
    Vertex::defineAttributes();
 }
 
-void MeshComponent::generateVertexBuffer() {
+void MeshComponent::generateVertexBuffer() const {
    std::vector< Vertex > vertices;
 
    const aiVector3D zero(0.0f, 0.0f, 0.0f);
 
    for (unsigned int i = 0; i < this->_mesh->mNumVertices; ++i) {
-      auto position = this->_mesh->mVertices[i];
+      aiVector3D position = this->_mesh->mVertices[i];
 
-      auto normal = zero;
+      aiVector3D normal = zero;
       if (this->_mesh->HasNormals()) {
          normal = this->_mesh->mNormals[i];
       }
 
-      auto tangent = zero;
-      auto bitangent = zero;
+      aiVector3D tangent = zero;
+      aiVector3D bitangent = zero;
       if (this->_mesh->HasTangentsAndBitangents()) {
          tangent = this->_mesh->mTangents[i];
          bitangent = this->_mesh->mBitangents[i];
       }
 
-      auto textureCoordinates = aiVector2D(0.0f, 0.0f);
+      aiVector2D textureCoordinates = aiVector2D(0.0f, 0.0f);
       if (this->_mesh->HasTextureCoords(0)) {
-         auto texture = this->_mesh->mTextureCoords[0][i];
+         aiVector3D texture = this->_mesh->mTextureCoords[0][i];
          textureCoordinates.x = texture.x;
          textureCoordinates.y = texture.y;
       }
 
-      vertices.push_back(Vertex(position, normal, tangent, bitangent,
-       textureCoordinates));
+      glm::ivec4 boneIds;
+      glm::vec4 boneWeights;
+      std::tie(boneIds, boneWeights) = this->getVertexBones(
+       this->_vertexBones[i]);
+
+      vertices.push_back(Vertex(vec3AiToGlm(position), vec3AiToGlm(normal),
+       vec3AiToGlm(tangent), vec3AiToGlm(bitangent),
+       vec2AiToGlm(textureCoordinates), boneIds, boneWeights));
    }
 
    glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
@@ -102,7 +164,7 @@ void MeshComponent::generateVertexBuffer() {
     vertices.data(), GL_STATIC_DRAW);
 }
 
-void MeshComponent::generateIndexBuffer() {
+void MeshComponent::generateIndexBuffer() const {
    std::vector< GLuint > faces;
    faces.resize(this->_mesh->mNumFaces * 3);
 
@@ -118,7 +180,7 @@ void MeshComponent::generateIndexBuffer() {
     faces.data(), GL_STATIC_DRAW);
 }
 
-void MeshComponent::generateTextureBuffers() {
+void MeshComponent::generateTextureBuffers() const {
    this->generateTextureBuffer(this->_textureGroupUnit.displacement);
    this->generateTextureBuffer(this->_textureGroupUnit.normal);
    this->generateTextureBuffer(this->_textureGroupUnit.ambient);
@@ -127,62 +189,26 @@ void MeshComponent::generateTextureBuffers() {
    this->generateTextureBuffer(this->_textureGroupUnit.ambient);
 }
 
-void MeshComponent::generateTextureBuffer(const TextureUnit& textureUnit) {
-   if (textureUnit.texture == nullptr) {
-      return;
+void MeshComponent::activateBones(const ShaderProgram& program,
+ const UniformVariable& vars, const BoneNodeMap& boneNodes,
+ const NodeTransformMap& nodeTransforms) const {
+   glm::mat4 meshToRootTransform =
+    glm::inverse(nodeTransforms.find(this->_node)->second);
+
+   std::vector< glm::mat4 > transforms;
+   transforms.reserve(this->_mesh->mNumBones);
+
+   for (unsigned int i = 0; i < this->_mesh->mNumBones; ++i) {
+      const aiBone* bone = this->_mesh->mBones[i];
+      const aiNode* node = boneNodes.find(bone)->second;
+      glm::mat4 rootToBoneTransform = nodeTransforms.find(node)->second;
+      glm::mat4 meshToBoneTransform = meshToRootTransform * rootToBoneTransform;
+      glm::mat4 meshOffset = mat4AiToGlm(bone->mOffsetMatrix);
+      transforms.push_back(meshToBoneTransform * meshOffset);
    }
 
-   GLint format;
-   int components = textureUnit.texture->getComponents();
-   if (components == 1) {
-      format = GL_LUMINANCE;
-   } else if (components == 2) {
-      format = GL_LUMINANCE_ALPHA;
-   } else if (components == 3) {
-      format = GL_RGB;
-   } else { // components == 4
-      format = GL_RGBA;
-   }
-
-   glBindTexture(GL_TEXTURE_2D, textureUnit.tbo);
-   glTexImage2D(GL_TEXTURE_2D,
-    /* level of detail */ 0, /* texture format */ format,
-    textureUnit.texture->getWidth(), textureUnit.texture->getHeight(),
-    /* border */ 0, /* data format */ format, /* data type */ GL_FLOAT,
-    textureUnit.texture->getData().data());
-   glGenerateMipmap(GL_TEXTURE_2D);
-
-   // Repeat with extra space in x-direction.
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-   // Repeat with extra space in y-direction.
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-   // Use mipmaps when down-sampling.
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-    GL_LINEAR_MIPMAP_LINEAR);
-   // Use mipmaps when up-sampling.
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-    GL_LINEAR_MIPMAP_LINEAR);
-}
-
-void MeshComponent::bindAttributes(const ShaderProgram& program,
- const AttributeVariable& vars) const {
-   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
-   glBindVertexArray(this->_geometryUnit.vao);
-
-   Vertex::bindAttributes(program, vars);
-}
-
-void MeshComponent::render(const ShaderProgram& program,
- const UniformVariable& vars, const glm::mat4& transform) const {
-   program.setUniformVariableMatrix4(vars.transform_matrix,
-    glm::value_ptr(transform), 1);
-
-   this->activateMaterial(program, vars);
-   this->activateTextures(program, vars);
-   this->activateGeometry();
-
-   glDrawElements(GL_TRIANGLES, this->_mesh->mNumFaces * 3, GL_UNSIGNED_INT,
-    reinterpret_cast< const GLvoid* >(0));
+   program.setUniformVariableMatrix4(vars.bones,
+    glm::value_ptr(*transforms.data()), transforms.size());
 }
 
 void MeshComponent::activateMaterial(const ShaderProgram& program,
@@ -219,6 +245,63 @@ void MeshComponent::activateTextures(const ShaderProgram& program,
     vars.shininess_texture, this->_textureGroupUnit.shininess);
 }
 
+void MeshComponent::activateGeometry() const {
+   glBindVertexArray(this->_geometryUnit.vao);
+   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_geometryUnit.ibo);
+}
+
+std::tuple< glm::ivec4, glm::vec4 > MeshComponent::getVertexBones(
+ const BoneWeightGroupUnit& bone) const {
+   glm::ivec4 boneIds(0);
+   glm::vec4 boneWeights(0.0f);
+
+   for (unsigned int i = 0; i < bone.size(); ++i) {
+      boneIds[i] = bone[i].index;
+      boneWeights[i] = bone[i].weight;
+   }
+
+   return std::make_tuple(boneIds, boneWeights);
+}
+
+void MeshComponent::generateTextureBuffer(
+ const TextureUnit& textureUnit) const {
+   if (textureUnit.texture == nullptr) {
+      return;
+   }
+
+   GLint format;
+   int components = textureUnit.texture->getComponents();
+   if (components == 1) {
+      format = GL_LUMINANCE;
+   } else if (components == 2) {
+      format = GL_LUMINANCE_ALPHA;
+   } else if (components == 3) {
+      format = GL_RGB;
+   } else { // components == 4
+      format = GL_RGBA;
+   }
+
+   glBindTexture(GL_TEXTURE_2D, textureUnit.tbo);
+   glTexImage2D(GL_TEXTURE_2D,
+    /* level of detail */ 0, /* texture format */ format,
+    textureUnit.texture->getWidth(), textureUnit.texture->getHeight(),
+    /* border */ 0, /* data format */ format, /* data type */ GL_FLOAT,
+    textureUnit.texture->getData().data());
+   glGenerateMipmap(GL_TEXTURE_2D);
+
+   // Repeat with extra space in x-direction.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   // Repeat with extra space in y-direction.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   // Use mipmaps when down-sampling.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+    GL_LINEAR_MIPMAP_LINEAR);
+   // Use mipmaps when up-sampling.
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+    GL_LINEAR_MIPMAP_LINEAR);
+}
+
 void MeshComponent::activateTexture(const ShaderProgram& program,
  const std::string& hasTextureVar, const std::string& textureVar,
  const TextureUnit& textureUnit) const {
@@ -235,18 +318,12 @@ void MeshComponent::activateTexture(const ShaderProgram& program,
    }
 }
 
-void MeshComponent::activateGeometry() const {
-   glBindVertexArray(this->_geometryUnit.vao);
-   glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_geometryUnit.ibo);
-}
-
 /* static */ MaterialUnit MeshComponent::extractMaterialUnit(
  const aiMaterial* material) {
-   glm::vec4 ambient = MeshComponent::defaultAmbientColor;
-   glm::vec4 diffuse = MeshComponent::defaultDiffuseColor;
-   glm::vec4 specular = MeshComponent::defaultSpecularColor;
-   float shininess = MeshComponent::defaultShininess;
+   glm::vec4 ambient = MeshComponent::DEFAULT_AMBIENT_COLOR;
+   glm::vec4 diffuse = MeshComponent::DEFAULT_DIFFUSE_COLOR;
+   glm::vec4 specular = MeshComponent::DEFAULT_SPECULAR_COLOR;
+   float shininess = MeshComponent::DEFAULT_SHININESS;
    bool twoSided = false;
 
    if (material == nullptr) {
@@ -256,20 +333,19 @@ void MeshComponent::activateGeometry() const {
    aiColor4D aiAmbient(0.0f, 0.0f, 0.0f, 1.0f);
    material->Get(AI_MATKEY_COLOR_AMBIENT, aiAmbient);
    if (!aiAmbient.IsBlack()) {
-      ambient = glm::vec4(aiAmbient.r, aiAmbient.g, aiAmbient.g, aiAmbient.a);
+      ambient = color4AiToGlm(aiAmbient);
    }
 
    aiColor4D aiDiffuse(0.0f, 0.0f, 0.0f, 1.0f);
    material->Get(AI_MATKEY_COLOR_DIFFUSE, aiDiffuse);
    if (!aiDiffuse.IsBlack()) {
-      diffuse = glm::vec4(aiDiffuse.r, aiDiffuse.g, aiDiffuse.g, aiDiffuse.a);
+      diffuse = color4AiToGlm(aiDiffuse);
    }
 
    aiColor4D aiSpecular(0.0f, 0.0f, 0.0f, 1.0f);
    material->Get(AI_MATKEY_COLOR_SPECULAR, aiSpecular);
    if (!aiSpecular.IsBlack()) {
-      specular = glm::vec4(aiSpecular.r, aiSpecular.g, aiSpecular.g,
-       aiSpecular.a);
+      specular = color4AiToGlm(aiSpecular);
    }
 
    float aiShininess = 0.0f;

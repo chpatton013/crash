@@ -6,14 +6,19 @@ using namespace crash::render;
 AttributeVariable::AttributeVariable(
  const std::string& position, const std::string& normal,
  const std::string& tangent, const std::string& bitangent,
- const std::string& texture_coordinates) :
+ const std::string& texture_coordinates,
+ const std::string& bone_ids, const std::string& bone_weights) :
    position(position), normal(normal),
    tangent(tangent), bitangent(bitangent),
-   texture_coordinates(texture_coordinates)
+   texture_coordinates(texture_coordinates),
+   bone_ids(bone_ids), bone_weights(bone_weights)
 {}
 
 UniformVariable::UniformVariable(
- const std::string& transform_matrix,
+ const std::string& model_transform,
+ const std::string& view_transform,
+ const std::string& perspective_transform,
+ const std::string& bones,
  const std::string& camera_position,
  const std::string& light_position,
  const std::string& light_diffuse,
@@ -34,7 +39,10 @@ UniformVariable::UniformVariable(
  const std::string& diffuse_texture,
  const std::string& specular_texture,
  const std::string& shininess_texture) :
-    transform_matrix(transform_matrix),
+    model_transform(model_transform),
+    view_transform(view_transform),
+    perspective_transform(perspective_transform),
+    bones(bones),
     camera_position(camera_position),
     light_position(light_position),
     light_diffuse(light_diffuse),
