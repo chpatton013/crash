@@ -1,10 +1,10 @@
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
-#include <crash/math/symbols.hpp>
+#include <crash/common/symbols.hpp>
 #include <crash/space/camera.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::space;
 
 ////////////////////////////////////////////////////////////////////////////////

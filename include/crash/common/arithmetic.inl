@@ -6,7 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace crash {
-namespace math {
+namespace common {
 
 template < typename T >
 bool approxEqual(const T& a, const T& b) {
@@ -62,5 +62,5 @@ T average(T a, T b) {
    return a + (b - a) * 0.5f;
 }
 
-} // namespace math
+} // namespace common
 } // namespace crash

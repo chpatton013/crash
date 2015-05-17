@@ -2,10 +2,10 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <crash/space/movable.hpp>
-#include <crash/math/symbols.hpp>
-#include <crash/math/util.hpp>
+#include <crash/common/symbols.hpp>
+#include <crash/common/util.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::space;
 
 void Movable::translate(const glm::vec3& translation) {

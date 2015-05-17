@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 namespace crash {
-namespace math {
+namespace common {
 
 struct Plane {
    Plane(const Plane& plane);
@@ -79,5 +79,5 @@ struct Plane {
     const glm::vec4& d2);
 };
 
-} // namespace math
+} // namespace common
 } // namespace crash

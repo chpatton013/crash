@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 namespace crash {
-namespace math {
+namespace common {
 
 struct Line {
    Line(const Line& line);
@@ -31,5 +31,5 @@ struct Line {
    static Line fromPoints(const glm::vec4& a, const glm::vec4& b);
 };
 
-} // namespace math
+} // namespace common
 } // namespace crash

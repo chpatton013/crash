@@ -1,6 +1,6 @@
 #include <crash/space/view_frustum.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::space;
 
 ViewFrustum::ViewFrustum(const ViewFrustum& viewFrustum) :

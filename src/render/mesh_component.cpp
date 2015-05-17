@@ -1,13 +1,13 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
-#include <crash/math/util.hpp>
+#include <crash/common/util.hpp>
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/mesh_component.hpp>
 #include <crash/render/shader_program.hpp>
 #include <crash/render/util.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::render;
 
 ColorUnit::ColorUnit(const glm::vec4& ambient, const glm::vec4& diffuse,

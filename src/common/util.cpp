@@ -1,14 +1,14 @@
 #include <cstdio>
 #include <glm/gtc/type_ptr.hpp>
-#include <crash/math/util.hpp>
+#include <crash/common/util.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 
-void crash::math::print(float f) {
+void crash::common::print(float f) {
    print(f, true);
 }
 
-void crash::math::print(float f, bool newline) {
+void crash::common::print(float f, bool newline) {
    if (newline) {
       printf("%.4f\n", f);
    } else {
@@ -16,11 +16,11 @@ void crash::math::print(float f, bool newline) {
    }
 }
 
-void crash::math::print(const glm::vec3& v) {
+void crash::common::print(const glm::vec3& v) {
    print(v, true);
 }
 
-void crash::math::print(const glm::vec3& v, bool newline) {
+void crash::common::print(const glm::vec3& v, bool newline) {
    if (newline) {
       printf("%.4f %.4f %.4f\n", v.x, v.y, v.z);
    } else {
@@ -28,11 +28,11 @@ void crash::math::print(const glm::vec3& v, bool newline) {
    }
 }
 
-void crash::math::print(const glm::vec4& v) {
+void crash::common::print(const glm::vec4& v) {
    print(v, true);
 }
 
-void crash::math::print(const glm::vec4& v, bool newline) {
+void crash::common::print(const glm::vec4& v, bool newline) {
    if (newline) {
       printf("%.4f %.4f %.4f %.4f\n", v.x, v.y, v.z, v.w);
    } else {
@@ -40,11 +40,11 @@ void crash::math::print(const glm::vec4& v, bool newline) {
    }
 }
 
-void crash::math::print(const glm::ivec3& v) {
+void crash::common::print(const glm::ivec3& v) {
    print(v, true);
 }
 
-void crash::math::print(const glm::ivec3& v, bool newline) {
+void crash::common::print(const glm::ivec3& v, bool newline) {
    if (newline) {
       printf("%d %d %d\n", v.x, v.y, v.z);
    } else {
@@ -52,11 +52,11 @@ void crash::math::print(const glm::ivec3& v, bool newline) {
    }
 }
 
-void crash::math::print(const glm::ivec4& v) {
+void crash::common::print(const glm::ivec4& v) {
    print(v, true);
 }
 
-void crash::math::print(const glm::ivec4& v, bool newline) {
+void crash::common::print(const glm::ivec4& v, bool newline) {
    if (newline) {
       printf("%d %d %d %d\n", v.x, v.y, v.z, v.w);
    } else {
@@ -64,11 +64,11 @@ void crash::math::print(const glm::ivec4& v, bool newline) {
    }
 }
 
-void crash::math::print(const glm::quat& q) {
+void crash::common::print(const glm::quat& q) {
    print(q, true);
 }
 
-void crash::math::print(const glm::quat& q, bool newline) {
+void crash::common::print(const glm::quat& q, bool newline) {
    if (newline) {
       printf("%.4f %.4f %.4f %.4f\n", q.w, q.x, q.y, q.z);
    } else {
@@ -76,7 +76,7 @@ void crash::math::print(const glm::quat& q, bool newline) {
    }
 }
 
-void crash::math::print(const glm::mat4& m) {
+void crash::common::print(const glm::mat4& m) {
    const float* v = glm::value_ptr(m);
    printf(
     "%.4f %.4f %.4f %.4f\n"

@@ -1,7 +1,7 @@
 #include <crash/render/light.hpp>
-#include <crash/math/symbols.hpp>
+#include <crash/common/symbols.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::render;
 
 Light::Light(const Light& light) :

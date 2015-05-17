@@ -1,8 +1,8 @@
-#include <crash/math/symbols.hpp>
+#include <crash/common/symbols.hpp>
 #include <crash/space/bounding_partition.hpp>
 #include <crash/space/util.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::space;
 
 ////////////////////////////////////////////////////////////////////////////////

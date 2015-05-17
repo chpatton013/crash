@@ -63,13 +63,13 @@ links({
 })
 linkoptions({})
 
-project('crash_math')
+project('crash_common')
 kind('SharedLib')
 targetdir('lib')
 files({
-   'src/math/**.cpp',
-   'include/crash/math/**.hpp',
-   'include/crash/math/**.inl'
+   'src/common/**.cpp',
+   'include/crash/common/**.hpp',
+   'include/crash/common/**.inl'
 })
 links({})
 linkoptions({})
@@ -83,7 +83,7 @@ files({
    'include/crash/render/**.inl'
 })
 links({
-   'crash_math',
+   'crash_common',
    'crash_space',
    'assimp',
    'boost_filesystem',
@@ -105,7 +105,7 @@ files({
    'include/crash/space/**.inl'
 })
 links({
-   'crash_math',
+   'crash_common',
 })
 linkoptions({})
 
@@ -148,7 +148,7 @@ files({
    'tests/asset_driver.cpp',
 })
 links({
-   'crash_math',
+   'crash_common',
    'crash_render',
    'assimp',
 })
@@ -161,7 +161,7 @@ files({
    'tests/render_driver.cpp',
 })
 links({
-   'crash_math',
+   'crash_common',
    'crash_space',
 
    'crash_render',

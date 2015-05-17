@@ -1,6 +1,6 @@
-#include <crash/math/line.hpp>
+#include <crash/common/line.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 
 Line::Line(const Line& line) :
    Line(line.point, line.direction)

@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 namespace crash {
-namespace math {
+namespace common {
 
 glm::quat axisAngleToQuat(const glm::vec4& aa);
 
@@ -50,7 +50,7 @@ bool approxLessThan(T a, T b);
 template < class T >
 bool approxGreaterThan(T a, T b);
 
-} // namespace math
+} // namespace common
 } // namespace crash
 
-#include <crash/math/arithmetic.inl>
+#include <crash/common/arithmetic.inl>

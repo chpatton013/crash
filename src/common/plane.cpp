@@ -1,6 +1,6 @@
-#include <crash/math/plane.hpp>
+#include <crash/common/plane.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 
 Plane::Plane(const Plane& plane) :
    Plane(plane.point, plane.normal)

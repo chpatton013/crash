@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 namespace crash {
-namespace math {
+namespace common {
 
 /**
  * The constant value of pi as a float.
@@ -55,5 +55,5 @@ extern const glm::vec3 RIGHT;
  */
 extern const glm::quat NO_ROTATION;
 
-} // namespace math
+} // namespace common
 } // namespace crash

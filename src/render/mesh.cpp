@@ -3,16 +3,16 @@
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include <crash/math/arithmetic.hpp>
-#include <crash/math/symbols.hpp>
-#include <crash/math/util.hpp>
+#include <crash/common/arithmetic.hpp>
+#include <crash/common/symbols.hpp>
+#include <crash/common/util.hpp>
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/shader_program.hpp>
 #include <crash/render/util.hpp>
 #include <crash/render/vertex.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::render;
 
 Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :

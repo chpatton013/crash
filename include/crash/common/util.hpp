@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 namespace crash {
-namespace math {
+namespace common {
 
 /**
  * Print the given float to stdout.
@@ -102,5 +102,5 @@ void print(const glm::quat& q, bool newline);
  */
 void print(const glm::mat4& m);
 
-} // namespace math
+} // namespace common
 } // namespace crash

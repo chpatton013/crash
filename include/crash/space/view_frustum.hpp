@@ -2,7 +2,7 @@
 
 #include <array>
 #include <glm/glm.hpp>
-#include <crash/math/plane.hpp>
+#include <crash/common/plane.hpp>
 
 namespace crash {
 namespace space {
@@ -12,7 +12,7 @@ public:
    static const int NUM_PLANES = 6;
    static const int NUM_CORNERS = 8;
 
-   typedef std::array< math::Plane, NUM_PLANES > Planes;
+   typedef std::array< common::Plane, NUM_PLANES > Planes;
    typedef std::array< glm::vec3, NUM_CORNERS > Corners3;
    typedef std::array< glm::vec4, NUM_CORNERS > Corners4;
 

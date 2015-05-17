@@ -1,10 +1,10 @@
-#include <crash/math/plane.hpp>
-#include <crash/math/arithmetic.hpp>
+#include <crash/common/plane.hpp>
+#include <crash/common/arithmetic.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/util.hpp>
 #include <crash/space/view_frustum.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::space;
 
 ////////////////////////////////////////////////////////////////////////////////

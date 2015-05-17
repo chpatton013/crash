@@ -15,9 +15,9 @@
 #  include <GL/gl.h>
 #endif
 
-#include <crash/math/arithmetic.hpp>
-#include <crash/math/symbols.hpp>
-#include <crash/math/util.hpp>
+#include <crash/common/arithmetic.hpp>
+#include <crash/common/symbols.hpp>
+#include <crash/common/util.hpp>
 #include <crash/render/light.hpp>
 #include <crash/render/light_manager.hpp>
 #include <crash/render/mesh.hpp>
@@ -30,7 +30,7 @@
 #include <crash/window/monitor.hpp>
 #include <crash/window/window.hpp>
 
-using namespace crash::math;
+using namespace crash::common;
 using namespace crash::render;
 using namespace crash::space;
 using namespace crash::window;
