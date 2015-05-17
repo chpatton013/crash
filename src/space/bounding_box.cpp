@@ -13,31 +13,44 @@ using namespace crash::space;
 
 BoundingBox::BoundingBox(const BoundingBox& boundingBox) :
    _transformer(boundingBox._transformer),
-    _linearVelocity(boundingBox._linearVelocity),
-    _angularVelocity(boundingBox._angularVelocity),
+    _radius(boost::none), _corners(boost::none),
+    _faceNormals(boost::none), _diagonalDirections(boost::none),
     _frustumPlaneIndex(0)
 {}
 
-BoundingBox::BoundingBox(const math::Transformer& transformer,
- const glm::vec3& linearVelocity, const glm::vec4& angularVelocity) :
-   _transformer(transformer), _linearVelocity(linearVelocity),
-   _angularVelocity(angularVelocity), _frustumPlaneIndex(0)
+BoundingBox::BoundingBox(const Transformer& transformer) :
+   _transformer(transformer),
+    _radius(boost::none), _corners(boost::none),
+    _faceNormals(boost::none), _diagonalDirections(boost::none),
+    _frustumPlaneIndex(0)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Transformable interface.
+// Movable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3& BoundingBox::getPosition() const {
+glm::vec3 BoundingBox::getPosition() const {
    return this->_transformer.getPosition();
 }
 
-const glm::vec4& BoundingBox::getOrientation() const {
+glm::quat BoundingBox::getOrientation() const {
    return this->_transformer.getOrientation();
 }
 
-const glm::vec3& BoundingBox::getSize() const {
+glm::vec3 BoundingBox::getSize() const {
    return this->_transformer.getSize();
+}
+
+glm::vec3 BoundingBox::getTranslationalVelocity() const {
+   return this->_transformer.getTranslationalVelocity();
+}
+
+glm::quat BoundingBox::getRotationalVelocity() const {
+   return this->_transformer.getRotationalVelocity();
+}
+
+glm::vec3 BoundingBox::getScaleVelocity() const {
+   return this->_transformer.getScaleVelocity();
 }
 
 void BoundingBox::setPosition(const glm::vec3& position) {
@@ -45,7 +58,7 @@ void BoundingBox::setPosition(const glm::vec3& position) {
    this->invalidate();
 }
 
-void BoundingBox::setOrientation(const glm::vec4& orientation) {
+void BoundingBox::setOrientation(const glm::quat& orientation) {
    this->_transformer.setOrientation(orientation);
    this->invalidate();
 }
@@ -55,8 +68,20 @@ void BoundingBox::setSize(const glm::vec3& size) {
    this->invalidate();
 }
 
-const glm::mat4& BoundingBox::getTransform() {
-   return this->_transformer.getTransform();
+void BoundingBox::setTranslationalVelocity(
+ const glm::vec3& translationalVelocity) {
+   this->_transformer.setTranslationalVelocity(translationalVelocity);
+   this->invalidate();
+}
+
+void BoundingBox::setRotationalVelocity(const glm::quat& rotationalVelocity) {
+   this->_transformer.setRotationalVelocity(rotationalVelocity);
+   this->invalidate();
+}
+
+void BoundingBox::setScaleVelocity(const glm::vec3& scaleVelocity) {
+   this->_transformer.setScaleVelocity(scaleVelocity);
+   this->invalidate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,25 +92,9 @@ const Transformer& BoundingBox::getTransformer() const {
    return this->_transformer;
 }
 
-const glm::vec3& BoundingBox::getLineraVelocity() const {
-   return this->_linearVelocity;
-}
-
-const glm::vec4& BoundingBox::getAngularVelocity() const {
-   return this->_angularVelocity;
-}
-
-void BoundingBox::setTransformer(const math::Transformer& transformer) {
+void BoundingBox::setTransformer(const Transformer& transformer) {
    this->_transformer = transformer;
    this->invalidate();
-}
-
-void BoundingBox::setLinearVelocity(const glm::vec3& linearVelocity) {
-   this->_linearVelocity = linearVelocity;
-}
-
-void BoundingBox::setAngularVelocity(const glm::vec4& angularVelocity) {
-   this->_angularVelocity = angularVelocity;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,8 +102,6 @@ void BoundingBox::setAngularVelocity(const glm::vec4& angularVelocity) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void BoundingBox::invalidate() {
-   this->_transformer.invalidate();
-
    this->_radius = boost::none;
    this->_corners = boost::none;
    this->_faceNormals = boost::none;

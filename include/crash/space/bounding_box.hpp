@@ -3,15 +3,14 @@
 #include <array>
 #include <boost/optional.hpp>
 #include <glm/glm.hpp>
-#include <crash/math/transformable.hpp>
-#include <crash/math/transformer.hpp>
+#include <crash/space/movable.hpp>
 
 namespace crash {
 namespace space {
 
 class ViewFrustum;
 
-class BoundingBox : public math::Transformable {
+class BoundingBox : public Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Type definitions.
@@ -30,34 +29,32 @@ public:
    /////////////////////////////////////////////////////////////////////////////
 
    BoundingBox(const BoundingBox& boundingBox);
-   BoundingBox(const math::Transformer& transformer,
-    const glm::vec3& linearVelocity, const glm::vec4& angularVelocity);
+   BoundingBox(const space::Transformer& transformer);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Transformable interface.
+   // Movable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const glm::vec3& getPosition() const;
-   const glm::vec4& getOrientation() const;
-   const glm::vec3& getSize() const;
+   glm::vec3 getPosition() const;
+   glm::quat getOrientation() const;
+   glm::vec3 getSize() const;
+   glm::vec3 getTranslationalVelocity() const;
+   glm::quat getRotationalVelocity() const;
+   glm::vec3 getScaleVelocity() const;
 
    void setPosition(const glm::vec3& position);
-   void setOrientation(const glm::vec4& orientation);
+   void setOrientation(const glm::quat& orientation);
    void setSize(const glm::vec3& size);
-
-   const glm::mat4& getTransform();
+   void setTranslationalVelocity(const glm::vec3& translationalVelocity);
+   void setRotationalVelocity(const glm::quat& rotationalVelocity);
+   void setScaleVelocity(const glm::vec3& scaleVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
    // Data access.
    /////////////////////////////////////////////////////////////////////////////
 
-   const math::Transformer& getTransformer() const;
-   const glm::vec3& getLineraVelocity() const;
-   const glm::vec4& getAngularVelocity() const;
-
-   void setTransformer(const math::Transformer& transformer);
-   void setLinearVelocity(const glm::vec3& linearVelocity);
-   void setAngularVelocity(const glm::vec4& angularVelocity);
+   const Transformer& getTransformer() const;
+   void setTransformer(const Transformer& transformer);
 
    /////////////////////////////////////////////////////////////////////////////
    // Memoization.
@@ -124,9 +121,7 @@ public:
 
 private:
    // Data members
-   math::Transformer _transformer;
-   glm::vec3 _linearVelocity;
-   glm::vec4 _angularVelocity;
+   Transformer _transformer;
 
    // Memoization
    void generateRadius();

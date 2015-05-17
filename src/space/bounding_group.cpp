@@ -1,5 +1,4 @@
 #include <crash/math/symbols.hpp>
-#include <crash/math/transformer.hpp>
 #include <crash/space/bounding_group.hpp>
 #include <crash/space/view_frustum.hpp>
 
@@ -16,30 +15,42 @@ BoundingGroup::BoundingGroup(const BoundingGroup& boundingGroup) :
 {}
 
 BoundingGroup::BoundingGroup(const Transformer& transformer) :
-   _boundingBox(transformer, glm::vec3(), glm::vec4(X_AXIS, 0.0f))
+   _boundingBox(transformer)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Transformable interface.
+// Movable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3& BoundingGroup::getPosition() const {
+glm::vec3 BoundingGroup::getPosition() const {
    return this->_boundingBox.getPosition();
 }
 
-const glm::vec4& BoundingGroup::getOrientation() const {
+glm::quat BoundingGroup::getOrientation() const {
    return this->_boundingBox.getOrientation();
 }
 
-const glm::vec3& BoundingGroup::getSize() const {
+glm::vec3 BoundingGroup::getSize() const {
    return this->_boundingBox.getSize();
+}
+
+glm::vec3 BoundingGroup::getTranslationalVelocity() const {
+   return this->_boundingBox.getTranslationalVelocity();
+}
+
+glm::quat BoundingGroup::getRotationalVelocity() const {
+   return this->_boundingBox.getRotationalVelocity();
+}
+
+glm::vec3 BoundingGroup::getScaleVelocity() const {
+   return this->_boundingBox.getScaleVelocity();
 }
 
 void BoundingGroup::setPosition(const glm::vec3& position) {
    this->_boundingBox.setPosition(position);
 }
 
-void BoundingGroup::setOrientation(const glm::vec4& orientation) {
+void BoundingGroup::setOrientation(const glm::quat& orientation) {
    this->_boundingBox.setOrientation(orientation);
 }
 
@@ -47,8 +58,17 @@ void BoundingGroup::setSize(const glm::vec3& size) {
    this->_boundingBox.setSize(size);
 }
 
-const glm::mat4& BoundingGroup::getTransform() {
-   return this->_boundingBox.getTransform();
+void BoundingGroup::setTranslationalVelocity(
+ const glm::vec3& translationalVelocity) {
+   this->_boundingBox.setTranslationalVelocity(translationalVelocity);
+}
+
+void BoundingGroup::setRotationalVelocity(const glm::quat& rotationalVelocity) {
+   this->_boundingBox.setRotationalVelocity(rotationalVelocity);
+}
+
+void BoundingGroup::setScaleVelocity(const glm::vec3& scaleVelocity) {
+   this->_boundingBox.setScaleVelocity(scaleVelocity);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

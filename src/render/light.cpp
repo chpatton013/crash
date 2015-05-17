@@ -1,6 +1,7 @@
-#include <glm/gtc/matrix_transform.hpp>
 #include <crash/render/light.hpp>
+#include <crash/math/symbols.hpp>
 
+using namespace crash::math;
 using namespace crash::render;
 
 Light::Light(const Light& light) :
@@ -16,35 +17,46 @@ Light::Light(const glm::vec3& position, const glm::vec4& diffuse,
 /* virtual */ Light::~Light() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Transformable interface.
+// Movable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3& Light::getPosition() const {
+glm::vec3 Light::getPosition() const {
    return this->_position;
 }
 
-const glm::vec4& Light::getOrientation() const {
-   return Light::__orientation;
+glm::quat Light::getOrientation() const {
+   return NO_ROTATION;
 }
 
-const glm::vec3& Light::getSize() const {
-   return Light::__size;
+glm::vec3 Light::getSize() const {
+   return UNIT_SIZE;
+}
+
+glm::vec3 Light::getTranslationalVelocity() const {
+   return glm::vec3();
+}
+
+glm::quat Light::getRotationalVelocity() const {
+   return NO_ROTATION;
+}
+
+glm::vec3 Light::getScaleVelocity() const {
+   return glm::vec3();
 }
 
 void Light::setPosition(const glm::vec3& position) {
    this->_position = position;
 }
 
-void Light::setOrientation(const glm::vec4&) {
-}
+void Light::setOrientation(const glm::quat&) {}
 
-void Light::setSize(const glm::vec3&) {
-}
+void Light::setSize(const glm::vec3&) {}
 
-const glm::mat4& Light::getTransform() {
-   this->_transform = glm::translate(glm::mat4(), this->_position);
-   return this->_transform;
-}
+void Light::setTranslationalVelocity(const glm::vec3&) {}
+
+void Light::setRotationalVelocity(const glm::quat&) {}
+
+void Light::setScaleVelocity(const glm::vec3&) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Light.
@@ -65,6 +77,3 @@ void Light::setDiffuse(const glm::vec4& diffuse) {
 void Light::setSpecular(const glm::vec4& specular) {
    this->_specular = specular;
 }
-
-/* static */ glm::vec4 Light::__orientation(1.0f, 0.0f, 0.0f, 0.0f);
-/* static */ glm::vec3 Light::__size(1.0f);

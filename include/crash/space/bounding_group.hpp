@@ -2,42 +2,40 @@
 
 #include <set>
 #include <vector>
-#include <crash/math/transformable.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/collision.hpp>
 
 namespace crash {
-
-namespace math {
-   class Transformer;
-}
-
 namespace space {
 
 class ViewFrustum;
 
-class BoundingGroup : public math::Transformable {
+class BoundingGroup : public Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
    BoundingGroup(const BoundingGroup& boundingGroup);
-   BoundingGroup(const math::Transformer& transformer);
+   BoundingGroup(const Transformer& transformer);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Transformable interface.
+   // Movable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const glm::vec3& getPosition() const;
-   const glm::vec4& getOrientation() const;
-   const glm::vec3& getSize() const;
+   glm::vec3 getPosition() const;
+   glm::quat getOrientation() const;
+   glm::vec3 getSize() const;
+   glm::vec3 getTranslationalVelocity() const;
+   glm::quat getRotationalVelocity() const;
+   glm::vec3 getScaleVelocity() const;
 
    void setPosition(const glm::vec3& position);
-   void setOrientation(const glm::vec4& orientation);
+   void setOrientation(const glm::quat& orientation);
    void setSize(const glm::vec3& size);
-
-   const glm::mat4& getTransform();
+   void setTranslationalVelocity(const glm::vec3& translationalVelocity);
+   void setRotationalVelocity(const glm::quat& rotationalVelocity);
+   void setScaleVelocity(const glm::vec3& scaleVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
    // Data access.

@@ -18,48 +18,63 @@ BoundingPartition::BoundingPartition(const BoundingPartition& spatialManager) :
 
 BoundingPartition::BoundingPartition(const Transformer& transformer,
  const glm::ivec3& partitions) :
-   _boundingBox(transformer, glm::vec3(), glm::vec4(X_AXIS, 0.0f)),
-    _numBoundingBoxes(0)
+   _boundingBox(transformer), _numBoundingBoxes(0)
 {
    this->partition(transformer, partitions);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Transformable interface.
+// Movable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const glm::vec3& BoundingPartition::getPosition() const {
-   return this->_boundingBox.getTransformer().getPosition();
+glm::vec3 BoundingPartition::getPosition() const {
+   return this->_boundingBox.getPosition();
 }
 
-const glm::vec4& BoundingPartition::getOrientation() const {
-   return this->_boundingBox.getTransformer().getOrientation();
+glm::quat BoundingPartition::getOrientation() const {
+   return this->_boundingBox.getOrientation();
 }
 
-const glm::vec3& BoundingPartition::getSize() const {
-   return this->_boundingBox.getTransformer().getSize();
+glm::vec3 BoundingPartition::getSize() const {
+   return this->_boundingBox.getSize();
+}
+
+glm::vec3 BoundingPartition::getTranslationalVelocity() const {
+   return this->_boundingBox.getTranslationalVelocity();
+}
+
+glm::quat BoundingPartition::getRotationalVelocity() const {
+   return this->_boundingBox.getRotationalVelocity();
+}
+
+glm::vec3 BoundingPartition::getScaleVelocity() const {
+   return this->_boundingBox.getScaleVelocity();
 }
 
 void BoundingPartition::setPosition(const glm::vec3& position) {
-   Transformer transformer(this->_boundingBox.getTransformer());
-   transformer.setPosition(position);
-   this->resize(transformer, this->_partitions);
+   this->_boundingBox.setPosition(position);
 }
 
-void BoundingPartition::setOrientation(const glm::vec4& orientation) {
-   Transformer transformer(this->_boundingBox.getTransformer());
-   transformer.setOrientation(orientation);
-   this->resize(transformer, this->_partitions);
+void BoundingPartition::setOrientation(const glm::quat& orientation) {
+   this->_boundingBox.setOrientation(orientation);
 }
 
 void BoundingPartition::setSize(const glm::vec3& size) {
-   Transformer transformer(this->_boundingBox.getTransformer());
-   transformer.setSize(size);
-   this->resize(transformer, this->_partitions);
+   this->_boundingBox.setSize(size);
 }
 
-const glm::mat4& BoundingPartition::getTransform() {
-   return this->_boundingBox.getTransform();
+void BoundingPartition::setTranslationalVelocity(
+ const glm::vec3& translationalVelocity) {
+   this->_boundingBox.setTranslationalVelocity(translationalVelocity);
+}
+
+void BoundingPartition::setRotationalVelocity(
+ const glm::quat& rotationalVelocity) {
+   this->_boundingBox.setRotationalVelocity(rotationalVelocity);
+}
+
+void BoundingPartition::setScaleVelocity(const glm::vec3& scaleVelocity) {
+   this->_boundingBox.setScaleVelocity(scaleVelocity);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +125,8 @@ void BoundingPartition::partition(const Transformer& transformer,
          index.z * dimensions.z * 0.5f
       );
       this->_boundingGroups.push_back(BoundingGroup(Transformer(
-       center, orientation, dimensions)));
+       center, orientation, dimensions,
+       glm::vec3(), NO_ROTATION, glm::vec3())));
    }
 }
 

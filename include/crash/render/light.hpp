@@ -1,12 +1,12 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <crash/math/transformable.hpp>
+#include <crash/space/movable.hpp>
 
 namespace crash {
 namespace render {
 
-class Light : public math::Transformable {
+class Light : public space::Movable {
 public:
    Light(const Light& light);
    Light(const glm::vec3& position, const glm::vec4& diffuse,
@@ -14,18 +14,22 @@ public:
    virtual ~Light();
 
    /////////////////////////////////////////////////////////////////////////////
-   // Transformable interface.
+   // Movable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const glm::vec3& getPosition() const;
-   const glm::vec4& getOrientation() const;
-   const glm::vec3& getSize() const;
+   glm::vec3 getPosition() const;
+   glm::quat getOrientation() const;
+   glm::vec3 getSize() const;
+   glm::vec3 getTranslationalVelocity() const;
+   glm::quat getRotationalVelocity() const;
+   glm::vec3 getScaleVelocity() const;
 
    void setPosition(const glm::vec3& position);
-   void setOrientation(const glm::vec4& orientation);
+   void setOrientation(const glm::quat& orientation);
    void setSize(const glm::vec3& size);
-
-   const glm::mat4& getTransform();
+   void setTranslationalVelocity(const glm::vec3& translationalVelocity);
+   void setRotationalVelocity(const glm::quat& rotationalVelocity);
+   void setScaleVelocity(const glm::vec3& scaleVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
    // Light.
@@ -42,9 +46,6 @@ private:
    glm::vec4 _diffuse;
    glm::vec4 _specular;
    glm::mat4 _transform;
-
-   static glm::vec4 __orientation;
-   static glm::vec3 __size;
 };
 
 } // namespace render
