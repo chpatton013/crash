@@ -47,6 +47,10 @@ struct UniformVariable {
     const std::string& diffuse_color,
     const std::string& specular_color,
     const std::string& shininess_value,
+    const std::string& ambient_base_color,
+    const std::string& diffuse_base_color,
+    const std::string& specular_base_color,
+    const std::string& shininess_base_value,
     const std::string& has_displacement_texture,
     const std::string& has_normal_texture,
     const std::string& has_ambient_texture,
@@ -72,6 +76,10 @@ struct UniformVariable {
    std::string diffuse_color;
    std::string specular_color;
    std::string shininess_value;
+   std::string ambient_base_color;
+   std::string diffuse_base_color;
+   std::string specular_base_color;
+   std::string shininess_base_value;
    std::string has_displacement_texture;
    std::string has_normal_texture;
    std::string has_ambient_texture;

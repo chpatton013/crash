@@ -122,11 +122,15 @@ int main(int argc, char** argv) {
       return 5;
    }
 
-   /* meshes.push_back(MeshInstance(*mesh, */
-   /*  crash::space::Transformer(glm::vec3(0.0f, 0.0f, 1.0f), NO_ROTATION, UNIT_SIZE, */
-   /*  glm::vec3(), NO_ROTATION, glm::vec3(1.0f)))); */
    meshes.push_back(MeshInstance(*mesh,
-    crash::space::Transformer(glm::vec3(0.0f, 0.0f, -1.0f),
+    ColorUnit(glm::vec4(1.0f), glm::vec4(1.0f, 0.3f, 0.3f, 1.0f), glm::vec4(1.0f), 1.0f),
+    crash::space::Transformer(
+    glm::vec3(0.0f, 0.0f, 1.0f), NO_ROTATION, UNIT_SIZE,
+    glm::vec3(), NO_ROTATION, glm::vec3(1.0f))));
+   meshes.push_back(MeshInstance(*mesh,
+    ColorUnit(glm::vec4(1.0f), glm::vec4(0.3f, 0.3f, 1.0f, 1.0f), glm::vec4(1.0f), 1.0f),
+    crash::space::Transformer(
+    glm::vec3(0.0f, 0.0f, -1.0f),
     axisAngleToQuat(glm::vec4(Y_AXIS, glm::radians(180.0f))), UNIT_SIZE,
     glm::vec3(), NO_ROTATION, glm::vec3(1.0f))));
 
@@ -241,6 +245,10 @@ std::tuple<
     "uDiffuseColor",
     "uSpecularColor",
     "uShininessValue",
+    "uAmbientBaseColor",
+    "uDiffuseBaseColor",
+    "uSpecularBaseColor",
+    "uShininessBaseValue",
     "uHasDisplacementTexture",
     "uHasNormalTexture",
     "uHasAmbientTexture",
@@ -266,6 +274,10 @@ std::tuple<
    program->createUniformVariable(uniforms->diffuse_color);
    program->createUniformVariable(uniforms->specular_color);
    program->createUniformVariable(uniforms->shininess_value);
+   program->createUniformVariable(uniforms->ambient_base_color);
+   program->createUniformVariable(uniforms->diffuse_base_color);
+   program->createUniformVariable(uniforms->specular_base_color);
+   program->createUniformVariable(uniforms->shininess_base_value);
    program->createUniformVariable(uniforms->has_displacement_texture);
    program->createUniformVariable(uniforms->has_normal_texture);
    program->createUniformVariable(uniforms->has_ambient_texture);

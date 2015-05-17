@@ -26,13 +26,18 @@ class Texture;
 struct AttributeVariable;
 struct UniformVariable;
 
-struct MaterialUnit {
-   MaterialUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
-    const glm::vec4& specular, float shininess, bool twoSided);
+struct ColorUnit {
+   ColorUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
+    const glm::vec4& specular, float shininess);
    glm::vec4 ambient;
    glm::vec4 diffuse;
    glm::vec4 specular;
    float shininess;
+};
+
+struct MaterialUnit {
+   MaterialUnit(const ColorUnit& color, bool twoSided);
+   ColorUnit color;
    bool twoSided;
 };
 
@@ -89,7 +94,12 @@ public:
    static const glm::vec4 DEFAULT_AMBIENT_COLOR;
    static const glm::vec4 DEFAULT_DIFFUSE_COLOR;
    static const glm::vec4 DEFAULT_SPECULAR_COLOR;
-   static const float DEFAULT_SHININESS;
+   static const float DEFAULT_SHININESS_VALUE;
+
+   static const glm::vec4 DEFAULT_AMBIENT_BASE_COLOR;
+   static const glm::vec4 DEFAULT_DIFFUSE_BASE_COLOR;
+   static const glm::vec4 DEFAULT_SPECULAR_BASE_COLOR;
+   static const float DEFAULT_SHININESS_BASE_VALUE;
 
    MeshComponent(const MeshComponent& component);
    MeshComponent(const aiNode* node, const aiMesh* mesh,
@@ -100,6 +110,7 @@ public:
     const AttributeVariable& vars) const;
 
    void render(const ShaderProgram& program, const UniformVariable& vars,
+    const ColorUnit& color,
     const glm::mat4& modelTransform, const BoneNodeMap& boneNodes,
     const NodeTransformMap& nodeTransforms) const;
 
@@ -123,7 +134,7 @@ private:
     const BoneNodeMap& boneNodes,
     const NodeTransformMap& nodeTransforms) const;
    void activateMaterial(const ShaderProgram& program,
-    const UniformVariable& vars) const;
+    const UniformVariable& vars, const ColorUnit& color) const;
    void activateTextures(const ShaderProgram& program,
     const UniformVariable& vars) const;
    void activateGeometry() const;

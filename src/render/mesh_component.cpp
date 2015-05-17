@@ -10,10 +10,13 @@
 using namespace crash::math;
 using namespace crash::render;
 
-MaterialUnit::MaterialUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
- const glm::vec4& specular, float shininess, bool twoSided) :
-   ambient(ambient), diffuse(diffuse), specular(specular),
-   shininess(shininess), twoSided(twoSided)
+ColorUnit::ColorUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
+ const glm::vec4& specular, float shininess) :
+   ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess)
+{}
+
+MaterialUnit::MaterialUnit(const ColorUnit& color, bool twoSided) :
+   color(color), twoSided(twoSided)
 {}
 
 GeometryUnit::GeometryUnit(const GLuint& vao, const GLuint& vbo,
@@ -50,7 +53,15 @@ BoneTransformUnit::BoneTransformUnit(
  glm::vec4(glm::vec3(0.7f), 1.0f);
 /* static */ const glm::vec4 MeshComponent::DEFAULT_SPECULAR_COLOR =
  glm::vec4(glm::vec3(0.9f), 1.0f);
-/* static */ const float MeshComponent::DEFAULT_SHININESS = 250.0f;
+/* static */ const float MeshComponent::DEFAULT_SHININESS_VALUE = 250.0f;
+
+/* static */ const glm::vec4 MeshComponent::DEFAULT_AMBIENT_BASE_COLOR =
+ glm::vec4(1.0f);
+/* static */ const glm::vec4 MeshComponent::DEFAULT_DIFFUSE_BASE_COLOR =
+ glm::vec4(1.0f);
+/* static */ const glm::vec4 MeshComponent::DEFAULT_SPECULAR_BASE_COLOR =
+ glm::vec4(1.0f);
+/* static */ const float MeshComponent::DEFAULT_SHININESS_BASE_VALUE = 1.0f;
 
 MeshComponent::MeshComponent(const MeshComponent& component) :
    _node(component._node), _mesh(component._mesh),
@@ -82,13 +93,14 @@ void MeshComponent::bindAttributes(const ShaderProgram& program,
 }
 
 void MeshComponent::render(const ShaderProgram& program,
- const UniformVariable& vars, const glm::mat4& modelTransform,
+ const UniformVariable& vars, const ColorUnit& color,
+ const glm::mat4& modelTransform,
  const BoneNodeMap& boneNodes, const NodeTransformMap& nodeTransforms) const {
    program.setUniformVariableMatrix4(vars.model_transform,
     glm::value_ptr(modelTransform), 1);
 
    this->activateBones(program, vars, boneNodes, nodeTransforms);
-   this->activateMaterial(program, vars);
+   this->activateMaterial(program, vars, color);
    this->activateTextures(program, vars);
    this->activateGeometry();
 
@@ -197,15 +209,24 @@ void MeshComponent::activateBones(const ShaderProgram& program,
 }
 
 void MeshComponent::activateMaterial(const ShaderProgram& program,
- const UniformVariable& vars) const {
+ const UniformVariable& vars, const ColorUnit& color) const {
    program.setUniformVariable4f(vars.ambient_color,
-    glm::value_ptr(this->_materialUnit.ambient), 1);
+    glm::value_ptr(this->_materialUnit.color.ambient), 1);
    program.setUniformVariable4f(vars.diffuse_color,
-    glm::value_ptr(this->_materialUnit.diffuse), 1);
+    glm::value_ptr(this->_materialUnit.color.diffuse), 1);
    program.setUniformVariable4f(vars.specular_color,
-    glm::value_ptr(this->_materialUnit.specular), 1);
+    glm::value_ptr(this->_materialUnit.color.specular), 1);
    program.setUniformVariable1f(vars.shininess_value,
-    &this->_materialUnit.shininess, 1);
+    &this->_materialUnit.color.shininess, 1);
+
+   program.setUniformVariable4f(vars.ambient_base_color,
+    glm::value_ptr(color.ambient), 1);
+   program.setUniformVariable4f(vars.diffuse_base_color,
+    glm::value_ptr(color.diffuse), 1);
+   program.setUniformVariable4f(vars.specular_base_color,
+    glm::value_ptr(color.specular), 1);
+   program.setUniformVariable1f(vars.shininess_base_value,
+    &color.shininess, 1);
 
    if (this->_materialUnit.twoSided) {
       glDisable(GL_CULL_FACE);
@@ -341,11 +362,12 @@ void MeshComponent::activateTexture(const ShaderProgram& program,
    glm::vec4 ambient = MeshComponent::DEFAULT_AMBIENT_COLOR;
    glm::vec4 diffuse = MeshComponent::DEFAULT_DIFFUSE_COLOR;
    glm::vec4 specular = MeshComponent::DEFAULT_SPECULAR_COLOR;
-   float shininess = MeshComponent::DEFAULT_SHININESS;
+   float shininess = MeshComponent::DEFAULT_SHININESS_VALUE;
    bool twoSided = false;
 
    if (material == nullptr) {
-      return MaterialUnit(ambient, diffuse, specular, shininess, twoSided);
+      return MaterialUnit(ColorUnit(ambient, diffuse, specular, shininess),
+       twoSided);
    }
 
    aiColor4D aiAmbient(0.0f, 0.0f, 0.0f, 1.0f);
@@ -376,5 +398,6 @@ void MeshComponent::activateTexture(const ShaderProgram& program,
    material->Get(AI_MATKEY_TWOSIDED, aiTwoSided);
    twoSided = (aiTwoSided != 0);
 
-   return MaterialUnit(ambient, diffuse, specular, shininess, twoSided);
+   return MaterialUnit(ColorUnit(ambient, diffuse, specular, shininess),
+    twoSided);
 }

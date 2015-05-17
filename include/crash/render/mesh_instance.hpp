@@ -26,7 +26,8 @@ public:
    /////////////////////////////////////////////////////////////////////////////
 
    MeshInstance(const MeshInstance& instance);
-   MeshInstance(const Mesh& mesh, const space::Transformer& transformer);
+   MeshInstance(const Mesh& mesh, const ColorUnit& color,
+    const space::Transformer& transformer);
    virtual ~MeshInstance();
 
    /////////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,8 @@ public:
    /////////////////////////////////////////////////////////////////////////////
 
    const Mesh& getMesh() const;
+   const ColorUnit& getColor() const;
+   void setColor(const ColorUnit& color);
 
    const AnimationProgressSet& getAnimationProgress() const;
    void startAnimation(unsigned int index);
@@ -70,6 +73,7 @@ private:
    glm::mat4 getNodeTransform(const aiNode* node, float delta_t) const;
 
    const Mesh& _mesh;
+   ColorUnit _color;
    space::Transformer _transformer;
    AnimationProgressSet _animationProgress;
 };

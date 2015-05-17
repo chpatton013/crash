@@ -75,7 +75,7 @@ public:
     const AttributeVariable& vars) const;
 
    void render(const ShaderProgram& program, const UniformVariable& vars,
-    const glm::mat4& parentTransform,
+    const ColorUnit& color, const glm::mat4& parentTransform,
     const NodeTransformMap& nodeTransforms) const;
 
 private:
@@ -117,7 +117,8 @@ private:
    NodeNameMap getNodeNameMap() const;
    void getNodeNameMapHelper(const aiNode* node, NodeNameMap& nodeNames) const;
 
-   void renderNode(const ShaderProgram& program, const UniformVariable& sig,
+   void renderNode(const ShaderProgram& program, const UniformVariable& vars,
+    const ColorUnit& color,
     const glm::mat4& globalTransform, const NodeTransformMap& nodeTransforms,
     const aiNode* node) const;
 

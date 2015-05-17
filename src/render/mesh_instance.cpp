@@ -18,13 +18,14 @@ void AnimationProgress::stop() {
 }
 
 MeshInstance::MeshInstance(const MeshInstance& instance) :
-   _mesh(instance._mesh), _transformer(instance._transformer),
+   _mesh(instance._mesh), _color(instance._color),
+    _transformer(instance._transformer),
     _animationProgress(instance._animationProgress)
 {}
 
-MeshInstance::MeshInstance(const Mesh& mesh,
+MeshInstance::MeshInstance(const Mesh& mesh, const ColorUnit& color,
  const space::Transformer& transformer) :
-   _mesh(mesh), _transformer(transformer), _animationProgress()
+   _mesh(mesh), _color(color), _transformer(transformer), _animationProgress()
 {
    this->_animationProgress.resize(this->_mesh.getAnimations().size());
 }
@@ -91,6 +92,14 @@ const Mesh& MeshInstance::getMesh() const {
    return this->_mesh;
 }
 
+const ColorUnit& MeshInstance::getColor() const {
+   return this->_color;
+}
+
+void MeshInstance::setColor(const ColorUnit& color) {
+   this->_color = color;
+}
+
 const AnimationProgressSet& MeshInstance::getAnimationProgress() const {
    return this->_animationProgress;
 }
@@ -117,7 +126,7 @@ void MeshInstance::render(const ShaderProgram& program,
    glm::mat4 localTransform = this->getTransform(delta_t);
    glm::mat4 modelTransform = parentTransform * localTransform;
 
-   this->_mesh.render(program, vars, modelTransform,
+   this->_mesh.render(program, vars, this->_color, modelTransform,
     this->getNodeTransforms(delta_t));
 }
 

@@ -133,10 +133,10 @@ void Mesh::bindAttributes(const ShaderProgram& program,
 }
 
 void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
- const glm::mat4& parentTransform,
+ const ColorUnit& color, const glm::mat4& parentTransform,
  const NodeTransformMap& nodeTransforms) const {
    glm::mat4 globalTransform = parentTransform * this->getTransform();
-   this->renderNode(program, vars, globalTransform, nodeTransforms,
+   this->renderNode(program, vars, color, globalTransform, nodeTransforms,
     this->_scene->mRootNode);
 }
 
@@ -363,8 +363,8 @@ void Mesh::getNodeNameMapHelper(
    }
 }
 
-void Mesh::renderNode(const ShaderProgram& program,
- const UniformVariable& vars, const glm::mat4& globalTransform,
+void Mesh::renderNode(const ShaderProgram& program, const UniformVariable& vars,
+ const ColorUnit& color, const glm::mat4& globalTransform,
  const NodeTransformMap& nodeTransforms, const aiNode* node) const {
    glm::mat4 localTransform = nodeTransforms.find(node)->second;
    glm::mat4 modelTransform = globalTransform * localTransform;
@@ -374,13 +374,13 @@ void Mesh::renderNode(const ShaderProgram& program,
       auto itr = this->_components.find(mesh);
       if (itr != this->_components.end()) {
          const MeshComponent& component = itr->second;
-         component.render(program, vars, modelTransform, this->_boneNodes,
-          nodeTransforms);
+         component.render(program, vars, color, modelTransform,
+          this->_boneNodes, nodeTransforms);
       }
    }
 
    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-      this->renderNode(program, vars, globalTransform, nodeTransforms,
+      this->renderNode(program, vars, color, globalTransform, nodeTransforms,
        node->mChildren[i]);
    }
 }
