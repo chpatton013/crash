@@ -40,6 +40,30 @@ void crash::math::print(const glm::vec4& v, bool newline) {
    }
 }
 
+void crash::math::print(const glm::ivec3& v) {
+   print(v, true);
+}
+
+void crash::math::print(const glm::ivec3& v, bool newline) {
+   if (newline) {
+      printf("%d %d %d\n", v.x, v.y, v.z);
+   } else {
+      printf("%d %d %d", v.x, v.y, v.z);
+   }
+}
+
+void crash::math::print(const glm::ivec4& v) {
+   print(v, true);
+}
+
+void crash::math::print(const glm::ivec4& v, bool newline) {
+   if (newline) {
+      printf("%d %d %d %d\n", v.x, v.y, v.z, v.w);
+   } else {
+      printf("%d %d %d %d", v.x, v.y, v.z, v.w);
+   }
+}
+
 void crash::math::print(const glm::quat& q) {
    print(q, true);
 }

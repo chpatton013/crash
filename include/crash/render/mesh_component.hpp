@@ -132,8 +132,13 @@ private:
    // Helpers.
    /////////////////////////////////////////////////////////////////////////////
 
-   std::tuple< glm::ivec4, glm::vec4 > getVertexBones(
-    const BoneWeightGroupUnit& bone) const;
+   glm::vec3 getVertexPosition(unsigned int index) const;
+   glm::vec3 getVertexNormal(unsigned int index) const;
+   std::tuple< glm::vec3, glm::vec3 >
+    getVertexTangentAndBitangent(unsigned int index) const;
+   glm::vec2 getVertexTextureCoordinates(unsigned int index) const;
+   std::tuple< glm::ivec4, glm::vec4 >
+    getVertexBones(unsigned int index) const;
 
    void generateTextureBuffer(const TextureUnit& textureUnit) const;
 

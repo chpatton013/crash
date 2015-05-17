@@ -118,7 +118,7 @@ private:
    void getNodeNameMapHelper(const aiNode* node, NodeNameMap& nodeNames) const;
 
    void renderNode(const ShaderProgram& program, const UniformVariable& sig,
-    const glm::mat4& parentTransform, const NodeTransformMap& nodeTransforms,
+    const glm::mat4& globalTransform, const NodeTransformMap& nodeTransforms,
     const aiNode* node) const;
 
    /////////////////////////////////////////////////////////////////////////////

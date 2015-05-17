@@ -124,39 +124,24 @@ void MeshComponent::generateVertexArray() const {
 
 void MeshComponent::generateVertexBuffer() const {
    std::vector< Vertex > vertices;
-
-   const aiVector3D zero(0.0f, 0.0f, 0.0f);
+   vertices.reserve(this->_mesh->mNumVertices);
 
    for (unsigned int i = 0; i < this->_mesh->mNumVertices; ++i) {
-      aiVector3D position = this->_mesh->mVertices[i];
+      glm::vec3 position = this->getVertexPosition(i);
+      glm::vec3 normal = this->getVertexNormal(i);
 
-      aiVector3D normal = zero;
-      if (this->_mesh->HasNormals()) {
-         normal = this->_mesh->mNormals[i];
-      }
+      glm::vec3 tangent;
+      glm::vec3 bitangent;
+      std::tie(tangent, bitangent) = this->getVertexTangentAndBitangent(i);
 
-      aiVector3D tangent = zero;
-      aiVector3D bitangent = zero;
-      if (this->_mesh->HasTangentsAndBitangents()) {
-         tangent = this->_mesh->mTangents[i];
-         bitangent = this->_mesh->mBitangents[i];
-      }
-
-      aiVector2D textureCoordinates = aiVector2D(0.0f, 0.0f);
-      if (this->_mesh->HasTextureCoords(0)) {
-         aiVector3D texture = this->_mesh->mTextureCoords[0][i];
-         textureCoordinates.x = texture.x;
-         textureCoordinates.y = texture.y;
-      }
+      glm::vec2 textureCoordinates = this->getVertexTextureCoordinates(i);
 
       glm::ivec4 boneIds;
       glm::vec4 boneWeights;
-      std::tie(boneIds, boneWeights) = this->getVertexBones(
-       this->_vertexBones[i]);
+      std::tie(boneIds, boneWeights) = this->getVertexBones(i);
 
-      vertices.push_back(Vertex(vec3AiToGlm(position), vec3AiToGlm(normal),
-       vec3AiToGlm(tangent), vec3AiToGlm(bitangent),
-       vec2AiToGlm(textureCoordinates), boneIds, boneWeights));
+      vertices.push_back(Vertex(position, normal, tangent, bitangent,
+       textureCoordinates, boneIds, boneWeights));
    }
 
    glBindBuffer(GL_ARRAY_BUFFER, this->_geometryUnit.vbo);
@@ -192,8 +177,8 @@ void MeshComponent::generateTextureBuffers() const {
 void MeshComponent::activateBones(const ShaderProgram& program,
  const UniformVariable& vars, const BoneNodeMap& boneNodes,
  const NodeTransformMap& nodeTransforms) const {
-   glm::mat4 meshToRootTransform =
-    glm::inverse(nodeTransforms.find(this->_node)->second);
+   glm::mat4 rootToMeshTransform = nodeTransforms.find(this->_node)->second;
+   glm::mat4 meshToRootTransform = glm::inverse(rootToMeshTransform);
 
    std::vector< glm::mat4 > transforms;
    transforms.reserve(this->_mesh->mNumBones);
@@ -251,8 +236,41 @@ void MeshComponent::activateGeometry() const {
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_geometryUnit.ibo);
 }
 
-std::tuple< glm::ivec4, glm::vec4 > MeshComponent::getVertexBones(
- const BoneWeightGroupUnit& bone) const {
+glm::vec3 MeshComponent::getVertexPosition(unsigned int index) const {
+   return vec3AiToGlm(this->_mesh->mVertices[index]);
+}
+
+glm::vec3 MeshComponent::getVertexNormal(unsigned int index) const {
+   if (!this->_mesh->HasNormals()) {
+      return glm::vec3();
+   }
+
+   return vec3AiToGlm(this->_mesh->mNormals[index]);
+}
+
+std::tuple< glm::vec3, glm::vec3 >
+ MeshComponent::getVertexTangentAndBitangent(unsigned int index) const {
+   if (!this->_mesh->HasTangentsAndBitangents()) {
+      return std::make_tuple(glm::vec3(), glm::vec3());
+   }
+
+   glm::vec3 tangent = vec3AiToGlm(this->_mesh->mTangents[index]);
+   glm::vec3 bitangent = vec3AiToGlm(this->_mesh->mBitangents[index]);
+   return std::make_tuple(tangent, bitangent);
+}
+
+glm::vec2 MeshComponent::getVertexTextureCoordinates(unsigned int index) const {
+   if (!this->_mesh->HasTextureCoords(0)) {
+      return glm::vec2();
+   }
+
+   return glm::vec2(vec3AiToGlm(this->_mesh->mTextureCoords[0][index]));
+}
+
+std::tuple< glm::ivec4, glm::vec4 >
+ MeshComponent::getVertexBones(unsigned int index) const {
+   const BoneWeightGroupUnit& bone = this->_vertexBones[index];
+
    glm::ivec4 boneIds(0);
    glm::vec4 boneWeights(0.0f);
 

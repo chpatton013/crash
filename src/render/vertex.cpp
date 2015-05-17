@@ -73,10 +73,10 @@ Vertex::Attribute::Attribute(
 {}
 
 Vertex::AttributeDefinition::AttributeDefinition(
- Attribute position, Attribute normal,
- Attribute tangent, Attribute bitangent,
- Attribute texture_coordinates,
- Attribute bone_ids, Attribute bone_weights) :
+ const Attribute& position, const Attribute& normal,
+ const Attribute& tangent, const Attribute& bitangent,
+ const Attribute& texture_coordinates,
+ const Attribute& bone_ids, const Attribute& bone_weights) :
    position(position), normal(normal),
     tangent(tangent), bitangent(bitangent),
     texture_coordinates(texture_coordinates),

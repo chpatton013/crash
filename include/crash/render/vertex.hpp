@@ -52,10 +52,10 @@ struct Vertex {
    glm::vec4 boneWeights;
 
    static struct AttributeDefinition {
-      AttributeDefinition(Attribute position, Attribute normal,
-       Attribute tangent, Attribute bitangent,
-       Attribute texture_coordinates,
-       Attribute bone_ids, Attribute bone_weights);
+      AttributeDefinition(const Attribute& position, const Attribute& normal,
+       const Attribute& tangent, const Attribute& bitangent,
+       const Attribute& texture_coordinates,
+       const Attribute& bone_ids, const Attribute& bone_weights);
 
       Attribute position;
       Attribute normal;

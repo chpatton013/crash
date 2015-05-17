@@ -1,9 +1,11 @@
+#include <iostream>
 #include <vector>
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <crash/math/arithmetic.hpp>
 #include <crash/math/symbols.hpp>
+#include <crash/math/util.hpp>
 #include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/shader_program.hpp>
@@ -133,8 +135,8 @@ void Mesh::bindAttributes(const ShaderProgram& program,
 void Mesh::render(const ShaderProgram& program, const UniformVariable& vars,
  const glm::mat4& parentTransform,
  const NodeTransformMap& nodeTransforms) const {
-   glm::mat4 modelTransform = parentTransform * this->getTransform();
-   this->renderNode(program, vars, modelTransform, nodeTransforms,
+   glm::mat4 globalTransform = parentTransform * this->getTransform();
+   this->renderNode(program, vars, globalTransform, nodeTransforms,
     this->_scene->mRootNode);
 }
 
@@ -362,10 +364,10 @@ void Mesh::getNodeNameMapHelper(
 }
 
 void Mesh::renderNode(const ShaderProgram& program,
- const UniformVariable& vars, const glm::mat4& parentTransform,
+ const UniformVariable& vars, const glm::mat4& globalTransform,
  const NodeTransformMap& nodeTransforms, const aiNode* node) const {
    glm::mat4 localTransform = nodeTransforms.find(node)->second;
-   glm::mat4 modelTransform = parentTransform * localTransform;
+   glm::mat4 modelTransform = globalTransform * localTransform;
 
    for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
       const aiMesh* mesh = this->_scene->mMeshes[node->mMeshes[i]];
@@ -378,7 +380,7 @@ void Mesh::renderNode(const ShaderProgram& program,
    }
 
    for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-      this->renderNode(program, vars, parentTransform, nodeTransforms,
+      this->renderNode(program, vars, globalTransform, nodeTransforms,
        node->mChildren[i]);
    }
 }
