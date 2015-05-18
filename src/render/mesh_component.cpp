@@ -1,7 +1,6 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 #include <crash/common/util.hpp>
-#include <crash/render/matrix_stack.hpp>
 #include <crash/render/mesh.hpp>
 #include <crash/render/mesh_component.hpp>
 #include <crash/render/shader_program.hpp>

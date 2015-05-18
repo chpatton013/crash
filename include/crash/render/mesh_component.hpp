@@ -20,7 +20,6 @@
 namespace crash {
 namespace render {
 
-class MatrixStack;
 class ShaderProgram;
 class Texture;
 struct AttributeVariable;
