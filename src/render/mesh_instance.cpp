@@ -33,6 +33,15 @@ MeshInstance::MeshInstance(const Mesh& mesh, const ColorUnit& color,
 /* virtual */ MeshInstance::~MeshInstance() {}
 
 ////////////////////////////////////////////////////////////////////////////////
+// Rendering.
+////////////////////////////////////////////////////////////////////////////////
+
+void MeshInstance::render(const glm::mat4& transform, float delta_t) const {
+   this->_mesh.render(*this->_program, this->_color, transform,
+    this->getNodeTransforms(delta_t));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Data access.
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,10 +71,6 @@ const AnimationProgressSet& MeshInstance::getAnimationProgress() const {
    return this->_animationProgress;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Rendering.
-////////////////////////////////////////////////////////////////////////////////
-
 void MeshInstance::startAnimation(unsigned int index) {
    this->_animationProgress[index].start();
 }
@@ -80,12 +85,6 @@ void MeshInstance::progressAnimations(float delta_t) {
          a.progress += delta_t;
       }
    }
-}
-
-void MeshInstance::render(const glm::mat4& modelTransform,
- float delta_t) const {
-   this->_mesh.render(*this->_program, this->_color, modelTransform,
-    this->getNodeTransforms(delta_t));
 }
 
 NodeTransformMap MeshInstance::getNodeTransforms(float delta_t) const {

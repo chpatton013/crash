@@ -3,6 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <crash/render/mesh.hpp>
+#include <crash/render/renderable.hpp>
 #include <crash/render/shader_program.hpp>
 
 namespace crash {
@@ -19,7 +20,7 @@ struct AnimationProgress {
 
 typedef std::vector< AnimationProgress > AnimationProgressSet;
 
-class MeshInstance {
+class MeshInstance : public Renderable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
@@ -29,6 +30,12 @@ public:
    MeshInstance(const Mesh& mesh, const ColorUnit& color,
     const std::shared_ptr< ShaderProgram >& program);
    virtual ~MeshInstance();
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Renderable interface.
+   /////////////////////////////////////////////////////////////////////////////
+
+   void render(const glm::mat4& transform, float delta_t) const;
 
    /////////////////////////////////////////////////////////////////////////////
    // Data access.
@@ -44,15 +51,9 @@ public:
 
    const AnimationProgressSet& getAnimationProgress() const;
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Rendering.
-   /////////////////////////////////////////////////////////////////////////////
-
    void startAnimation(unsigned int index);
    void stopAnimation(unsigned int index);
    void progressAnimations(float delta_t);
-
-   void render(const glm::mat4& modelTransform, float delta_t) const;
 
 private:
    NodeTransformMap getNodeTransforms(float delta_t) const;
