@@ -4,6 +4,7 @@
 
 const uint MAX_NUM_LIGHTS = 8;
 
+uniform uint uLightCount;
 uniform vec3 uLightPosition[MAX_NUM_LIGHTS];
 uniform vec4 uLightDiffuse[MAX_NUM_LIGHTS];
 uniform vec4 uLightSpecular[MAX_NUM_LIGHTS];
@@ -130,7 +131,7 @@ void main() {
    float shininessValue = getShininessValue();
 
    oColor = ambientColor;
-   for (int i = 0; i < MAX_NUM_LIGHTS; ++i) {
+   for (int i = 0; i < uLightCount; ++i) {
       oColor += getColorForLight(position, normal, diffuseColor, specularColor,
        shininessValue, i);
    }

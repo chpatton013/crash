@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <string>
 #include <vector>
 
@@ -21,28 +20,34 @@ class ShaderProgram;
 
 class LightManager {
 public:
-   static const std::size_t NUM_LIGHTS = 8;
-
    LightManager(const LightManager& lightManager);
-   LightManager(const std::string& positionHandle,
-    const std::string& diffuseHandle, const std::string specularHandle);
-   LightManager(const std::string& positionHandle,
-    const std::string& diffuseHandle, const std::string specularHandle,
-    const std::vector< Light >& lights);
+   LightManager(const std::string& countHandle,
+    const std::string& positionHandle, const std::string& diffuseHandle,
+    const std::string specularHandle);
+   LightManager(const std::string& countHandle,
+    const std::string& positionHandle, const std::string& diffuseHandle,
+    const std::string specularHandle, const std::vector< Light >& lights);
    virtual ~LightManager();
 
+   unsigned int getLightCount() const;
    Light getLight(unsigned int index) const;
+   std::vector< Light > getLights() const;
+
+   void addLight(const Light& light);
+   void removeLight(unsigned int index);
    void setLight(unsigned int index, const Light& light);
+   void clearLights();
 
    void setUniforms(const ShaderProgram& program) const;
 
 private:
+   const std::string _countHandle;
    const std::string _positionHandle;
    const std::string _diffuseHandle;
    const std::string _specularHandle;
-   std::array< glm::vec3, LightManager::NUM_LIGHTS > _position;
-   std::array< glm::vec4, LightManager::NUM_LIGHTS > _diffuse;
-   std::array< glm::vec4, LightManager::NUM_LIGHTS > _specular;
+   std::vector< glm::vec3 > _position;
+   std::vector< glm::vec4 > _diffuse;
+   std::vector< glm::vec4 > _specular;
 };
 
 } // namespace render

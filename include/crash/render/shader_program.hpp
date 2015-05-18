@@ -40,6 +40,7 @@ struct UniformVariable {
     const std::string& perspective_transform,
     const std::string& bones,
     const std::string& camera_position,
+    const std::string& light_count,
     const std::string& light_position,
     const std::string& light_diffuse,
     const std::string& light_specular,
@@ -69,6 +70,7 @@ struct UniformVariable {
    std::string perspective_transform;
    std::string bones;
    std::string camera_position;
+   std::string light_count;
    std::string light_position;
    std::string light_diffuse;
    std::string light_specular;
