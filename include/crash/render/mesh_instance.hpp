@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-#include <crash/space/movable.hpp>
+#include <crash/common/movable.hpp>
 #include <crash/render/mesh.hpp>
 
 namespace crash {
@@ -19,7 +19,7 @@ struct AnimationProgress {
 
 typedef std::vector< AnimationProgress > AnimationProgressSet;
 
-class MeshInstance : public space::Movable {
+class MeshInstance : public common::Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
@@ -27,7 +27,7 @@ public:
 
    MeshInstance(const MeshInstance& instance);
    MeshInstance(const Mesh& mesh, const ColorUnit& color,
-    const space::Transformer& transformer);
+    const common::Transformer& transformer);
    virtual ~MeshInstance();
 
    /////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ private:
 
    const Mesh& _mesh;
    ColorUnit _color;
-   space::Transformer _transformer;
+   common::Transformer _transformer;
    AnimationProgressSet _animationProgress;
 };
 

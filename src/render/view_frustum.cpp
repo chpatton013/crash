@@ -1,7 +1,7 @@
-#include <crash/space/view_frustum.hpp>
+#include <crash/render/view_frustum.hpp>
 
 using namespace crash::common;
-using namespace crash::space;
+using namespace crash::render;
 
 ViewFrustum::ViewFrustum(const ViewFrustum& viewFrustum) :
    ViewFrustum(viewFrustum._planes)

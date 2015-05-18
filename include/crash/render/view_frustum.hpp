@@ -5,7 +5,7 @@
 #include <crash/common/plane.hpp>
 
 namespace crash {
-namespace space {
+namespace render {
 
 class ViewFrustum {
 public:
@@ -39,5 +39,5 @@ private:
    Planes _planes;
 };
 
-} // namespace space
+} // namespace render
 } // namespace crash

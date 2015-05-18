@@ -2,6 +2,7 @@
 #include <crash/render/mesh_instance.hpp>
 #include <crash/render/util.hpp>
 
+using namespace crash::common;
 using namespace crash::render;
 
 AnimationProgress::AnimationProgress() :
@@ -24,7 +25,7 @@ MeshInstance::MeshInstance(const MeshInstance& instance) :
 {}
 
 MeshInstance::MeshInstance(const Mesh& mesh, const ColorUnit& color,
- const space::Transformer& transformer) :
+ const Transformer& transformer) :
    _mesh(mesh), _color(color), _transformer(transformer), _animationProgress()
 {
    this->_animationProgress.resize(this->_mesh.getAnimations().size());

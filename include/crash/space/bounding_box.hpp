@@ -3,14 +3,17 @@
 #include <array>
 #include <boost/optional.hpp>
 #include <glm/glm.hpp>
-#include <crash/space/movable.hpp>
+#include <crash/common/movable.hpp>
 
 namespace crash {
+
+namespace render {
+   class ViewFrustum;
+}
+
 namespace space {
 
-class ViewFrustum;
-
-class BoundingBox : public Movable {
+class BoundingBox : public common::Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Type definitions.
@@ -29,7 +32,7 @@ public:
    /////////////////////////////////////////////////////////////////////////////
 
    BoundingBox(const BoundingBox& boundingBox);
-   BoundingBox(const space::Transformer& transformer);
+   BoundingBox(const common::Transformer& transformer);
 
    /////////////////////////////////////////////////////////////////////////////
    // Movable interface.
@@ -53,8 +56,8 @@ public:
    // Data access.
    /////////////////////////////////////////////////////////////////////////////
 
-   const Transformer& getTransformer() const;
-   void setTransformer(const Transformer& transformer);
+   const common::Transformer& getTransformer() const;
+   void setTransformer(const common::Transformer& transformer);
 
    /////////////////////////////////////////////////////////////////////////////
    // Memoization.
@@ -109,7 +112,7 @@ public:
     *
     * :param viewFrustum:  The ViewFrustum to test this BoundingBox against.
     */
-   bool isVisible(const ViewFrustum& viewFrustum);
+   bool isVisible(const render::ViewFrustum& viewFrustum);
 
    /**
     * Determine if this BoundingBox is intersecting with the specified other
@@ -121,7 +124,7 @@ public:
 
 private:
    // Data members
-   Transformer _transformer;
+   common::Transformer _transformer;
 
    // Memoization
    void generateRadius();

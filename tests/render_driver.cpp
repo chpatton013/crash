@@ -18,6 +18,7 @@
 #include <crash/common/arithmetic.hpp>
 #include <crash/common/symbols.hpp>
 #include <crash/common/util.hpp>
+#include <crash/render/camera.hpp>
 #include <crash/render/light.hpp>
 #include <crash/render/light_manager.hpp>
 #include <crash/render/mesh.hpp>
@@ -25,14 +26,12 @@
 #include <crash/render/shader.hpp>
 #include <crash/render/shader_program.hpp>
 #include <crash/render/util.hpp>
-#include <crash/space/camera.hpp>
 #include <crash/window/keyboard.hpp>
 #include <crash/window/monitor.hpp>
 #include <crash/window/window.hpp>
 
 using namespace crash::common;
 using namespace crash::render;
-using namespace crash::space;
 using namespace crash::window;
 
 struct controls_t {
@@ -124,13 +123,11 @@ int main(int argc, char** argv) {
 
    meshes.push_back(MeshInstance(*mesh,
     ColorUnit(glm::vec4(1.0f), glm::vec4(1.0f, 0.3f, 0.3f, 1.0f), glm::vec4(1.0f), 1.0f),
-    crash::space::Transformer(
-    glm::vec3(0.0f, 0.0f, 1.0f), NO_ROTATION, UNIT_SIZE,
+    Transformer(glm::vec3(0.0f, 0.0f, 1.0f), NO_ROTATION, UNIT_SIZE,
     glm::vec3(), NO_ROTATION, glm::vec3(1.0f))));
    meshes.push_back(MeshInstance(*mesh,
     ColorUnit(glm::vec4(1.0f), glm::vec4(0.3f, 0.3f, 1.0f, 1.0f), glm::vec4(1.0f), 1.0f),
-    crash::space::Transformer(
-    glm::vec3(0.0f, 0.0f, -1.0f),
+    Transformer(glm::vec3(0.0f, 0.0f, -1.0f),
     axisAngleToQuat(glm::vec4(Y_AXIS, glm::radians(180.0f))), UNIT_SIZE,
     glm::vec3(), NO_ROTATION, glm::vec3(1.0f))));
 

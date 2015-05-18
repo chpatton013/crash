@@ -84,7 +84,6 @@ files({
 })
 links({
    'crash_common',
-   'crash_space',
    'assimp',
    'boost_filesystem',
    'boost_system',
@@ -106,6 +105,7 @@ files({
 })
 links({
    'crash_common',
+   'crash_render',
 })
 linkoptions({})
 

@@ -1,12 +1,11 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
-#include <crash/space/movable.hpp>
+#include <crash/common/movable.hpp>
 #include <crash/common/symbols.hpp>
 #include <crash/common/util.hpp>
 
 using namespace crash::common;
-using namespace crash::space;
 
 void Movable::translate(const glm::vec3& translation) {
    this->setPosition(this->getPosition() + translation);

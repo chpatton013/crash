@@ -2,22 +2,26 @@
 
 #include <set>
 #include <vector>
+#include <crash/common/movable.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/collision.hpp>
 
 namespace crash {
+
+namespace render {
+   class ViewFrustum;
+}
+
 namespace space {
 
-class ViewFrustum;
-
-class BoundingGroup : public Movable {
+class BoundingGroup : public common::Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
    BoundingGroup(const BoundingGroup& boundingGroup);
-   BoundingGroup(const Transformer& transformer);
+   BoundingGroup(const common::Transformer& transformer);
 
    /////////////////////////////////////////////////////////////////////////////
    // Movable interface.
@@ -56,12 +60,12 @@ public:
    // Spatial queries.
    /////////////////////////////////////////////////////////////////////////////
 
-   bool isVisible(const ViewFrustum& viewFrustum);
+   bool isVisible(const render::ViewFrustum& viewFrustum);
    bool isIntersecting(BoundingBox& other);
 
    std::vector< Collision > getCollidingElements() const;
    std::vector< BoundingBox* > getVisibleElements(
-    const ViewFrustum& viewFrustum) const;
+    const render::ViewFrustum& viewFrustum) const;
 
 protected:
    BoundingBox _boundingBox;

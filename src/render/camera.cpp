@@ -2,10 +2,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <crash/common/symbols.hpp>
-#include <crash/space/camera.hpp>
+#include <crash/render/camera.hpp>
 
 using namespace crash::common;
-using namespace crash::space;
+using namespace crash::render;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors.

@@ -4,6 +4,7 @@
 
 using namespace crash::common;
 using namespace crash::space;
+using namespace crash::render;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors.

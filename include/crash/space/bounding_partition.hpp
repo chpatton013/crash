@@ -2,24 +2,28 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <crash/common/movable.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/bounding_group.hpp>
 
 namespace crash {
 
+namespace render {
+   class ViewFrustum;
+}
+
 namespace space {
 
 class Collision;
-class ViewFrustum;
 
-class BoundingPartition : public Movable {
+class BoundingPartition : public common::Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
    /////////////////////////////////////////////////////////////////////////////
 
    BoundingPartition(const BoundingPartition& spatialManager);
-   BoundingPartition(const Transformer& transformer,
+   BoundingPartition(const common::Transformer& transformer,
     const glm::ivec3& partitions);
 
    /////////////////////////////////////////////////////////////////////////////
@@ -46,8 +50,10 @@ public:
 
    const BoundingBox& getBoundingBox() const;
 
-   void resize(const Transformer& transformer, const glm::ivec3& partitions);
-   void partition(const Transformer& transformer, const glm::ivec3& partitions);
+   void resize(const common::Transformer& transformer,
+    const glm::ivec3& partitions);
+   void partition(const common::Transformer& transformer,
+    const glm::ivec3& partitions);
 
    /////////////////////////////////////////////////////////////////////////////
    // Grouping.
@@ -70,14 +76,14 @@ public:
    // Spatial queries.
    /////////////////////////////////////////////////////////////////////////////
 
-   bool isVisible(const ViewFrustum& viewFrustum);
+   bool isVisible(const render::ViewFrustum& viewFrustum);
    bool isIntersect(BoundingBox& other);
 
    std::vector< BoundingGroup > getContainingBoundingGroups(
     BoundingBox* boundingBox) const;
    std::vector< Collision > getCollidingElements() const;
    std::vector< BoundingBox* > getVisibleElements(
-    const ViewFrustum& viewFrustum) const;
+    const render::ViewFrustum& viewFrustum) const;
 
 private:
    BoundingBox _boundingBox;

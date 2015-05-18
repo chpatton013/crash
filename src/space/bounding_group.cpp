@@ -1,9 +1,10 @@
 #include <crash/common/symbols.hpp>
 #include <crash/space/bounding_group.hpp>
-#include <crash/space/view_frustum.hpp>
+#include <crash/render/view_frustum.hpp>
 
 using namespace crash::common;
 using namespace crash::space;
+using namespace crash::render;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors.

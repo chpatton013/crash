@@ -1,12 +1,12 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <crash/space/movable.hpp>
+#include <crash/common/movable.hpp>
 
 namespace crash {
 namespace render {
 
-class Light : public space::Movable {
+class Light : public common::Movable {
 public:
    Light(const Light& light);
    Light(const glm::vec3& position, const glm::vec4& diffuse,

@@ -3,13 +3,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <boost/optional.hpp>
-#include <crash/space/view_frustum.hpp>
-#include <crash/space/movable.hpp>
+#include <crash/common/movable.hpp>
+#include <crash/render/view_frustum.hpp>
 
 namespace crash {
-namespace space {
+namespace render {
 
-class Camera : public Movable {
+class Camera : public common::Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
@@ -86,5 +86,5 @@ private:
    boost::optional< ViewFrustum > _viewFrustum;
 };
 
-} // namespace space
+} // namespace render
 } // namespace crash

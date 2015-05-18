@@ -5,7 +5,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace crash {
-namespace space {
+namespace common {
 
 class Movable {
 public:
@@ -78,5 +78,5 @@ private:
    glm::vec3 _scaleVelocity;
 };
 
-} // namespace space
+} // namespace common
 } // namespace crash

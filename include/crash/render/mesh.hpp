@@ -16,7 +16,7 @@
 #  include <GL/gl.h>
 #endif
 
-#include <crash/space/movable.hpp>
+#include <crash/common/movable.hpp>
 #include <crash/render/animation.hpp>
 #include <crash/render/mesh_component.hpp>
 #include <crash/render/texture.hpp>
@@ -30,7 +30,7 @@ struct UniformVariable;
 
 typedef std::map< std::string, const aiNode* > NodeNameMap;
 
-class Mesh : public space::Movable {
+class Mesh : public common::Movable {
 public:
    struct SceneImportFailure {
       SceneImportFailure(const std::string& error);
@@ -128,7 +128,7 @@ private:
 
    boost::filesystem::path _path;
    const aiScene* _scene;
-   space::Transformer _transformer;
+   common::Transformer _transformer;
    BoneNodeMap _boneNodes;
    std::vector< Animation > _animations;
    std::vector< TextureGroup > _textureGroups;
