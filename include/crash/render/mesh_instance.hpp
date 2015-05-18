@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-#include <crash/common/movable.hpp>
 #include <crash/render/mesh.hpp>
+#include <crash/render/shader_program.hpp>
 
 namespace crash {
 namespace render {
@@ -19,7 +19,7 @@ struct AnimationProgress {
 
 typedef std::vector< AnimationProgress > AnimationProgressSet;
 
-class MeshInstance : public common::Movable {
+class MeshInstance {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
@@ -27,42 +27,32 @@ public:
 
    MeshInstance(const MeshInstance& instance);
    MeshInstance(const Mesh& mesh, const ColorUnit& color,
-    const common::Transformer& transformer);
+    const std::shared_ptr< ShaderProgram >& program);
    virtual ~MeshInstance();
 
    /////////////////////////////////////////////////////////////////////////////
-   // Movable interface.
+   // Data access.
    /////////////////////////////////////////////////////////////////////////////
 
-   glm::vec3 getPosition() const;
-   glm::quat getOrientation() const;
-   glm::vec3 getSize() const;
-   glm::vec3 getTranslationalVelocity() const;
-   glm::quat getRotationalVelocity() const;
-   glm::vec3 getScaleVelocity() const;
+   const Mesh& getMesh() const;
 
-   void setPosition(const glm::vec3& position);
-   void setOrientation(const glm::quat& orientation);
-   void setSize(const glm::vec3& size);
-   void setTranslationalVelocity(const glm::vec3& translationalVelocity);
-   void setRotationalVelocity(const glm::quat& rotationalVelocity);
-   void setScaleVelocity(const glm::vec3& scaleVelocity);
+   const ColorUnit& getColor() const;
+   void setColor(const ColorUnit& color);
+
+   const std::shared_ptr< ShaderProgram >& getShaderProgram() const;
+   void setShaderProgram(const std::shared_ptr< ShaderProgram >& program);
+
+   const AnimationProgressSet& getAnimationProgress() const;
 
    /////////////////////////////////////////////////////////////////////////////
    // Rendering.
    /////////////////////////////////////////////////////////////////////////////
 
-   const Mesh& getMesh() const;
-   const ColorUnit& getColor() const;
-   void setColor(const ColorUnit& color);
-
-   const AnimationProgressSet& getAnimationProgress() const;
    void startAnimation(unsigned int index);
    void stopAnimation(unsigned int index);
    void progressAnimations(float delta_t);
 
-   void render(const ShaderProgram& program, const UniformVariable& vars,
-    const glm::mat4& parentTransform, float delta_t) const;
+   void render(const glm::mat4& modelTransform, float delta_t) const;
 
 private:
    NodeTransformMap getNodeTransforms(float delta_t) const;
@@ -74,7 +64,7 @@ private:
 
    const Mesh& _mesh;
    ColorUnit _color;
-   common::Transformer _transformer;
+   std::shared_ptr< ShaderProgram > _program;
    AnimationProgressSet _animationProgress;
 };
 

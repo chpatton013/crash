@@ -19,14 +19,13 @@ void AnimationProgress::stop() {
 }
 
 MeshInstance::MeshInstance(const MeshInstance& instance) :
-   _mesh(instance._mesh), _color(instance._color),
-    _transformer(instance._transformer),
+   _mesh(instance._mesh), _color(instance._color), _program(instance._program),
     _animationProgress(instance._animationProgress)
 {}
 
 MeshInstance::MeshInstance(const Mesh& mesh, const ColorUnit& color,
- const Transformer& transformer) :
-   _mesh(mesh), _color(color), _transformer(transformer), _animationProgress()
+ const std::shared_ptr< ShaderProgram >& program) :
+   _mesh(mesh), _color(color), _program(program), _animationProgress()
 {
    this->_animationProgress.resize(this->_mesh.getAnimations().size());
 }
@@ -34,59 +33,7 @@ MeshInstance::MeshInstance(const Mesh& mesh, const ColorUnit& color,
 /* virtual */ MeshInstance::~MeshInstance() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// Movable interface.
-////////////////////////////////////////////////////////////////////////////////
-
-glm::vec3 MeshInstance::getPosition() const {
-   return this->_transformer.getPosition();
-}
-
-glm::quat MeshInstance::getOrientation() const {
-   return this->_transformer.getOrientation();
-}
-
-glm::vec3 MeshInstance::getSize() const {
-   return this->_transformer.getSize();
-}
-
-glm::vec3 MeshInstance::getTranslationalVelocity() const {
-   return this->_transformer.getTranslationalVelocity();
-}
-
-glm::quat MeshInstance::getRotationalVelocity() const {
-   return this->_transformer.getRotationalVelocity();
-}
-
-glm::vec3 MeshInstance::getScaleVelocity() const {
-   return this->_transformer.getScaleVelocity();
-}
-
-void MeshInstance::setPosition(const glm::vec3& position) {
-   this->setPosition(position);
-}
-
-void MeshInstance::setOrientation(const glm::quat& orientation) {
-   this->setOrientation(orientation);
-}
-
-void MeshInstance::setSize(const glm::vec3& size) {
-   this->setSize(size);
-}
-
-void MeshInstance::setTranslationalVelocity(const glm::vec3& translationalVelocity) {
-   this->setTranslationalVelocity(translationalVelocity);
-}
-
-void MeshInstance::setRotationalVelocity(const glm::quat& rotationalVelocity) {
-   this->setRotationalVelocity(rotationalVelocity);
-}
-
-void MeshInstance::setScaleVelocity(const glm::vec3& scaleVelocity) {
-   this->setScaleVelocity(scaleVelocity);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Rendering.
+// Data access.
 ////////////////////////////////////////////////////////////////////////////////
 
 const Mesh& MeshInstance::getMesh() const {
@@ -101,9 +48,23 @@ void MeshInstance::setColor(const ColorUnit& color) {
    this->_color = color;
 }
 
+
+const std::shared_ptr< ShaderProgram >& MeshInstance::getShaderProgram() const {
+   return this->_program;
+}
+
+void MeshInstance::setShaderProgram(
+ const std::shared_ptr< ShaderProgram >& program) {
+   this->_program = program;
+}
+
 const AnimationProgressSet& MeshInstance::getAnimationProgress() const {
    return this->_animationProgress;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Rendering.
+////////////////////////////////////////////////////////////////////////////////
 
 void MeshInstance::startAnimation(unsigned int index) {
    this->_animationProgress[index].start();
@@ -121,13 +82,9 @@ void MeshInstance::progressAnimations(float delta_t) {
    }
 }
 
-void MeshInstance::render(const ShaderProgram& program,
- const UniformVariable& vars, const glm::mat4& parentTransform,
+void MeshInstance::render(const glm::mat4& modelTransform,
  float delta_t) const {
-   glm::mat4 localTransform = this->getTransform(delta_t);
-   glm::mat4 modelTransform = parentTransform * localTransform;
-
-   this->_mesh.render(program, vars, this->_color, modelTransform,
+   this->_mesh.render(*this->_program, this->_color, modelTransform,
     this->getNodeTransforms(delta_t));
 }
 
