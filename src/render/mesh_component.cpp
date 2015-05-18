@@ -92,15 +92,15 @@ void MeshComponent::bindAttributes(const ShaderProgram& program,
 }
 
 void MeshComponent::render(const ShaderProgram& program,
- const UniformVariable& vars, const ColorUnit& color,
- const glm::mat4& modelTransform,
+ const ColorUnit& color, const glm::mat4& modelTransform,
  const BoneNodeMap& boneNodes, const NodeTransformMap& nodeTransforms) const {
-   program.setUniformVariableMatrix4(vars.model_transform,
+   program.setUniformVariableMatrix4(
+    program.getVariableNames().model_transform,
     glm::value_ptr(modelTransform), 1);
 
-   this->activateBones(program, vars, boneNodes, nodeTransforms);
-   this->activateMaterial(program, vars, color);
-   this->activateTextures(program, vars);
+   this->activateBones(program, boneNodes, nodeTransforms);
+   this->activateMaterial(program, color);
+   this->activateTextures(program);
    this->activateGeometry();
 
    glDrawElements(GL_TRIANGLES, this->_mesh->mNumFaces * 3, GL_UNSIGNED_INT,
@@ -186,8 +186,7 @@ void MeshComponent::generateTextureBuffers() const {
 }
 
 void MeshComponent::activateBones(const ShaderProgram& program,
- const UniformVariable& vars, const BoneNodeMap& boneNodes,
- const NodeTransformMap& nodeTransforms) const {
+ const BoneNodeMap& boneNodes, const NodeTransformMap& nodeTransforms) const {
    glm::mat4 rootToMeshTransform = nodeTransforms.find(this->_node)->second;
    glm::mat4 meshToRootTransform = glm::inverse(rootToMeshTransform);
 
@@ -203,12 +202,14 @@ void MeshComponent::activateBones(const ShaderProgram& program,
       transforms.push_back(meshToBoneTransform * meshOffset);
    }
 
-   program.setUniformVariableMatrix4(vars.bones,
+   program.setUniformVariableMatrix4(program.getVariableNames().bones,
     glm::value_ptr(*transforms.data()), transforms.size());
 }
 
 void MeshComponent::activateMaterial(const ShaderProgram& program,
- const UniformVariable& vars, const ColorUnit& color) const {
+ const ColorUnit& color) const {
+   auto& vars = program.getVariableNames();
+
    program.setUniformVariable4f(vars.ambient_color,
     glm::value_ptr(this->_materialUnit.color.ambient), 1);
    program.setUniformVariable4f(vars.diffuse_color,
@@ -234,8 +235,9 @@ void MeshComponent::activateMaterial(const ShaderProgram& program,
    }
 }
 
-void MeshComponent::activateTextures(const ShaderProgram& program,
- const UniformVariable& vars) const {
+void MeshComponent::activateTextures(const ShaderProgram& program) const {
+   auto& vars = program.getVariableNames();
+
    this->activateTexture(program, vars.has_displacement_texture,
     vars.displacement_texture, this->_textureGroupUnit.displacement);
    this->activateTexture(program, vars.has_normal_texture,

@@ -100,7 +100,7 @@ class ShaderProgram {
 public:
    typedef std::vector< std::shared_ptr< Shader > > Shaders;
 
-   ShaderProgram(const Shaders& shaders);
+   ShaderProgram(const Shaders& shaders, const UniformVariable& vars);
    virtual ~ShaderProgram();
 
    const Shaders& getShaders() const;
@@ -110,6 +110,8 @@ public:
    void use() const;
    void createUniformVariable(const std::string& name);
    GLint getVariableHandle(const std::string& name) const;
+
+   const UniformVariable& getVariableNames() const;
 
    void setUniformVariable1f(const std::string& name, const GLfloat* array,
     GLsizei length) const;
@@ -161,6 +163,7 @@ private:
    Shaders _shaders;
    GLuint _handle;
    std::map< std::string, GLint > _variables;
+   UniformVariable _vars;
 };
 
 } // namespace render

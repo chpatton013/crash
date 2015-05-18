@@ -23,7 +23,6 @@ namespace render {
 class ShaderProgram;
 class Texture;
 struct AttributeVariable;
-struct UniformVariable;
 
 struct ColorUnit {
    ColorUnit(const glm::vec4& ambient, const glm::vec4& diffuse,
@@ -108,8 +107,7 @@ public:
    void bindAttributes(const ShaderProgram& program,
     const AttributeVariable& vars) const;
 
-   void render(const ShaderProgram& program, const UniformVariable& vars,
-    const ColorUnit& color,
+   void render(const ShaderProgram& program, const ColorUnit& color,
     const glm::mat4& modelTransform, const BoneNodeMap& boneNodes,
     const NodeTransformMap& nodeTransforms) const;
 
@@ -129,13 +127,11 @@ private:
    /////////////////////////////////////////////////////////////////////////////
 
    void activateBones(const ShaderProgram& program,
-    const UniformVariable& vars,
     const BoneNodeMap& boneNodes,
     const NodeTransformMap& nodeTransforms) const;
    void activateMaterial(const ShaderProgram& program,
-    const UniformVariable& vars, const ColorUnit& color) const;
-   void activateTextures(const ShaderProgram& program,
-    const UniformVariable& vars) const;
+    const ColorUnit& color) const;
+   void activateTextures(const ShaderProgram& program) const;
    void activateGeometry() const;
 
    /////////////////////////////////////////////////////////////////////////////

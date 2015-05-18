@@ -89,8 +89,9 @@ ShaderProgram::VariableReferenceFailure::VariableReferenceFailure(
    error(error)
 {}
 
-ShaderProgram::ShaderProgram(const Shaders& shaders) :
-   _shaders(shaders)
+ShaderProgram::ShaderProgram(const Shaders& shaders,
+ const UniformVariable& vars) :
+   _shaders(shaders), _vars(vars)
 {
    this->_handle = glCreateProgram();
 }
@@ -156,6 +157,10 @@ GLint ShaderProgram::getVariableHandle(const std::string& name) const {
    }
 
    return itr->second;
+}
+
+const UniformVariable& ShaderProgram::getVariableNames() const {
+   return this->_vars;
 }
 
 void ShaderProgram::setUniformVariable1f(const std::string& name,
