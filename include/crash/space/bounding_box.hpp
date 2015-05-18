@@ -4,16 +4,12 @@
 #include <boost/optional.hpp>
 #include <glm/glm.hpp>
 #include <crash/common/movable.hpp>
+#include <crash/space/boundable.hpp>
 
 namespace crash {
-
-namespace render {
-   class ViewFrustum;
-}
-
 namespace space {
 
-class BoundingBox : public common::Movable {
+class BoundingBox : public common::Movable, public Boundable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Type definitions.
@@ -51,6 +47,27 @@ public:
    void setTranslationalVelocity(const glm::vec3& translationalVelocity);
    void setRotationalVelocity(const glm::quat& rotationalVelocity);
    void setScaleVelocity(const glm::vec3& scaleVelocity);
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Boundable interface.
+   /////////////////////////////////////////////////////////////////////////////
+
+   BoundingBox& getBoundingBox();
+
+   /**
+    * Determine if any part of this BoundingBox is within the given ViewFrustum.
+    *
+    * :param viewFrustum:  The ViewFrustum to test this BoundingBox against.
+    */
+   bool isVisible(const render::ViewFrustum& viewFrustum);
+
+   /**
+    * Determine if this BoundingBox is intersecting with the specified other
+    * BoundingBox.
+    *
+    * :param other: The other BoundingBox to test for intersection.
+    */
+   bool isIntersecting(Boundable* boundable);
 
    /////////////////////////////////////////////////////////////////////////////
    // Data access.
@@ -102,25 +119,6 @@ public:
     *    3: ntr -> fbl
     */
    const DiagonalDirections& getDiagonalDirections();
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Spatial queries.
-   /////////////////////////////////////////////////////////////////////////////
-
-   /**
-    * Determine if any part of this BoundingBox is within the given ViewFrustum.
-    *
-    * :param viewFrustum:  The ViewFrustum to test this BoundingBox against.
-    */
-   bool isVisible(const render::ViewFrustum& viewFrustum);
-
-   /**
-    * Determine if this BoundingBox is intersecting with the specified other
-    * BoundingBox.
-    *
-    * :param other: The other BoundingBox to test for intersection.
-    */
-   bool isIntersecting(BoundingBox& boundable);
 
 private:
    // Data members

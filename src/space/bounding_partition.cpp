@@ -14,12 +14,12 @@ BoundingPartition::BoundingPartition(const BoundingPartition& spatialManager) :
    _boundingBox(spatialManager._boundingBox),
    _partitions(spatialManager._partitions),
    _boundingGroups(spatialManager._boundingGroups),
-   _numBoundingBoxes(spatialManager._numBoundingBoxes)
+   _numBoundables(spatialManager._numBoundables)
 {}
 
 BoundingPartition::BoundingPartition(const Transformer& transformer,
  const glm::ivec3& partitions) :
-   _boundingBox(transformer), _numBoundingBoxes(0)
+   _boundingBox(transformer), _numBoundables(0)
 {
    this->partition(transformer, partitions);
 }
@@ -79,16 +79,28 @@ void BoundingPartition::setScaleVelocity(const glm::vec3& scaleVelocity) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Data access.
+// Boundable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const BoundingBox& BoundingPartition::getBoundingBox() const {
+BoundingBox& BoundingPartition::getBoundingBox() {
    return this->_boundingBox;
 }
 
+bool BoundingPartition::isVisible(const render::ViewFrustum& viewFrustum) {
+   return this->_boundingBox.isVisible(viewFrustum);
+}
+
+bool BoundingPartition::isIntersecting(Boundable* other) {
+   return this->_boundingBox.isIntersecting(other);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Grouping.
+////////////////////////////////////////////////////////////////////////////////
+
 void BoundingPartition::resize(const Transformer& transformer,
  const glm::ivec3& partitions) {
-   std::vector< BoundingBox* > boundaingBoxes = this->getBoundingBoxes();
+   std::vector< Boundable* > boundaingBoxes = this->getBoundables();
 
    this->partition(transformer, partitions);
 
@@ -99,7 +111,7 @@ void BoundingPartition::resize(const Transformer& transformer,
 
 void BoundingPartition::partition(const Transformer& transformer,
  const glm::ivec3& partitions) {
-   this->_numBoundingBoxes = 0;
+   this->_numBoundables = 0;
 
    this->_boundingBox.setTransformer(transformer);
    this->_partitions = partitions;
@@ -131,27 +143,23 @@ void BoundingPartition::partition(const Transformer& transformer,
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Grouping.
-////////////////////////////////////////////////////////////////////////////////
-
-bool BoundingPartition::add(BoundingBox* boundingBox) {
+bool BoundingPartition::add(Boundable* boundingBox) {
    bool added = false;
 
    for (auto& group : this->_boundingGroups) {
-      if (group.isIntersecting(*boundingBox)) {
+      if (group.isIntersecting(boundingBox)) {
          added |= group.add(boundingBox);
       }
    }
 
    if (added) {
-      ++this->_numBoundingBoxes;
+      ++this->_numBoundables;
    }
 
    return added;
 }
 
-bool BoundingPartition::remove(BoundingBox* boundingBox) {
+bool BoundingPartition::remove(Boundable* boundingBox) {
    bool removed = false;
 
    for (auto& group : this->_boundingGroups) {
@@ -159,13 +167,13 @@ bool BoundingPartition::remove(BoundingBox* boundingBox) {
    }
 
    if (removed) {
-      --this->_numBoundingBoxes;
+      --this->_numBoundables;
    }
 
    return removed;
 }
 
-bool BoundingPartition::update(BoundingBox* boundingBox) {
+bool BoundingPartition::update(Boundable* boundingBox) {
    if (!this->remove(boundingBox)) {
       return false;
    }
@@ -178,24 +186,24 @@ void BoundingPartition::clear() {
       group.clear();
    }
 
-   this->_numBoundingBoxes = 0;
+   this->_numBoundables = 0;
 }
 
-unsigned int BoundingPartition::getNumBoundingBoxes() const {
-   return this->_numBoundingBoxes;
+unsigned int BoundingPartition::getNumBoundables() const {
+   return this->_numBoundables;
 }
 
 unsigned int BoundingPartition::getNumBoundingGroups() const {
    return this->_boundingGroups.size();
 }
 
-std::vector< BoundingBox* > BoundingPartition::getBoundingBoxes() const {
-   std::vector< BoundingBox* > accumulator;
-   std::set< BoundingBox* > mark;
+std::vector< Boundable* > BoundingPartition::getBoundables() const {
+   std::vector< Boundable* > accumulator;
+   std::set< Boundable* > mark;
 
-   accumulator.reserve(this->_numBoundingBoxes);
+   accumulator.reserve(this->_numBoundables);
    for (auto& group : this->_boundingGroups) {
-      for (auto boundingBox : group.getBoundingBoxes()) {
+      for (auto boundingBox : group.getBoundables()) {
          auto itr = mark.find(boundingBox);
          if (itr == mark.end()) {
             accumulator.push_back(boundingBox);
@@ -215,16 +223,12 @@ const glm::ivec3& BoundingPartition::getPartitions() const {
    return this->_partitions;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Spatial queries.
-////////////////////////////////////////////////////////////////////////////////
-
 std::vector< BoundingGroup > BoundingPartition::getContainingBoundingGroups(
- BoundingBox* boundingBox) const {
+ Boundable* boundingBox) const {
    std::vector< BoundingGroup > groups;
 
    for (auto group : this->_boundingGroups) {
-      if (group.isIntersecting(*boundingBox)) {
+      if (group.isIntersecting(boundingBox)) {
          groups.push_back(group);
       }
    }
@@ -249,10 +253,10 @@ std::vector< Collision > BoundingPartition::getCollidingElements() const {
    return accumulator;
 }
 
-std::vector< BoundingBox* > BoundingPartition::getVisibleElements(
+std::vector< Boundable* > BoundingPartition::getVisibleElements(
  const ViewFrustum& viewFrustum) const {
-   std::vector< BoundingBox* > accumulator;
-   std::set< BoundingBox* > mark;
+   std::vector< Boundable* > accumulator;
+   std::set< Boundable* > mark;
 
    for (auto& group : this->_boundingGroups) {
       for (auto boundingBox : group.getVisibleElements(viewFrustum)) {

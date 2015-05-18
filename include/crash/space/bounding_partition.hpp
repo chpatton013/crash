@@ -16,7 +16,7 @@ namespace space {
 
 class Collision;
 
-class BoundingPartition : public common::Movable {
+class BoundingPartition : public common::Movable, public Boundable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
@@ -45,51 +45,46 @@ public:
    void setScaleVelocity(const glm::vec3& scaleVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Data access.
+   // Boundable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const BoundingBox& getBoundingBox() const;
+   BoundingBox& getBoundingBox();
+   bool isVisible(const render::ViewFrustum& viewFrustum);
+   bool isIntersecting(Boundable* other);
+
+   /////////////////////////////////////////////////////////////////////////////
+   // Grouping.
+   /////////////////////////////////////////////////////////////////////////////
 
    void resize(const common::Transformer& transformer,
     const glm::ivec3& partitions);
    void partition(const common::Transformer& transformer,
     const glm::ivec3& partitions);
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Grouping.
-   /////////////////////////////////////////////////////////////////////////////
-
-   bool add(BoundingBox* boundable);
-   bool remove(BoundingBox* boundable);
-   bool update(BoundingBox* boundable);
+   bool add(Boundable* boundable);
+   bool remove(Boundable* boundable);
+   bool update(Boundable* boundable);
    void clear();
 
-   unsigned int getNumBoundingBoxes() const;
+   unsigned int getNumBoundables() const;
    unsigned int getNumBoundingGroups() const;
 
-   std::vector< BoundingBox* > getBoundingBoxes() const;
+   std::vector< Boundable* > getBoundables() const;
    std::vector< BoundingGroup > getBoundingGroups() const;
 
    const glm::ivec3& getPartitions() const;
 
-   /////////////////////////////////////////////////////////////////////////////
-   // Spatial queries.
-   /////////////////////////////////////////////////////////////////////////////
-
-   bool isVisible(const render::ViewFrustum& viewFrustum);
-   bool isIntersect(BoundingBox& other);
-
    std::vector< BoundingGroup > getContainingBoundingGroups(
-    BoundingBox* boundingBox) const;
+    Boundable* boundingBox) const;
    std::vector< Collision > getCollidingElements() const;
-   std::vector< BoundingBox* > getVisibleElements(
+   std::vector< Boundable* > getVisibleElements(
     const render::ViewFrustum& viewFrustum) const;
 
 private:
    BoundingBox _boundingBox;
    glm::ivec3 _partitions;
    std::vector< BoundingGroup > _boundingGroups;
-   unsigned int _numBoundingBoxes;
+   unsigned int _numBoundables;
 };
 
 } // namespace space

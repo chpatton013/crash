@@ -3,24 +3,24 @@
 namespace crash {
 namespace space {
 
-class BoundingBox;
+struct Boundable;
 
 class Collision {
 public:
    virtual ~Collision();
 
-   BoundingBox* getFirst() const;
-   BoundingBox* getSecond() const;
+   Boundable* getFirst() const;
+   Boundable* getSecond() const;
 
    bool operator<(const Collision& other) const;
 
-   static Collision factory(BoundingBox* first, BoundingBox* second);
+   static Collision factory(Boundable* first, Boundable* second);
 
 private:
-   Collision(BoundingBox* first, BoundingBox* second);
+   Collision(Boundable* first, Boundable* second);
 
-   BoundingBox* _first;
-   BoundingBox* _second;
+   Boundable* _first;
+   Boundable* _second;
 };
 
 } // namespace space

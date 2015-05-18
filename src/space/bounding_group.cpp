@@ -12,7 +12,7 @@ using namespace crash::render;
 
 BoundingGroup::BoundingGroup(const BoundingGroup& boundingGroup) :
    _boundingBox(boundingGroup._boundingBox),
-   _boundingBoxes(boundingGroup._boundingBoxes)
+    _boundables(boundingGroup._boundables)
 {}
 
 BoundingGroup::BoundingGroup(const Transformer& transformer) :
@@ -73,65 +73,61 @@ void BoundingGroup::setScaleVelocity(const glm::vec3& scaleVelocity) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Data access.
+// Boundable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-const BoundingBox& BoundingGroup::getBoundingBox() const {
+BoundingBox& BoundingGroup::getBoundingBox() {
    return this->_boundingBox;
+}
+
+bool BoundingGroup::isVisible(const ViewFrustum& viewFrustum) {
+   return this->_boundingBox.isVisible(viewFrustum);
+}
+
+bool BoundingGroup::isIntersecting(Boundable* other) {
+   return this->_boundingBox.isIntersecting(other);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Grouping.
 ////////////////////////////////////////////////////////////////////////////////
 
-bool BoundingGroup::add(BoundingBox* boundingBox) {
-   return this->_boundingBoxes.insert(boundingBox).second;
+bool BoundingGroup::add(Boundable* boundingBox) {
+   return this->_boundables.insert(boundingBox).second;
 }
 
-bool BoundingGroup::remove(BoundingBox* boundingBox) {
-   auto itr = this->_boundingBoxes.find(boundingBox);
-   if (itr == this->_boundingBoxes.end()) {
+bool BoundingGroup::remove(Boundable* boundingBox) {
+   auto itr = this->_boundables.find(boundingBox);
+   if (itr == this->_boundables.end()) {
       return false;
    }
 
-   this->_boundingBoxes.erase(itr);
+   this->_boundables.erase(itr);
    return true;
 }
 
 void BoundingGroup::clear() {
-   this->_boundingBoxes.clear();
+   this->_boundables.clear();
 }
 
-const std::set< BoundingBox* >& BoundingGroup::getBoundingBoxes() const {
-   return this->_boundingBoxes;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Spatial queries.
-////////////////////////////////////////////////////////////////////////////////
-
-bool BoundingGroup::isVisible(const ViewFrustum& viewFrustum) {
-   return this->_boundingBox.isVisible(viewFrustum);
-}
-
-bool BoundingGroup::isIntersecting(BoundingBox& other) {
-   return this->_boundingBox.isIntersecting(other);
+const std::set< Boundable* >& BoundingGroup::getBoundables() const {
+   return this->_boundables;
 }
 
 std::vector< Collision > BoundingGroup::getCollidingElements() const {
    std::vector< Collision > queue;
-   auto begin = this->_boundingBoxes.begin();
-   auto end = this->_boundingBoxes.end();
+   auto begin = this->_boundables.begin();
+   auto end = this->_boundables.end();
 
    for (auto itrA = begin; itrA != end; ++itrA) {
       // Start searching at the position after itrA so each combination of
-      // BoundingBoxes is only checked once.
+      // Boundables is only checked once.
       auto itrB = itrA;
       while (++itrB != end) {
          auto a = *itrA;
          auto b = *itrB;
 
-         if (a->isIntersecting(*b)) {
+         if (a->isIntersecting(b)) {
             queue.push_back(Collision::factory(a, b));
          }
       }
@@ -140,11 +136,11 @@ std::vector< Collision > BoundingGroup::getCollidingElements() const {
    return queue;
 }
 
-std::vector< BoundingBox* > BoundingGroup::getVisibleElements(
+std::vector< Boundable* > BoundingGroup::getVisibleElements(
  const ViewFrustum& viewFrustum) const {
-   std::vector< BoundingBox* > queue;
+   std::vector< Boundable* > queue;
 
-   for (auto boundingBox : this->_boundingBoxes) {
+   for (auto boundingBox : this->_boundables) {
       if (boundingBox->isVisible(viewFrustum)) {
          queue.push_back(boundingBox);
       }

@@ -86,6 +86,62 @@ void BoundingBox::setScaleVelocity(const glm::vec3& scaleVelocity) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Boundable interface.
+////////////////////////////////////////////////////////////////////////////////
+
+BoundingBox& BoundingBox::getBoundingBox() {
+   return *this;
+}
+
+bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
+   auto corners = this->getCorners();
+   auto diagonals = this->getDiagonalDirections();
+   auto frustumPlanes = viewFrustum.getPlanes();
+
+   for (int planeCount = 0; planeCount < ViewFrustum::NUM_PLANES;
+    ++planeCount) {
+      // Utilize temporal locality by starting at the last failing plane.
+      int planeNdx = (this->_frustumPlaneIndex + planeCount) %
+       ViewFrustum::NUM_PLANES;
+      const Plane& plane = frustumPlanes[planeNdx];
+
+      // Find the diagonal that is most orthogonal to the plane.
+      // Doing this allows us to reduce the maximum number of dot products that
+      // need to be calculated from 8 to 6. The minimum rises from 1 to 5, but
+      // the reduction in worst-case behaviour results in better performance
+      // when most BoundingBoxes are out of the viewing frustum - as is the norm
+      // in large scenes where performance may start to suffer.
+      // This step involves 4 dot products.
+      int closestDiagonal = 0;
+      float closestProjection = std::abs(glm::dot(diagonals[0], plane.normal));
+      for (int diagNdx = 1; diagNdx < NUM_DIAGONALS; ++diagNdx) {
+         float projection = std::abs(glm::dot(diagonals[diagNdx], plane.normal));
+         if (projection > closestProjection) {
+            closestDiagonal = diagNdx;
+            closestProjection = projection;
+         }
+      }
+
+      // Check distance of each extreme point.
+      // This step involves 1 or 2 dot products.
+      auto c1 = corners[closestDiagonal];
+      auto c2 = corners[(NUM_CORNERS - 1) - closestDiagonal];
+      if (plane.distance(c1) < 0 && plane.distance(c2) < 0) {
+         this->_frustumPlaneIndex = planeNdx;
+         return false;
+      }
+   }
+
+   return true;
+}
+
+bool BoundingBox::isIntersecting(Boundable* boundable) {
+   auto& boundingBox = boundable->getBoundingBox();
+   return this->intersectAsSpheres(boundingBox) &&
+    this->intersectAsBoxes(boundingBox);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Data access.
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -190,57 +246,6 @@ void BoundingBox::generateDiagonalDirections() {
    }
 
    this->_diagonalDirections = diagonals;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Spatial queries.
-////////////////////////////////////////////////////////////////////////////////
-
-bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
-   auto corners = this->getCorners();
-   auto diagonals = this->getDiagonalDirections();
-   auto frustumPlanes = viewFrustum.getPlanes();
-
-   for (int planeCount = 0; planeCount < ViewFrustum::NUM_PLANES;
-    ++planeCount) {
-      // Utilize temporal locality by starting at the last failing plane.
-      int planeNdx = (this->_frustumPlaneIndex + planeCount) %
-       ViewFrustum::NUM_PLANES;
-      const Plane& plane = frustumPlanes[planeNdx];
-
-      // Find the diagonal that is most orthogonal to the plane.
-      // Doing this allows us to reduce the maximum number of dot products that
-      // need to be calculated from 8 to 6. The minimum rises from 1 to 5, but
-      // the reduction in worst-case behaviour results in better performance
-      // when most BoundingBoxes are out of the viewing frustum - as is the norm
-      // in large scenes where performance may start to suffer.
-      // This step involves 4 dot products.
-      int closestDiagonal = 0;
-      float closestProjection = std::abs(glm::dot(diagonals[0], plane.normal));
-      for (int diagNdx = 1; diagNdx < NUM_DIAGONALS; ++diagNdx) {
-         float projection = std::abs(glm::dot(diagonals[diagNdx], plane.normal));
-         if (projection > closestProjection) {
-            closestDiagonal = diagNdx;
-            closestProjection = projection;
-         }
-      }
-
-      // Check distance of each extreme point.
-      // This step involves 1 or 2 dot products.
-      auto c1 = corners[closestDiagonal];
-      auto c2 = corners[(NUM_CORNERS - 1) - closestDiagonal];
-      if (plane.distance(c1) < 0 && plane.distance(c2) < 0) {
-         this->_frustumPlaneIndex = planeNdx;
-         return false;
-      }
-   }
-
-   return true;
-}
-
-bool BoundingBox::isIntersecting(BoundingBox& boundable) {
-   return this->intersectAsSpheres(boundable) &&
-    this->intersectAsBoxes(boundable);
 }
 
 bool BoundingBox::intersectAsSpheres(BoundingBox& boundingBox) {

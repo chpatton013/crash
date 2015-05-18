@@ -14,7 +14,7 @@ namespace render {
 
 namespace space {
 
-class BoundingGroup : public common::Movable {
+class BoundingGroup : public common::Movable, public Boundable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.
@@ -42,34 +42,29 @@ public:
    void setScaleVelocity(const glm::vec3& scaleVelocity);
 
    /////////////////////////////////////////////////////////////////////////////
-   // Data access.
+   // Boundable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   const BoundingBox& getBoundingBox() const;
+   BoundingBox& getBoundingBox();
+   bool isVisible(const render::ViewFrustum& viewFrustum);
+   bool isIntersecting(Boundable* other);
 
    /////////////////////////////////////////////////////////////////////////////
    // Grouping.
    /////////////////////////////////////////////////////////////////////////////
 
-   bool add(BoundingBox* boundingBox);
-   bool remove(BoundingBox* boundingBox);
+   bool add(Boundable* boundingBox);
+   bool remove(Boundable* boundingBox);
    void clear();
-   const std::set< BoundingBox* >& getBoundingBoxes() const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   // Spatial queries.
-   /////////////////////////////////////////////////////////////////////////////
-
-   bool isVisible(const render::ViewFrustum& viewFrustum);
-   bool isIntersecting(BoundingBox& other);
+   const std::set< Boundable* >& getBoundables() const;
 
    std::vector< Collision > getCollidingElements() const;
-   std::vector< BoundingBox* > getVisibleElements(
+   std::vector< Boundable* > getVisibleElements(
     const render::ViewFrustum& viewFrustum) const;
 
 protected:
    BoundingBox _boundingBox;
-   std::set< BoundingBox* > _boundingBoxes;
+   std::set< Boundable* > _boundables;
 };
 
 } // namespace space
