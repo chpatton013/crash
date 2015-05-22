@@ -57,12 +57,9 @@ void Texture::importTexture() {
 }
 
 TextureGroup::TextureGroup(
- const std::shared_ptr< Texture >& displacement,
- const std::shared_ptr< Texture >& normal,
- const std::shared_ptr< Texture >& ambient,
- const std::shared_ptr< Texture >& diffuse,
- const std::shared_ptr< Texture >& specular,
- const std::shared_ptr< Texture >& shininess) :
+ const TexturePtr& displacement, const TexturePtr& normal,
+ const TexturePtr& ambient, const TexturePtr& diffuse,
+ const TexturePtr& specular, const TexturePtr& shininess) :
    displacement(displacement), normal(normal),
    ambient(ambient), diffuse(diffuse),
    specular(specular), shininess(shininess)

@@ -293,7 +293,7 @@ void Mesh::destroyComponents() {
    this->_components.clear();
 }
 
-std::shared_ptr< Texture > Mesh::importTexture(const aiMaterial* material,
+TexturePtr Mesh::importTexture(const aiMaterial* material,
  const aiTextureType& type, unsigned int index) {
    aiString textureFileName;
    aiReturn ret = material->GetTexture(type, index, &textureFileName,

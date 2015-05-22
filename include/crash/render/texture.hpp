@@ -6,6 +6,9 @@
 namespace crash {
 namespace render {
 
+class Texture;
+typedef std::shared_ptr< Texture > TexturePtr;
+
 class Texture {
 public:
    struct ImportFailure {
@@ -34,19 +37,15 @@ private:
 };
 
 struct TextureGroup {
-   TextureGroup(
-    const std::shared_ptr< Texture >& displacement,
-    const std::shared_ptr< Texture >& normal,
-    const std::shared_ptr< Texture >& ambient,
-    const std::shared_ptr< Texture >& diffuse,
-    const std::shared_ptr< Texture >& specular,
-    const std::shared_ptr< Texture >& shininess);
-   std::shared_ptr< Texture > displacement;
-   std::shared_ptr< Texture > normal;
-   std::shared_ptr< Texture > ambient;
-   std::shared_ptr< Texture > diffuse;
-   std::shared_ptr< Texture > specular;
-   std::shared_ptr< Texture > shininess;
+   TextureGroup(const TexturePtr& displacement, const TexturePtr& normal,
+    const TexturePtr& ambient, const TexturePtr& diffuse,
+    const TexturePtr& specular, const TexturePtr& shininess);
+   TexturePtr displacement;
+   TexturePtr normal;
+   TexturePtr ambient;
+   TexturePtr diffuse;
+   TexturePtr specular;
+   TexturePtr shininess;
 };
 
 } // namespace render

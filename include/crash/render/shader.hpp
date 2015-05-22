@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <boost/filesystem/path.hpp>
 
 #include <GL/glew.h>
@@ -12,6 +13,9 @@
 
 namespace crash {
 namespace render {
+
+class Shader;
+typedef std::shared_ptr< Shader > ShaderPtr;
 
 class Shader {
 public:

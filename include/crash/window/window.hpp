@@ -11,6 +11,9 @@ struct GLFWwindow;
 namespace crash {
 namespace window {
 
+class Window;
+typedef std::shared_ptr< window::Window > WindowPtr;
+
 class Monitor;
 
 class Window : public GlfwAdapter {

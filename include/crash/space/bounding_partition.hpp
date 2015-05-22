@@ -14,6 +14,9 @@ namespace render {
 
 namespace space {
 
+class BoundingPartition;
+typedef std::shared_ptr< BoundingPartition > BoundingPartitionPtr;
+
 class Collision;
 
 class BoundingPartition : public common::Movable, public Boundable {

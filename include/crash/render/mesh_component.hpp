@@ -15,13 +15,13 @@
 #  include <GL/gl.h>
 #endif
 
+#include <crash/render/texture.hpp>
 #include <crash/render/vertex.hpp>
 
 namespace crash {
 namespace render {
 
 class ShaderProgram;
-class Texture;
 struct AttributeVariable;
 
 struct ColorUnit {
@@ -47,9 +47,8 @@ struct GeometryUnit {
 };
 
 struct TextureUnit {
-   TextureUnit(std::shared_ptr< Texture > texture, const GLuint& tbo,
-    const GLint& index);
-   std::shared_ptr< Texture > texture;
+   TextureUnit(TexturePtr texture, const GLuint& tbo, const GLint& index);
+   TexturePtr texture;
    GLuint tbo;
    GLint index;
 };

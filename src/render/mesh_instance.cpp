@@ -24,7 +24,7 @@ MeshInstance::MeshInstance(const MeshInstance& instance) :
 {}
 
 MeshInstance::MeshInstance(const Mesh& mesh, const ColorUnit& color,
- const std::shared_ptr< ShaderProgram >& program) :
+ const ShaderProgramPtr& program) :
    _mesh(mesh), _color(color), _program(program), _animationProgress()
 {
    this->_animationProgress.resize(this->_mesh.getAnimations().size());
@@ -57,13 +57,11 @@ void MeshInstance::setColor(const ColorUnit& color) {
    this->_color = color;
 }
 
-
-const std::shared_ptr< ShaderProgram >& MeshInstance::getShaderProgram() const {
+const ShaderProgramPtr& MeshInstance::getShaderProgram() const {
    return this->_program;
 }
 
-void MeshInstance::setShaderProgram(
- const std::shared_ptr< ShaderProgram >& program) {
+void MeshInstance::setShaderProgram(const ShaderProgramPtr& program) {
    this->_program = program;
 }
 

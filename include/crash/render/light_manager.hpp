@@ -18,6 +18,9 @@ namespace render {
 
 class ShaderProgram;
 
+class LightManager;
+typedef std::shared_ptr< render::LightManager > LightManagerPtr;
+
 class LightManager {
 public:
    LightManager(const LightManager& lightManager);

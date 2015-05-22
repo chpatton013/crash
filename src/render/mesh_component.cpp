@@ -23,7 +23,7 @@ GeometryUnit::GeometryUnit(const GLuint& vao, const GLuint& vbo,
    vao(vao), vbo(vbo), ibo(ibo)
 {}
 
-TextureUnit::TextureUnit(std::shared_ptr< Texture > texture, const GLuint& tbo,
+TextureUnit::TextureUnit(TexturePtr texture, const GLuint& tbo,
  const GLint& index) :
    texture(texture), tbo(tbo), index(index)
 {}

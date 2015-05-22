@@ -18,6 +18,9 @@
 namespace crash {
 namespace render {
 
+class ShaderProgram;
+typedef std::shared_ptr< ShaderProgram > ShaderProgramPtr;
+
 struct AttributeVariable {
    AttributeVariable(const std::string& position, const std::string& normal,
     const std::string& tangent, const std::string& bitangent,
@@ -98,7 +101,7 @@ struct UniformVariable {
 
 class ShaderProgram {
 public:
-   typedef std::vector< std::shared_ptr< Shader > > Shaders;
+   typedef std::vector< ShaderPtr > Shaders;
 
    ShaderProgram(const Shaders& shaders, const UniformVariable& vars);
    virtual ~ShaderProgram();

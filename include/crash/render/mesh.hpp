@@ -29,6 +29,9 @@ struct AttributeVariable;
 
 typedef std::map< std::string, const aiNode* > NodeNameMap;
 
+class Mesh;
+typedef std::shared_ptr< Mesh > MeshPtr;
+
 class Mesh : public common::Movable {
 public:
    struct SceneImportFailure {
@@ -107,7 +110,7 @@ private:
    // Helpers.
    /////////////////////////////////////////////////////////////////////////////
 
-   std::shared_ptr< Texture > importTexture(const aiMaterial* material,
+   TexturePtr importTexture(const aiMaterial* material,
     const aiTextureType& type, unsigned int index);
 
    void buildComponentsHelper(const aiNode* node);

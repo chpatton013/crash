@@ -9,6 +9,9 @@
 namespace crash {
 namespace render {
 
+class Camera;
+typedef std::shared_ptr< render::Camera > CameraPtr;
+
 class Camera : public common::Movable {
 public:
    /////////////////////////////////////////////////////////////////////////////

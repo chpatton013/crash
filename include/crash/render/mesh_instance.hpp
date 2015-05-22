@@ -28,7 +28,7 @@ public:
 
    MeshInstance(const MeshInstance& instance);
    MeshInstance(const Mesh& mesh, const ColorUnit& color,
-    const std::shared_ptr< ShaderProgram >& program);
+    const ShaderProgramPtr& program);
    virtual ~MeshInstance();
 
    /////////////////////////////////////////////////////////////////////////////
@@ -46,8 +46,8 @@ public:
    const ColorUnit& getColor() const;
    void setColor(const ColorUnit& color);
 
-   const std::shared_ptr< ShaderProgram >& getShaderProgram() const;
-   void setShaderProgram(const std::shared_ptr< ShaderProgram >& program);
+   const ShaderProgramPtr& getShaderProgram() const;
+   void setShaderProgram(const ShaderProgramPtr& program);
 
    const AnimationProgressSet& getAnimationProgress() const;
 
@@ -65,7 +65,7 @@ private:
 
    const Mesh& _mesh;
    ColorUnit _color;
-   std::shared_ptr< ShaderProgram > _program;
+   ShaderProgramPtr _program;
    AnimationProgressSet _animationProgress;
 };
 
