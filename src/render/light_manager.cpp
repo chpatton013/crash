@@ -28,8 +28,8 @@ LightManager::LightManager(const std::string& countHandle,
  const std::string specularHandle, const std::vector< Light >& lights) :
    LightManager(countHandle, positionHandle, diffuseHandle, specularHandle)
 {
-   for (unsigned int i = 0; i < lights.size(); ++i) {
-      this->setLight(i, lights[i]);
+   for (const Light& light : lights) {
+      this->addLight(light);
    }
 }
 
@@ -53,6 +53,10 @@ std::vector< Light > LightManager::getLights() const {
 }
 
 void LightManager::addLight(const Light& light) {
+   if (this->getLightCount() >= LightManager::MAX_NUM_LIGHTS) {
+      throw LightManager::_lightLimitExceeded;
+   }
+
    this->_position.push_back(light.getPosition());
    this->_diffuse.push_back(light.getDiffuse());
    this->_specular.push_back(light.getSpecular());
@@ -88,3 +92,5 @@ void LightManager::setUniforms(const ShaderProgram& program) const {
     reinterpret_cast< const GLfloat* >(this->_specular.data()), numLights);
 }
 
+/* static */ const unsigned int LightManager::MAX_NUM_LIGHTS = 8;
+/* static */ LightManager::LightLimitExceeded _lightLimitExceeded;

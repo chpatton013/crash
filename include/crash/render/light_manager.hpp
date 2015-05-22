@@ -23,6 +23,10 @@ typedef std::shared_ptr< render::LightManager > LightManagerPtr;
 
 class LightManager {
 public:
+   static const unsigned int MAX_NUM_LIGHTS;
+
+   static struct LightLimitExceeded {} _lightLimitExceeded;
+
    LightManager(const LightManager& lightManager);
    LightManager(const std::string& countHandle,
     const std::string& positionHandle, const std::string& diffuseHandle,
