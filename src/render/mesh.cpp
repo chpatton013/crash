@@ -1,4 +1,3 @@
-#include <iostream>
 #include <vector>
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
@@ -15,8 +14,12 @@ using namespace crash::common;
 using namespace crash::render;
 
 Mesh::SceneImportFailure::SceneImportFailure(const std::string& error) :
-   error(error)
+   std::exception(), _error(error)
 {}
+
+const char* Mesh::SceneImportFailure::what() const noexcept {
+   return this->_error.data();
+}
 
 /* static */ const unsigned int Mesh::NUM_TEXTURE_TYPES = 6;
 

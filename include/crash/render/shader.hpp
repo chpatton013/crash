@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <memory>
 #include <boost/filesystem/path.hpp>
 
@@ -28,12 +29,15 @@ public:
 
    void compile() const;
 
-   struct CompileFailure {
+   class CompileFailure : public std::exception {
+   public:
       CompileFailure(const boost::filesystem::path& path,
        const std::string& error);
+      const char* what() const noexcept;
 
-      boost::filesystem::path path;
-      std::string error;
+   private:
+      boost::filesystem::path _path;
+      std::string _error;
    };
 
 private:

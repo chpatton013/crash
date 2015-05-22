@@ -5,6 +5,14 @@
 
 using namespace crash::render;
 
+LightManager::LightLimitExceeded::LightLimitExceeded() :
+   std::exception()
+{}
+
+const char* LightManager::LightLimitExceeded::what() const noexcept {
+   return "Global light limit exceeded";
+}
+
 LightManager::LightManager(const LightManager& lightManager) :
    _countHandle(lightManager._countHandle),
    _positionHandle(lightManager._positionHandle),
@@ -54,7 +62,7 @@ std::vector< Light > LightManager::getLights() const {
 
 void LightManager::addLight(const Light& light) {
    if (this->getLightCount() >= LightManager::MAX_NUM_LIGHTS) {
-      throw LightManager::_lightLimitExceeded;
+      throw LightManager::LightLimitExceeded();
    }
 
    this->_position.push_back(light.getPosition());
@@ -93,4 +101,3 @@ void LightManager::setUniforms(const ShaderProgram& program) const {
 }
 
 /* static */ const unsigned int LightManager::MAX_NUM_LIGHTS = 8;
-/* static */ LightManager::LightLimitExceeded _lightLimitExceeded;

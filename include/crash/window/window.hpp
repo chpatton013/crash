@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <map>
 #include <string>
 #include <glm/glm.hpp>
@@ -36,7 +37,10 @@ public:
    typedef void (*mouseEnterCallback)(const Window&, bool);
    typedef void (*mouseScrollCallback)(const Window&, const glm::vec2&);
 
-   static struct DestroyedWindow {} _destroyedWindow;
+   struct DestroyedWindow : public std::exception {
+      DestroyedWindow();
+      const char* what() const noexcept;
+   };
 
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.

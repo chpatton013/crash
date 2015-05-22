@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <string>
 #include <vector>
 
@@ -25,7 +26,10 @@ class LightManager {
 public:
    static const unsigned int MAX_NUM_LIGHTS;
 
-   static struct LightLimitExceeded {} _lightLimitExceeded;
+   struct LightLimitExceeded : public std::exception {
+      LightLimitExceeded();
+      const char* what() const noexcept;
+   };
 
    LightManager(const LightManager& lightManager);
    LightManager(const std::string& countHandle,

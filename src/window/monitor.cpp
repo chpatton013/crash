@@ -30,7 +30,7 @@ GLFWmonitor* Monitor::getHandle() const {
 std::string Monitor::getName() const {
    const char* name = glfwGetMonitorName(this->_handle);
    if (name == nullptr) {
-      throw GlfwAdapter::_invalidGlfwState;
+      throw GlfwAdapter::InvalidGlfwState();
    }
 
    return std::string(name);
@@ -47,7 +47,7 @@ glm::ivec2 Monitor::getSize() const {
 
    glfwGetMonitorPhysicalSize(this->_handle, &width, &height);
    if (width <= 0 && height <= 0) {
-      throw GlfwAdapter::_invalidGlfwState;
+      throw GlfwAdapter::InvalidGlfwState();
    }
 
    return glm::ivec2(width, height);
@@ -57,7 +57,7 @@ std::vector< const GLFWvidmode* > Monitor::getAvailableModes() const {
    int count = -1;
    const GLFWvidmode* modes = glfwGetVideoModes(this->_handle, &count);
    if (modes == nullptr || count <= 0) {
-      throw GlfwAdapter::_invalidGlfwState;
+      throw GlfwAdapter::InvalidGlfwState();
    }
 
    std::vector< const GLFWvidmode* > availableModes;
@@ -70,7 +70,7 @@ std::vector< const GLFWvidmode* > Monitor::getAvailableModes() const {
 const GLFWvidmode* Monitor::getMode() const {
    const GLFWvidmode* mode = glfwGetVideoMode(this->_handle);
    if (mode == nullptr) {
-      throw GlfwAdapter::_invalidGlfwState;
+      throw GlfwAdapter::InvalidGlfwState();
    }
 
    return mode;
@@ -79,7 +79,7 @@ const GLFWvidmode* Monitor::getMode() const {
 const GLFWgammaramp* Monitor::getGamma() const {
    const GLFWgammaramp* gammaRamp = glfwGetGammaRamp(this->_handle);
    if (gammaRamp == nullptr) {
-      throw GlfwAdapter::_invalidGlfwState;
+      throw GlfwAdapter::InvalidGlfwState();
    }
 
    return gammaRamp;

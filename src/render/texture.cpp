@@ -5,8 +5,12 @@
 using namespace crash::render;
 
 Texture::ImportFailure::ImportFailure(const std::string& error) :
-   error(error)
+   std::exception(), _error(error)
 {}
+
+const char* Texture::ImportFailure::what() const noexcept {
+   return this->_error.data();
+}
 
 Texture::Texture(const Texture& texture) :
    _path(texture._path), _data(texture._data),

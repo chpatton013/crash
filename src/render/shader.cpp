@@ -10,8 +10,12 @@ using namespace crash::render;
 
 Shader::CompileFailure::CompileFailure(const boost::filesystem::path& path,
  const std::string& error) :
-   path(path), error(error)
+   std::exception(), _path(path), _error(error)
 {}
+
+const char* Shader::CompileFailure::what() const noexcept {
+   return std::string(this->_path.string() + ":" + this->_error).data();
+}
 
 Shader::Shader(const boost::filesystem::path& path, const GLenum& type) :
    _path(path), _type(type)

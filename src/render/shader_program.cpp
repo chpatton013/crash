@@ -76,18 +76,30 @@ UniformVariable::UniformVariable(
 {}
 
 ShaderProgram::LinkFailure::LinkFailure(const std::string& error) :
-   error(error)
+   std::exception(), _error(error)
 {}
+
+const char* ShaderProgram::LinkFailure::what() const noexcept {
+   return this->_error.data();
+}
 
 ShaderProgram::VariableAllocationFailure::VariableAllocationFailure(
- const std::string& error) :
-   error(error)
+ const std::string& variable) :
+   std::exception(), _variable(variable)
 {}
 
+const char* ShaderProgram::VariableAllocationFailure::what() const noexcept {
+   return this->_variable.data();
+}
+
 ShaderProgram::VariableReferenceFailure::VariableReferenceFailure(
- const std::string& error) :
-   error(error)
+ const std::string& variable) :
+   std::exception(), _variable(variable)
 {}
+
+const char* ShaderProgram::VariableReferenceFailure::what() const noexcept {
+   return this->_variable.data();
+}
 
 ShaderProgram::ShaderProgram(const Shaders& shaders,
  const UniformVariable& vars) :

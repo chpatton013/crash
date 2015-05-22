@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <map>
 #include <memory>
 #include <string>
@@ -35,9 +36,13 @@ typedef std::shared_ptr< Mesh > MeshPtr;
 
 class Mesh : public common::Movable {
 public:
-   struct SceneImportFailure {
+   class SceneImportFailure : public std::exception {
+   public:
       SceneImportFailure(const std::string& error);
-      std::string error;
+      const char* what() const noexcept;
+
+   private:
+      std::string _error;
    };
 
    static const unsigned int NUM_TEXTURE_TYPES;

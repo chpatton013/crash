@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <vector>
 #include <boost/filesystem/path.hpp>
 
@@ -11,9 +12,13 @@ typedef std::shared_ptr< Texture > TexturePtr;
 
 class Texture {
 public:
-   struct ImportFailure {
+   class ImportFailure : public std::exception {
+   public:
       ImportFailure(const std::string& error);
-      std::string error;
+      const char* what() const noexcept;
+
+   private:
+      std::string _error;
    };
 
    Texture(const Texture& texture);

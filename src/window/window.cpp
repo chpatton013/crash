@@ -4,6 +4,14 @@
 
 using namespace crash::window;
 
+Window::DestroyedWindow::DestroyedWindow() :
+   std::exception()
+{}
+
+const char* Window::DestroyedWindow::what() const noexcept {
+   return "Window has already been destroyed";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors.
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +50,7 @@ Window::Window(const glm::ivec2& size, const std::string& title,
    GLFWwindow* handle = glfwCreateWindow(size.x, size.y, title.data(),
     monitorHandle, shareHandle);
    if (handle == nullptr) {
-      throw GlfwAdapter::_invalidGlfwState;
+      throw GlfwAdapter::InvalidGlfwState();
    }
 
    this->_handle = handle;
@@ -79,7 +87,7 @@ GLFWwindow* Window::getHandle() const {
 
 boost::optional< Monitor > Window::getMonitor() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    return Monitor(glfwGetWindowMonitor(this->_handle));
@@ -87,7 +95,7 @@ boost::optional< Monitor > Window::getMonitor() const {
 
 boost::optional< Window > Window::getShare() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    auto itr = Window::_instances.find(this->_share);
@@ -100,7 +108,7 @@ boost::optional< Window > Window::getShare() const {
 
 std::string Window::getTitle() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    return this->_title;
@@ -108,7 +116,7 @@ std::string Window::getTitle() const {
 
 glm::ivec2 Window::getWindowPosition() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    int x, y;
@@ -118,7 +126,7 @@ glm::ivec2 Window::getWindowPosition() const {
 
 glm::ivec2 Window::getWindowSize() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    int x, y;
@@ -128,7 +136,7 @@ glm::ivec2 Window::getWindowSize() const {
 
 glm::ivec2 Window::getFrameBufferSize() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    int x, y;
@@ -158,7 +166,7 @@ bool Window::isDecorated() const {
 
 bool Window::shouldClose() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    return glfwWindowShouldClose(this->_handle);
@@ -166,7 +174,7 @@ bool Window::shouldClose() const {
 
 int Window::getAttribute(int a) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    return glfwGetWindowAttrib(this->_handle, a);
@@ -174,7 +182,7 @@ int Window::getAttribute(int a) const {
 
 int Window::getInputMode(int m) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    return glfwGetInputMode(this->_handle, m);
@@ -182,7 +190,7 @@ int Window::getInputMode(int m) const {
 
 void* Window::getUserPointer() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    return glfwGetWindowUserPointer(this->_handle);
@@ -208,7 +216,7 @@ bool Window::isDestroyed() const {
 
 void Window::setTitle(const std::string& t) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSetWindowTitle(this->_handle, t.data());
@@ -218,7 +226,7 @@ void Window::setTitle(const std::string& t) {
 
 void Window::setWindowPosition(const glm::ivec2& p) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSetWindowPos(this->_handle, p.x, p.y);
@@ -226,7 +234,7 @@ void Window::setWindowPosition(const glm::ivec2& p) const {
 
 void Window::setWindowSize(const glm::ivec2& s) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSetWindowSize(this->_handle, s.x, s.y);
@@ -234,7 +242,7 @@ void Window::setWindowSize(const glm::ivec2& s) const {
 
 void Window::setVisible(bool v) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (v) {
@@ -246,7 +254,7 @@ void Window::setVisible(bool v) const {
 
 void Window::setMinimized(bool m) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (m) {
@@ -258,7 +266,7 @@ void Window::setMinimized(bool m) const {
 
 void Window::setShouldClose(bool c) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSetWindowShouldClose(this->_handle, c ? GL_TRUE : GL_FALSE);
@@ -266,7 +274,7 @@ void Window::setShouldClose(bool c) const {
 
 void Window::setInputMode(int m, int v) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSetInputMode(this->_handle, m, v);
@@ -274,7 +282,7 @@ void Window::setInputMode(int m, int v) const {
 
 void Window::setUserPointer(void* p) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSetWindowUserPointer(this->_handle, p);
@@ -282,7 +290,7 @@ void Window::setUserPointer(void* p) const {
 
 void Window::setMousePosition(const glm::vec2& p) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSetCursorPos(this->_handle, p.x, p.y);
@@ -295,7 +303,7 @@ void Window::setMousePosition(const glm::vec2& p) const {
 boost::optional< Window::windowPositionCallback >
  Window::getWindowPositionCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_windowPositionCb == nullptr) {
@@ -308,7 +316,7 @@ boost::optional< Window::windowPositionCallback >
 boost::optional< Window::windowSizeCallback >
  Window::getWindowSizeCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_windowSizeCb == nullptr) {
@@ -320,7 +328,7 @@ boost::optional< Window::windowSizeCallback >
 
 boost::optional< Window::closeCallback > Window::getCloseCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_closeCb == nullptr) {
@@ -332,7 +340,7 @@ boost::optional< Window::closeCallback > Window::getCloseCallback() const {
 
 boost::optional< Window::refreshCallback > Window::getRefreshCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_refreshCb == nullptr) {
@@ -344,7 +352,7 @@ boost::optional< Window::refreshCallback > Window::getRefreshCallback() const {
 
 boost::optional< Window::focusCallback > Window::getFocusCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_focusCb == nullptr) {
@@ -357,7 +365,7 @@ boost::optional< Window::focusCallback > Window::getFocusCallback() const {
 boost::optional< Window::minimizeCallback >
  Window::getMinimizeCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_minimizeCb == nullptr) {
@@ -370,7 +378,7 @@ boost::optional< Window::minimizeCallback >
 boost::optional< Window::frameBufferSizeCallback >
  Window::getFrameBufferCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_frameBufferSizeCb == nullptr) {
@@ -382,7 +390,7 @@ boost::optional< Window::frameBufferSizeCallback >
 
 boost::optional< Window::keyCallback > Window::getKeyCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_keyCb == nullptr) {
@@ -394,7 +402,7 @@ boost::optional< Window::keyCallback > Window::getKeyCallback() const {
 
 boost::optional< Window::charCallback > Window::getCharCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_charCb == nullptr) {
@@ -407,7 +415,7 @@ boost::optional< Window::charCallback > Window::getCharCallback() const {
 boost::optional< Window::mouseButtonCallback >
  Window::getMouseButtonCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_mouseButtonCb == nullptr) {
@@ -420,7 +428,7 @@ boost::optional< Window::mouseButtonCallback >
 boost::optional< Window::mousePositionCallback >
  Window::getMousePositionCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_mousePositionCb == nullptr) {
@@ -433,7 +441,7 @@ boost::optional< Window::mousePositionCallback >
 boost::optional< Window::mouseEnterCallback >
  Window::getMouseEnterCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_mouseEnterCb == nullptr) {
@@ -446,7 +454,7 @@ boost::optional< Window::mouseEnterCallback >
 boost::optional< Window::mouseScrollCallback >
  Window::getMouseScrollCallback() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (this->_mouseScrollCb == nullptr) {
@@ -518,7 +526,7 @@ boost::optional< Window::mouseScrollCallback >
 boost::optional< Window::windowPositionCallback >
  Window::setWindowPositionCallback(Window::windowPositionCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::windowPositionCallback oldCallback = this->_windowPositionCb;
@@ -534,7 +542,7 @@ boost::optional< Window::windowPositionCallback >
 boost::optional< Window::windowSizeCallback >
  Window::setWindowSizeCallback(Window::windowSizeCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::windowSizeCallback oldCallback = this->_windowSizeCb;
@@ -550,7 +558,7 @@ boost::optional< Window::windowSizeCallback >
 boost::optional< Window::closeCallback >
  Window::setCloseCallback(Window::closeCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::closeCallback oldCallback = this->_closeCb;
@@ -566,7 +574,7 @@ boost::optional< Window::closeCallback >
 boost::optional< Window::refreshCallback >
  Window::setRefreshCallback(Window::refreshCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::refreshCallback oldCallback = this->_refreshCb;
@@ -582,7 +590,7 @@ boost::optional< Window::refreshCallback >
 boost::optional< Window::focusCallback >
  Window::setFocusCallback(Window::focusCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::focusCallback oldCallback = this->_focusCb;
@@ -598,7 +606,7 @@ boost::optional< Window::focusCallback >
 boost::optional< Window::minimizeCallback >
  Window::setMinimizeCallback(Window::minimizeCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::minimizeCallback oldCallback = this->_minimizeCb;
@@ -614,7 +622,7 @@ boost::optional< Window::minimizeCallback >
 boost::optional< Window::frameBufferSizeCallback >
  Window::setFrameBufferSizeCallback(Window::frameBufferSizeCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::frameBufferSizeCallback oldCallback = this->_frameBufferSizeCb;
@@ -630,7 +638,7 @@ boost::optional< Window::frameBufferSizeCallback >
 boost::optional< Window::keyCallback >
  Window::setKeyCallback(keyCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::keyCallback oldCallback = this->_keyCb;
@@ -646,7 +654,7 @@ boost::optional< Window::keyCallback >
 boost::optional< Window::charCallback >
  Window::setCharCallback(charCallback callback) {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    Window::charCallback oldCallback = this->_charCb;
@@ -717,7 +725,7 @@ boost::optional< Window::mouseScrollCallback >
    auto window = itr->second;
 
    if (window->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (window->_windowPositionCb == nullptr) {
@@ -737,7 +745,7 @@ boost::optional< Window::mouseScrollCallback >
    auto window = itr->second;
 
    if (window->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (window->_windowSizeCb == nullptr) {
@@ -757,7 +765,7 @@ boost::optional< Window::mouseScrollCallback >
    auto window = itr->second;
 
    if (window->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (window->_frameBufferSizeCb == nullptr) {
@@ -776,7 +784,7 @@ boost::optional< Window::mouseScrollCallback >
    auto window = itr->second;
 
    if (window->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (window->_focusCb == nullptr) {
@@ -795,7 +803,7 @@ boost::optional< Window::mouseScrollCallback >
    auto window = itr->second;
 
    if (window->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (window->_minimizeCb == nullptr) {
@@ -814,7 +822,7 @@ boost::optional< Window::mouseScrollCallback >
    auto window = itr->second;
 
    if (window->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (window->_refreshCb == nullptr) {
@@ -833,7 +841,7 @@ boost::optional< Window::mouseScrollCallback >
    auto window = itr->second;
 
    if (window->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    if (window->_closeCb == nullptr) {
@@ -938,7 +946,7 @@ boost::optional< Window::mouseScrollCallback >
 
 void Window::swapBuffers() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSwapBuffers(this->_handle);
@@ -946,7 +954,7 @@ void Window::swapBuffers() const {
 
 void Window::swapInterval(unsigned int interval) const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwSwapInterval(interval);
@@ -954,7 +962,7 @@ void Window::swapInterval(unsigned int interval) const {
 
 void Window::makeContextCurrent() const {
    if (this->_destroyed) {
-      throw Window::_destroyedWindow;
+      throw Window::DestroyedWindow();
    }
 
    glfwMakeContextCurrent(this->_handle);
@@ -992,7 +1000,5 @@ void Window::destroy() {
 ////////////////////////////////////////////////////////////////////////////////
 // Static members.
 ////////////////////////////////////////////////////////////////////////////////
-
-/* static */ Window::DestroyedWindow Window::_destroyedWindow;
 
 /* static */ std::map< GLFWwindow*, Window* > Window::_instances;

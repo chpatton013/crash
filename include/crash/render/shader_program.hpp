@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <map>
 #include <memory>
 #include <string>
@@ -147,19 +148,31 @@ public:
    void setUniformVariableMatrix4(const std::string& name, const GLfloat* array,
     GLsizei length) const;
 
-   struct LinkFailure {
+   class LinkFailure : public std::exception {
+   public:
       LinkFailure(const std::string& error);
-      std::string error;
+      const char* what() const noexcept;
+
+   private:
+      std::string _error;
    };
 
-   struct VariableAllocationFailure {
-      VariableAllocationFailure(const std::string& error);
-      std::string error;
+   class VariableAllocationFailure : public std::exception {
+   public:
+      VariableAllocationFailure(const std::string& variable);
+      const char* what() const noexcept;
+
+   private:
+      std::string _variable;
    };
 
-   struct VariableReferenceFailure {
-      VariableReferenceFailure(const std::string& error);
-      std::string error;
+   class VariableReferenceFailure : public std::exception {
+   public:
+      VariableReferenceFailure(const std::string& variable);
+      const char* what() const noexcept;
+
+   private:
+      std::string _variable;
    };
 
 private:

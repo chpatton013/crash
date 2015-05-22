@@ -3,6 +3,14 @@
 
 using namespace crash::window;
 
+GlfwAdapter::InvalidGlfwState::InvalidGlfwState() :
+   std::exception()
+{}
+
+const char* GlfwAdapter::InvalidGlfwState::what() const noexcept {
+   return "Invalid GLFW state";
+}
+
 GlfwInitializer::GlfwInitializer() {
    glfwInit();
 }
@@ -47,10 +55,6 @@ GlfwAdapter::GlfwAdapter() {}
 
    GlfwAdapter::_errorCb(error, std::string(description));
 }
-
-/* static */ GlfwAdapter::InvalidGlfwState GlfwAdapter::_invalidGlfwState;
-
-/* static */ GlfwAdapter::InvalidInternalState GlfwAdapter::_invalidInternalState;
 
 /* static */ GlfwAdapter::errorCallback GlfwAdapter::_errorCb = nullptr;
 

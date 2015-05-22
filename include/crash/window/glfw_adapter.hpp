@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <memory>
 #include <string>
 #include <boost/optional/optional.hpp>
@@ -24,8 +25,10 @@ public:
    static boost::optional< errorCallback > setErrorCallback(errorCallback callback);
    static void errorCallbackAdapter(int error, const char* description);
 
-   static struct InvalidGlfwState {} _invalidGlfwState;
-   static struct InvalidInternalState {} _invalidInternalState;
+   struct InvalidGlfwState : public std::exception {
+      InvalidGlfwState();
+      const char* what() const noexcept;
+   };
 
 private:
    static errorCallback _errorCb;
