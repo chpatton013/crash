@@ -17,6 +17,7 @@
 #endif
 
 #include <crash/common/movable.hpp>
+#include <crash/common/transformer.hpp>
 #include <crash/render/animation.hpp>
 #include <crash/render/mesh_component.hpp>
 #include <crash/render/texture.hpp>

@@ -76,16 +76,8 @@ void BoundingGroup::setScaleVelocity(const glm::vec3& scaleVelocity) {
 // Boundable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-BoundingBox& BoundingGroup::getBoundingBox() {
-   return this->_boundingBox;
-}
-
-bool BoundingGroup::isVisible(const ViewFrustum& viewFrustum) {
-   return this->_boundingBox.isVisible(viewFrustum);
-}
-
-bool BoundingGroup::isIntersecting(Boundable* other) {
-   return this->_boundingBox.isIntersecting(other);
+BoundingBox* BoundingGroup::getBoundingBox() {
+   return &this->_boundingBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,9 +132,9 @@ std::vector< Boundable* > BoundingGroup::getVisibleElements(
  const ViewFrustum& viewFrustum) const {
    std::vector< Boundable* > queue;
 
-   for (auto boundingBox : this->_boundables) {
-      if (boundingBox->isVisible(viewFrustum)) {
-         queue.push_back(boundingBox);
+   for (Boundable* boundable : this->_boundables) {
+      if (boundable->isVisible(viewFrustum)) {
+         queue.push_back(boundable);
       }
    }
 

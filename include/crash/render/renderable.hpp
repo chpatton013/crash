@@ -5,9 +5,12 @@
 namespace crash {
 namespace render {
 
+class MeshInstance;
+
 struct Renderable {
-   virtual void render(float delta_t) const;
-   virtual void render(const glm::mat4& transform, float delta_t) const = 0;
+   virtual MeshInstance* getMeshInstance() = 0;
+   virtual void render(float delta_t);
+   virtual void render(const glm::mat4& transform, float delta_t);
 };
 
 } // namespace render

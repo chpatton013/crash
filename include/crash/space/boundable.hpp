@@ -11,14 +11,14 @@ namespace space {
 class BoundingBox;
 
 struct Boundable {
-   virtual BoundingBox& getBoundingBox() = 0;
+   virtual BoundingBox* getBoundingBox() = 0;
 
    /**
     * Determine if any part of this Boundable is within the given ViewFrustum.
     *
     * :param viewFrustum:  The ViewFrustum to test this BoundingBox against.
     */
-   virtual bool isVisible(const render::ViewFrustum& viewFrustum) = 0;
+   virtual bool isVisible(const render::ViewFrustum& viewFrustum);
 
    /**
     * Determine if this BoundingBox is intersecting with the specified other
@@ -26,7 +26,7 @@ struct Boundable {
     *
     * :param other: The other Boundable to test for intersection.
     */
-   virtual bool isIntersecting(Boundable* boundable) = 0;
+   virtual bool isIntersecting(Boundable* boundable);
 };
 
 } // namespace space

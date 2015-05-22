@@ -35,7 +35,9 @@ public:
    // Renderable interface.
    /////////////////////////////////////////////////////////////////////////////
 
-   void render(const glm::mat4& transform, float delta_t) const;
+   MeshInstance* getMeshInstance();
+   void render(float delta_t);
+   void render(const glm::mat4& transform, float delta_t);
 
    /////////////////////////////////////////////////////////////////////////////
    // Data access.

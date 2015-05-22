@@ -36,7 +36,15 @@ MeshInstance::MeshInstance(const Mesh& mesh, const ColorUnit& color,
 // Rendering.
 ////////////////////////////////////////////////////////////////////////////////
 
-void MeshInstance::render(const glm::mat4& transform, float delta_t) const {
+MeshInstance* MeshInstance::getMeshInstance() {
+   return this;
+}
+
+void MeshInstance::render(float delta_t) {
+   this->render(glm::mat4(), delta_t);
+}
+
+void MeshInstance::render(const glm::mat4& transform, float delta_t) {
    this->_mesh.render(*this->_program, this->_color, transform,
     this->getNodeTransforms(delta_t));
 }
@@ -107,7 +115,7 @@ void MeshInstance::getNodeTransformsHelper(const aiNode* node, float delta_t,
 
 glm::mat4 MeshInstance::getNodeTransform(
  const aiNode* node, float delta_t) const {
-   auto animations = this->_mesh.getAnimations();
+   const auto animations = this->_mesh.getAnimations();
 
    std::vector< glm::mat4 > transforms;
    transforms.reserve(this->_animationProgress.size());

@@ -12,9 +12,9 @@ using namespace crash::render;
 
 BoundingPartition::BoundingPartition(const BoundingPartition& spatialManager) :
    _boundingBox(spatialManager._boundingBox),
-   _partitions(spatialManager._partitions),
-   _boundingGroups(spatialManager._boundingGroups),
-   _numBoundables(spatialManager._numBoundables)
+    _partitions(spatialManager._partitions),
+    _boundingGroups(spatialManager._boundingGroups),
+    _numBoundables(spatialManager._numBoundables)
 {}
 
 BoundingPartition::BoundingPartition(const Transformer& transformer,
@@ -82,16 +82,8 @@ void BoundingPartition::setScaleVelocity(const glm::vec3& scaleVelocity) {
 // Boundable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-BoundingBox& BoundingPartition::getBoundingBox() {
-   return this->_boundingBox;
-}
-
-bool BoundingPartition::isVisible(const render::ViewFrustum& viewFrustum) {
-   return this->_boundingBox.isVisible(viewFrustum);
-}
-
-bool BoundingPartition::isIntersecting(Boundable* other) {
-   return this->_boundingBox.isIntersecting(other);
+BoundingBox* BoundingPartition::getBoundingBox() {
+   return &this->_boundingBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,8 +250,8 @@ std::vector< Boundable* > BoundingPartition::getVisibleElements(
    std::vector< Boundable* > accumulator;
    std::set< Boundable* > mark;
 
-   for (auto& group : this->_boundingGroups) {
-      for (auto boundingBox : group.getVisibleElements(viewFrustum)) {
+   for (const BoundingGroup& group : this->_boundingGroups) {
+      for (Boundable* boundingBox : group.getVisibleElements(viewFrustum)) {
          auto itr = mark.find(boundingBox);
          if (itr == mark.end()) {
             accumulator.push_back(boundingBox);

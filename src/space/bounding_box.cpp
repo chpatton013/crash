@@ -89,8 +89,8 @@ void BoundingBox::setScaleVelocity(const glm::vec3& scaleVelocity) {
 // Boundable interface.
 ////////////////////////////////////////////////////////////////////////////////
 
-BoundingBox& BoundingBox::getBoundingBox() {
-   return *this;
+BoundingBox* BoundingBox::getBoundingBox() {
+   return this;
 }
 
 bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
@@ -136,9 +136,9 @@ bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
 }
 
 bool BoundingBox::isIntersecting(Boundable* boundable) {
-   auto& boundingBox = boundable->getBoundingBox();
-   return this->intersectAsSpheres(boundingBox) &&
-    this->intersectAsBoxes(boundingBox);
+   BoundingBox* boundingBox = boundable->getBoundingBox();
+   return this->intersectAsSpheres(*boundingBox) &&
+    this->intersectAsBoxes(*boundingBox);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
