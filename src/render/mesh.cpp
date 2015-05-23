@@ -198,7 +198,7 @@ void Mesh::normalizeScene() {
    float scale = 1.0f / maxDimension;
    glm::vec3 center = average(min, max) * scale;
 
-   this->setPosition(-center);
+   this->translate(-center);
    this->setSize(glm::vec3(scale));
 }
 

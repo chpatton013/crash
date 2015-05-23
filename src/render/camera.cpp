@@ -41,7 +41,7 @@ glm::quat Camera::getOrientation() const {
 }
 
 glm::vec3 Camera::getSize() const {
-   return glm::vec3(1.0f);
+   return glm::vec3(0.0f);
 }
 
 glm::vec3 Camera::getTranslationalVelocity() const {
