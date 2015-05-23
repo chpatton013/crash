@@ -5,6 +5,15 @@
 namespace crash {
 namespace common {
 
+int rand_int();
+int rand_int(int upper);
+int rand_int(int lower, int upper);
+
+float unit_rand();
+float rand_float();
+float rand_float(float upper);
+float rand_float(float lower, float upper);
+
 glm::quat axisAngleToQuat(const glm::vec4& aa);
 
 /**
