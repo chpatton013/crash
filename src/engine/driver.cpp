@@ -28,6 +28,8 @@ Driver::Driver(const Driver& driver) :
     _lightManager(driver._lightManager),
     _window(driver._window),
     _shouldLoop(true),
+    _renderBoundingGroups(false),
+    _renderBoundingPartition(false),
     _updateTimer(),
     _renderTimer(),
     _updatesPerSecond(0.0f),
@@ -42,6 +44,8 @@ Driver::Driver(const BoundingPartitionPtr& boundingPartition,
     _lightManager(lightManager),
     _window(window),
     _shouldLoop(true),
+    _renderBoundingGroups(false),
+    _renderBoundingPartition(false),
     _updateTimer(),
     _renderTimer(),
     _updatesPerSecond(0.0f),
@@ -79,6 +83,30 @@ void Driver::setWindow(const WindowPtr& window) {
    this->_window = window;
 }
 
+bool Driver::getShouldLoop() const {
+   return this->_shouldLoop && !this->_window->shouldClose();
+}
+
+void Driver::setShouldLoop(bool shouldLoop) {
+   this->_shouldLoop = shouldLoop;
+}
+
+bool Driver::getRenderBoundingGroups() const {
+   return this->_renderBoundingGroups;
+}
+
+void Driver::setRenderBoundingGroups(bool renderBoundingGroups) {
+   this->_renderBoundingGroups = renderBoundingGroups;
+}
+
+bool Driver::getRenderBoundingPartition() const {
+   return this->_renderBoundingPartition;
+}
+
+void Driver::setRenderBoundingPartition(bool renderBoundingPartition) {
+   this->_renderBoundingPartition = renderBoundingPartition;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Driver.
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +114,7 @@ void Driver::setWindow(const WindowPtr& window) {
 void Driver::loop(float updateInterval, float renderInterval) {
    static const float smoothing = 0.01f;
 
-   while (this->shouldLoop()) {
+   while (this->getShouldLoop()) {
       float updateElapsed = this->getUpdateTimerElapsed();
       if (updateElapsed > updateInterval) {
          {
@@ -113,14 +141,6 @@ void Driver::loop(float updateInterval, float renderInterval) {
          this->render(renderElapsed);
       }
    }
-}
-
-bool Driver::shouldLoop() const {
-   return this->_shouldLoop && !this->_window->shouldClose();
-}
-
-void Driver::setShouldLoop(bool shouldLoop) {
-   this->_shouldLoop = shouldLoop;
 }
 
 float Driver::getUpdatesPerSecond() const {
@@ -155,6 +175,8 @@ void Driver::update(float delta_t) {
 
 void Driver::render(float delta_t) const {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glEnable(GL_CULL_FACE);
 
    std::vector< Boundable* > visibleBoundables =
     this->_boundingPartition->getVisibleElements(
@@ -188,6 +210,24 @@ void Driver::render(float delta_t) const {
       renderable->render(delta_t);
    }
 
+   if (Driver::BoundingCubeMeshInstance != nullptr) {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      glDisable(GL_CULL_FACE);
+
+      if (this->_renderBoundingPartition) {
+         glm::mat4 transform = this->_boundingPartition->getTransform();
+         Driver::BoundingCubeMeshInstance->render(transform, delta_t);
+      }
+
+      if (this->getRenderBoundingGroups()) {
+         const auto groups = this->_boundingPartition->getBoundingGroups();
+         for (const BoundingGroup& group : groups) {
+            glm::mat4 transform = group.getTransform();
+            Driver::BoundingCubeMeshInstance->render(transform, delta_t);
+         }
+      }
+   }
+
    this->_window->swapBuffers();
 }
 
@@ -210,3 +250,5 @@ void Driver::resetUpdateTimer() {
 void Driver::resetRenderTimer() {
    this->_renderTimer.start();
 }
+
+/* static */ MeshInstancePtr Driver::BoundingCubeMeshInstance = nullptr;

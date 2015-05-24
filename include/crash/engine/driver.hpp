@@ -2,10 +2,10 @@
 
 #include <memory>
 #include <set>
-/* #include <vector> */
 #include <boost/timer/timer.hpp>
 #include <crash/render/camera.hpp>
 #include <crash/render/light_manager.hpp>
+#include <crash/render/mesh_instance.hpp>
 #include <crash/space/bounding_partition.hpp>
 #include <crash/window/window.hpp>
 
@@ -21,8 +21,13 @@ namespace window {
 
 namespace engine {
 
+class Driver;
+typedef std::shared_ptr< Driver > DriverPtr;
+
 class Driver {
 public:
+   static render::MeshInstancePtr BoundingCubeMeshInstance;
+
    Driver(const Driver& driver);
    Driver(const space::BoundingPartitionPtr& boundingPartition,
     const render::CameraPtr& camera,
@@ -44,13 +49,20 @@ public:
    window::WindowPtr getWindow();
    void setWindow(const window::WindowPtr& window);
 
+   bool getShouldLoop() const;
+   void setShouldLoop(bool shouldLoop);
+
+   bool getRenderBoundingGroups() const;
+   void setRenderBoundingGroups(bool renderBoundingGroups);
+
+   bool getRenderBoundingPartition() const;
+   void setRenderBoundingPartition(bool renderBoundingPartition);
+
    /////////////////////////////////////////////////////////////////////////////
    // Driver.
    /////////////////////////////////////////////////////////////////////////////
 
    void loop(float updateInterval, float renderInterval);
-   bool shouldLoop() const;
-   void setShouldLoop(bool shouldLoop);
    float getUpdatesPerSecond() const;
    float getRendersPerSecond() const;
 
@@ -78,6 +90,8 @@ private:
    render::LightManagerPtr _lightManager;
    window::WindowPtr _window;
    bool _shouldLoop;
+   bool _renderBoundingGroups;
+   bool _renderBoundingPartition;
    boost::timer::cpu_timer _updateTimer;
    boost::timer::cpu_timer _renderTimer;
    float _updatesPerSecond;

@@ -20,6 +20,9 @@ struct AnimationProgress {
 
 typedef std::vector< AnimationProgress > AnimationProgressSet;
 
+class MeshInstance;
+typedef std::shared_ptr< MeshInstance > MeshInstancePtr;
+
 class MeshInstance : public Renderable {
 public:
    /////////////////////////////////////////////////////////////////////////////
