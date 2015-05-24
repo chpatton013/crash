@@ -53,21 +53,28 @@ struct controls_t {
 
 controls_t controls;
 CameraPtr camera;
+BoundingPartitionPtr boundingPartition;
+DriverPtr driver;
 
 void closeCb(Window& window);
 void keyCb(const Window& window, int key, int, int action, int mods);
+void mouseButtonCb(const Window&, int, int action, int mods);
 glm::vec3 getStartingPosition();
 glm::quat getStartingRotation();
 glm::vec3 getTranslationalVelocity();
 glm::quat getRotationalVelocity();
+void setVisibleElementsColor(const glm::vec4& color);
+void toggleRenderBoundingPartition();
+void toggleRenderBoundingGroups();
 
 WindowPtr getWindow();
 MeshPtr getMesh(const boost::filesystem::path& path);
+MeshPtr getCubeMesh(const boost::filesystem::path& path);
 ShaderProgramPtr getShaderProgram(
  const boost::filesystem::path& vertexShaderPath,
  const boost::filesystem::path& fragmentShaderPath);
 void linkShaderProgram(const ShaderProgramPtr& program,
- const MeshPtr& mesh);
+ const std::vector< MeshPtr >& meshes);
 std::vector< ActorPtr > getActors(const MeshPtr& mesh,
  const ShaderProgramPtr& program, const glm::vec3& dimensions,
  unsigned int numActors);
@@ -82,6 +89,7 @@ int main(int argc, char** argv) {
       return 1;
    }
    const std::string meshFile = argv[1];
+   const std::string cubeFile = "/Users/cpatton/Desktop/cube/cube.obj";
 
    WindowPtr window;
    try {
@@ -92,8 +100,10 @@ int main(int argc, char** argv) {
    }
 
    MeshPtr mesh;
+   MeshPtr cube;
    try {
       mesh = getMesh(boost::filesystem::path(meshFile));
+      cube = getMesh(boost::filesystem::path(cubeFile));
    } catch (Mesh::SceneImportFailure e) {
       std::cerr << "Scene Import Failure: " << e.what() << std::endl;
       return 3;
@@ -102,6 +112,7 @@ int main(int argc, char** argv) {
       return 4;
    }
    mesh->initialize();
+   cube->initialize();
 
    ShaderProgramPtr program;
    try {
@@ -113,8 +124,9 @@ int main(int argc, char** argv) {
       return 5;
    }
 
+   std::vector< MeshPtr > meshes = {{ mesh, cube }};
    try {
-      linkShaderProgram(program, mesh);
+      linkShaderProgram(program, meshes);
    } catch (ShaderProgram::LinkFailure e) {
       std::cerr << "Shader Program Link Failure: " << e.what() << std::endl;
       return 6;
@@ -126,17 +138,22 @@ int main(int argc, char** argv) {
 
    glm::vec3 dimensions(10.0f);
    std::vector< ActorPtr > actors = getActors(mesh, program, dimensions, 100);
-   BoundingPartitionPtr boundingPartition =
-    getBoundingPartition(actors, dimensions);
+   boundingPartition = getBoundingPartition(actors, dimensions);
    camera = getCamera();
    LightManagerPtr lightManager = getLightManager(program);
 
-   Driver driver(boundingPartition, camera, lightManager, window);
+   driver = std::make_shared< Driver >(
+    boundingPartition, camera, lightManager, window);
+
+   Driver::BoundingCubeMeshInstance = std::make_shared< MeshInstance >(
+    *cube, ColorUnit(glm::vec4(), glm::vec4(), glm::vec4(), 0.0f), program);
+
    const float updateInterval = 1.0f / 25.0f;
    const float renderInterval = 1.0f / 60.0f;
-   driver.loop(updateInterval, renderInterval);
+   driver->loop(updateInterval, renderInterval);
 
    mesh->teardown();
+   cube->teardown();
 
    return 0;
 }
@@ -146,6 +163,11 @@ void closeCb(Window& window) {
 }
 
 void keyCb(const Window& window, int key, int, int action, int mods) {
+   static const glm::vec4 WHITE(0.7f, 0.7f, 0.7f, 1.0f);
+   static const glm::vec4   RED(0.7f, 0.0f, 0.0f, 1.0f);
+   static const glm::vec4 GREEN(0.0f, 0.7f, 0.0f, 1.0f);
+   static const glm::vec4  BLUE(0.0f, 0.0f, 0.7f, 1.0f);
+
    if (action == GLFW_REPEAT) {
       return;
    }
@@ -177,6 +199,22 @@ void keyCb(const Window& window, int key, int, int action, int mods) {
       controls.roll_left = control;
    } else if (key == GLFW_KEY_L) {
       controls.roll_right = control;
+   } else if (key == GLFW_KEY_1) {
+      if (control) {
+         setVisibleElementsColor(RED);
+      }
+   } else if (key == GLFW_KEY_2) {
+      if (control) {
+         setVisibleElementsColor(GREEN);
+      }
+   } else if (key == GLFW_KEY_3) {
+      if (control) {
+         setVisibleElementsColor(BLUE);
+      }
+   } else if (key == GLFW_KEY_4) {
+      if (control) {
+         setVisibleElementsColor(WHITE);
+      }
    } else if (key == GLFW_KEY_SPACE) {
       if (mods & GLFW_MOD_SHIFT) {
          controls.move_down = control;
@@ -192,6 +230,18 @@ void keyCb(const Window& window, int key, int, int action, int mods) {
 
    camera->setTranslationalVelocity(getTranslationalVelocity());
    camera->setRotationalVelocity(getRotationalVelocity());
+}
+
+void mouseButtonCb(const Window&, int, int action, int mods) {
+   if (action != GLFW_PRESS) {
+      return;
+   }
+
+   if (mods & GLFW_MOD_SHIFT) {
+      toggleRenderBoundingPartition();
+   } else {
+      toggleRenderBoundingGroups();
+   }
 }
 
 glm::vec3 getStartingPosition() {
@@ -264,6 +314,30 @@ glm::quat getRotationalVelocity() {
    return axisAngleToQuat(glm::vec4(glm::normalize(axis), glm::radians(90.0f)));
 }
 
+void setVisibleElementsColor(const glm::vec4& diffuse) {
+   std::vector< Boundable* > visibleBoundables =
+    boundingPartition->getVisibleElements(camera->getViewFrustum());
+   for (Boundable* boundable : visibleBoundables) {
+      Renderable* renderable = dynamic_cast< Renderable* >(boundable);
+      if (renderable == nullptr) {
+         continue;
+      }
+
+      MeshInstance* instance = renderable->getMeshInstance();
+      ColorUnit color = instance->getColor();
+      color.diffuse = diffuse;
+      instance->setColor(color);
+   }
+}
+
+void toggleRenderBoundingPartition() {
+   driver->setRenderBoundingPartition(!driver->getRenderBoundingPartition());
+}
+
+void toggleRenderBoundingGroups() {
+   driver->setRenderBoundingGroups(!driver->getRenderBoundingGroups());
+}
+
 WindowPtr getWindow() {
    Window::setHint(GLFW_SAMPLES, 4);
    Window::setHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -293,6 +367,7 @@ WindowPtr getWindow() {
 
    window->setCloseCallback(closeCb);
    window->setKeyCallback(keyCb);
+   window->setMouseButtonCallback(mouseButtonCb);
    window->setVisible(true);
 
    return window;
@@ -351,7 +426,7 @@ ShaderProgramPtr getShaderProgram(
 }
 
 void linkShaderProgram(const ShaderProgramPtr& program,
- const MeshPtr& mesh) {
+ const std::vector< MeshPtr >& meshes) {
    AttributeVariable attributes(
     "aPosition",
     "aNormal",
@@ -361,7 +436,9 @@ void linkShaderProgram(const ShaderProgramPtr& program,
     "aBoneIds",
     "aBoneWeights");
 
-   mesh->bindAttributes(*program, attributes);
+   for (const MeshPtr& mesh : meshes) {
+      mesh->bindAttributes(*program, attributes);
+   }
 
    // @throws ShaderProgram::LinkFailure
    program->link();
@@ -445,7 +522,7 @@ BoundingPartitionPtr getBoundingPartition(
     glm::vec3(), NO_ROTATION, glm::vec3());
 
    BoundingPartitionPtr boundingPartition =
-    std::make_shared< BoundingPartition >(transformer, glm::ivec3(4));
+    std::make_shared< BoundingPartition >(transformer, glm::ivec3(2));
 
    for (const ActorPtr& actor : actors) {
       boundingPartition->add(actor.get());
