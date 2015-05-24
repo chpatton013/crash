@@ -92,12 +92,12 @@ BoundingBox* BoundingPartition::getBoundingBox() {
 
 void BoundingPartition::resize(const Transformer& transformer,
  const glm::ivec3& partitions) {
-   std::vector< Boundable* > boundaingBoxes = this->getBoundables();
+   std::vector< Boundable* > boundables = this->getBoundables();
 
    this->partition(transformer, partitions);
 
-   for (auto boundingBox : boundaingBoxes) {
-      this->add(boundingBox);
+   for (Boundable* boundable : boundables) {
+      this->add(boundable);
    }
 }
 
@@ -108,29 +108,31 @@ void BoundingPartition::partition(const Transformer& transformer,
    this->_boundingBox.setTransformer(transformer);
    this->_partitions = partitions;
 
-   int totalPartitions = this->_partitions.x * this->_partitions.y *
+   unsigned int totalPartitions = this->_partitions.x * this->_partitions.y *
     this->_partitions.z;
    this->_boundingGroups.clear();
    this->_boundingGroups.reserve(totalPartitions);
 
-   auto size = transformer.getSize();
+   glm::vec3 size = transformer.getSize();
    glm::vec3 dimensions = glm::vec3(
       size.x / (float)partitions.x,
       size.y / (float)partitions.y,
       size.z / (float)partitions.z
    );
 
-   auto position = transformer.getPosition();
-   auto orientation = transformer.getOrientation();
-   for (int ndx = 0; ndx < totalPartitions; ++ndx) {
+   glm::vec3 corner = transformer.getPosition() - (size * 0.5f);
+   glm::quat orientation = transformer.getOrientation();
+   for (unsigned int ndx = 0; ndx < totalPartitions; ++ndx) {
       glm::ivec3 index = vectorize_index(ndx, this->_partitions);
-      glm::vec3 center = position + glm::vec3(
-         index.x * dimensions.x * 0.5f,
-         index.y * dimensions.y * 0.5f,
-         index.z * dimensions.z * 0.5f
+      glm::vec3 relativePosition = glm::vec3(
+         index.x * dimensions.x,
+         index.y * dimensions.y,
+         index.z * dimensions.z
       );
+      glm::vec3 position = corner + (dimensions * 0.5f) + relativePosition;
+
       this->_boundingGroups.push_back(BoundingGroup(Transformer(
-       center, orientation, dimensions,
+       position, orientation, dimensions,
        glm::vec3(), NO_ROTATION, glm::vec3())));
    }
 }

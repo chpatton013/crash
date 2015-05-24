@@ -213,7 +213,7 @@ void BoundingBox::generateCorners() {
       glm::vec4( 0.5f,  0.5f,  0.5f, 1.0f), // 7:ftr
    }};
 
-   auto transform = this->getTransform();
+   glm::mat4 transform = this->getTransform();
 
    Corners corners;
    for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
