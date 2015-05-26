@@ -25,6 +25,7 @@
 #include <crash/render/shader.hpp>
 #include <crash/render/shader_program.hpp>
 #include <crash/space/bounding_partition.hpp>
+#include <crash/space/collision.hpp>
 #include <crash/window/monitor.hpp>
 #include <crash/window/window.hpp>
 
@@ -51,6 +52,11 @@ struct controls_t {
    bool roll_right;
 };
 
+static const glm::vec4 WHITE(0.7f, 0.7f, 0.7f, 1.0f);
+static const glm::vec4   RED(0.7f, 0.0f, 0.0f, 1.0f);
+static const glm::vec4 GREEN(0.0f, 0.7f, 0.0f, 1.0f);
+static const glm::vec4  BLUE(0.0f, 0.0f, 0.7f, 1.0f);
+
 controls_t controls;
 CameraPtr camera;
 BoundingPartitionPtr boundingPartition;
@@ -59,6 +65,7 @@ DriverPtr driver;
 void closeCb(Window& window);
 void keyCb(const Window& window, int key, int, int action, int mods);
 void mouseButtonCb(const Window&, int, int action, int mods);
+void collisionCb(const Collision& collision);
 glm::vec3 getStartingPosition();
 glm::quat getStartingRotation();
 glm::vec3 getTranslationalVelocity();
@@ -153,6 +160,8 @@ int main(int argc, char** argv) {
    driver = std::make_shared< Driver >(
     boundingPartition.get(), camera.get(), lightManager.get(), window.get());
 
+   driver->addCollisionCallback(collisionCb);
+
    Driver::BoundingCubeMeshInstance = std::make_shared< MeshInstance >(
     *cube, ColorUnit(glm::vec4(), glm::vec4(), glm::vec4(), 0.0f), program);
 
@@ -171,11 +180,6 @@ void closeCb(Window& window) {
 }
 
 void keyCb(const Window& window, int key, int, int action, int mods) {
-   static const glm::vec4 WHITE(0.7f, 0.7f, 0.7f, 1.0f);
-   static const glm::vec4   RED(0.7f, 0.0f, 0.0f, 1.0f);
-   static const glm::vec4 GREEN(0.0f, 0.7f, 0.0f, 1.0f);
-   static const glm::vec4  BLUE(0.0f, 0.0f, 0.7f, 1.0f);
-
    if (action == GLFW_REPEAT) {
       return;
    }
@@ -252,6 +256,25 @@ void mouseButtonCb(const Window&, int, int action, int mods) {
    } else {
       toggleRenderBoundingBoxes();
    }
+}
+
+void collisionCb(const Collision& collision) {
+   Boundable* other = nullptr;
+   if (collision.getFirst() == camera.get()) {
+      other = collision.getSecond();
+   } else if (collision.getSecond() == camera.get()) {
+      other = collision.getFirst();
+   }
+
+   Renderable* renderable = dynamic_cast< Renderable* >(other);
+   if (renderable == nullptr) {
+      return;
+   }
+
+   MeshInstance* instance = renderable->getMeshInstance();
+   ColorUnit color = instance->getColor();
+   color.diffuse = RED;
+   instance->setColor(color);
 }
 
 glm::vec3 getStartingPosition() {
