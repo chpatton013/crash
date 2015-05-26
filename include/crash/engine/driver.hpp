@@ -6,7 +6,9 @@
 #include <crash/engine/camera.hpp>
 #include <crash/render/light_manager.hpp>
 #include <crash/render/mesh_instance.hpp>
+#include <crash/space/boundable.hpp>
 #include <crash/space/bounding_partition.hpp>
+#include <crash/space/collision.hpp>
 #include <crash/window/window.hpp>
 
 namespace crash {
@@ -26,6 +28,8 @@ typedef std::shared_ptr< Driver > DriverPtr;
 
 class Driver {
 public:
+   typedef void (*CollisionCallback)(const space::Collision& collision);
+
    static render::MeshInstancePtr BoundingCubeMeshInstance;
 
    Driver(const Driver& driver);
@@ -47,6 +51,11 @@ public:
 
    window::Window* getWindow() const;
    void setWindow(window::Window* window);
+
+   const std::set< CollisionCallback >& getCollisionCallbacks() const;
+   void addCollisionCallback(CollisionCallback callback);
+   void removeCollisionCallback(CollisionCallback callback);
+   void clearCollisionCallbacks();
 
    bool getShouldLoop() const;
    void setShouldLoop(bool shouldLoop);
@@ -91,6 +100,7 @@ private:
    engine::Camera* _camera;
    render::LightManager* _lightManager;
    window::Window* _window;
+   std::set< CollisionCallback > _collisionCallbacks;
    bool _shouldLoop;
    bool _renderBoundingBoxes;
    bool _renderBoundingGroups;

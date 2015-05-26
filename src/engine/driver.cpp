@@ -82,6 +82,23 @@ void Driver::setWindow(Window* window) {
    this->_window = window;
 }
 
+const std::set< Driver::CollisionCallback >&
+ Driver::getCollisionCallbacks() const {
+   return this->_collisionCallbacks;
+}
+
+void Driver::addCollisionCallback(CollisionCallback callback) {
+   this->_collisionCallbacks.insert(callback);
+}
+
+void Driver::removeCollisionCallback(CollisionCallback callback) {
+   this->_collisionCallbacks.erase(callback);
+}
+
+void Driver::clearCollisionCallbacks() {
+   this->_collisionCallbacks.clear();
+}
+
 bool Driver::getShouldLoop() const {
    return this->_shouldLoop && !this->_window->shouldClose();
 }
@@ -165,6 +182,15 @@ float Driver::getRendersPerSecond() const {
 void Driver::update(float delta_t) {
    glfwPollEvents();
 
+   if (this->_collisionCallbacks.size() > 0) {
+      std::vector< Collision > collidingBoundables =
+       this->_boundingPartition->getCollidingElements();
+      for (const Collision& collision : collidingBoundables) {
+         for (const CollisionCallback& callback : this->_collisionCallbacks) {
+            callback(collision);
+         }
+      }
+   }
 
    std::vector< Boundable* > boundables =
     this->_boundingPartition->getBoundables();
