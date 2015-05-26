@@ -1,5 +1,7 @@
 #pragma once
 
+#include <crash/common/movable.hpp>
+
 namespace crash {
 
 namespace render {
@@ -10,7 +12,7 @@ namespace space {
 
 class BoundingBox;
 
-struct Boundable {
+struct Boundable : public common::Movable {
    virtual BoundingBox* getBoundingBox() = 0;
 
    /**

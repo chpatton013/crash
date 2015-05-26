@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-#include <crash/common/movable.hpp>
 #include <crash/common/transformer.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/bounding_group.hpp>
@@ -20,7 +19,7 @@ typedef std::shared_ptr< BoundingPartition > BoundingPartitionPtr;
 
 class Collision;
 
-class BoundingPartition : public common::Movable, public Boundable {
+class BoundingPartition : public Boundable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.

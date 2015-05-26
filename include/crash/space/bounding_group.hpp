@@ -2,7 +2,6 @@
 
 #include <set>
 #include <vector>
-#include <crash/common/movable.hpp>
 #include <crash/common/transformer.hpp>
 #include <crash/space/bounding_box.hpp>
 #include <crash/space/collision.hpp>
@@ -15,7 +14,7 @@ namespace render {
 
 namespace space {
 
-class BoundingGroup : public common::Movable, public Boundable {
+class BoundingGroup : public Boundable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Constructors.

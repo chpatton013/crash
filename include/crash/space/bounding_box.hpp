@@ -3,14 +3,13 @@
 #include <array>
 #include <boost/optional.hpp>
 #include <glm/glm.hpp>
-#include <crash/common/movable.hpp>
 #include <crash/common/transformer.hpp>
 #include <crash/space/boundable.hpp>
 
 namespace crash {
 namespace space {
 
-class BoundingBox : public common::Movable, public Boundable {
+class BoundingBox : public Boundable {
 public:
    /////////////////////////////////////////////////////////////////////////////
    // Type definitions.

@@ -13,8 +13,7 @@ namespace engine {
 class Actor;
 typedef std::shared_ptr< Actor > ActorPtr;
 
-class Actor :
- public common::Movable, public space::Boundable, public render::Renderable {
+class Actor : public space::Boundable, public render::Renderable {
 public:
    Actor(const Actor& actor);
    Actor(const space::BoundingBox& _boundingBox,
