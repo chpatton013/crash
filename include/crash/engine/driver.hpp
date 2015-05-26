@@ -52,6 +52,9 @@ public:
    bool getShouldLoop() const;
    void setShouldLoop(bool shouldLoop);
 
+   bool getRenderBoundingBoxes() const;
+   void setRenderBoundingBoxes(bool renderBoundingBoxes);
+
    bool getRenderBoundingGroups() const;
    void setRenderBoundingGroups(bool renderBoundingGroups);
 
@@ -90,6 +93,7 @@ private:
    render::LightManagerPtr _lightManager;
    window::WindowPtr _window;
    bool _shouldLoop;
+   bool _renderBoundingBoxes;
    bool _renderBoundingGroups;
    bool _renderBoundingPartition;
    boost::timer::cpu_timer _updateTimer;

@@ -91,6 +91,14 @@ void Driver::setShouldLoop(bool shouldLoop) {
    this->_shouldLoop = shouldLoop;
 }
 
+bool Driver::getRenderBoundingBoxes() const {
+   return this->_renderBoundingBoxes;
+}
+
+void Driver::setRenderBoundingBoxes(bool renderBoundingBoxes) {
+   this->_renderBoundingBoxes = renderBoundingBoxes;
+}
+
 bool Driver::getRenderBoundingGroups() const {
    return this->_renderBoundingGroups;
 }
@@ -175,8 +183,6 @@ void Driver::update(float delta_t) {
 
 void Driver::render(float delta_t) const {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glEnable(GL_CULL_FACE);
 
    std::vector< Boundable* > visibleBoundables =
     this->_boundingPartition->getVisibleElements(
@@ -207,7 +213,19 @@ void Driver::render(float delta_t) const {
 
       this->_lightManager->setUniforms(*program);
 
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      glEnable(GL_CULL_FACE);
+
       renderable->render(delta_t);
+
+      if (Driver::BoundingCubeMeshInstance != nullptr &&
+       this->getRenderBoundingBoxes()) {
+         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+         glDisable(GL_CULL_FACE);
+
+         glm::mat4 transform = boundable->getBoundingBox()->getTransform();
+         Driver::BoundingCubeMeshInstance->render(transform, delta_t);
+      }
    }
 
    if (Driver::BoundingCubeMeshInstance != nullptr) {

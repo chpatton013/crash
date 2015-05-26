@@ -66,6 +66,7 @@ glm::quat getRotationalVelocity();
 void setVisibleElementsColor(const glm::vec4& color);
 void toggleRenderBoundingPartition();
 void toggleRenderBoundingGroups();
+void toggleRenderBoundingBoxes();
 
 WindowPtr getWindow();
 MeshPtr getMesh(const boost::filesystem::path& path);
@@ -103,6 +104,7 @@ int main(int argc, char** argv) {
    MeshPtr cube;
    try {
       mesh = getMesh(boost::filesystem::path(meshFile));
+      mesh->translate(glm::vec3(0.0f, -0.4f, -0.5f));
       cube = getMesh(boost::filesystem::path(cubeFile));
    } catch (Mesh::SceneImportFailure e) {
       std::cerr << "Scene Import Failure: " << e.what() << std::endl;
@@ -239,8 +241,10 @@ void mouseButtonCb(const Window&, int, int action, int mods) {
 
    if (mods & GLFW_MOD_SHIFT) {
       toggleRenderBoundingPartition();
-   } else {
+   } else if (mods & GLFW_MOD_CONTROL) {
       toggleRenderBoundingGroups();
+   } else {
+      toggleRenderBoundingBoxes();
    }
 }
 
@@ -336,6 +340,10 @@ void toggleRenderBoundingPartition() {
 
 void toggleRenderBoundingGroups() {
    driver->setRenderBoundingGroups(!driver->getRenderBoundingGroups());
+}
+
+void toggleRenderBoundingBoxes() {
+   driver->setRenderBoundingBoxes(!driver->getRenderBoundingBoxes());
 }
 
 WindowPtr getWindow() {
@@ -480,8 +488,6 @@ void linkShaderProgram(const ShaderProgramPtr& program,
 std::vector< ActorPtr > getActors(const MeshPtr& mesh,
  const ShaderProgramPtr& program, const glm::vec3& dimensions,
  unsigned int numActors) {
-   static const glm::vec3 CENTER_OFFSET(0.0, -0.5f, 0.0f);
-
    std::vector< ActorPtr > actors;
    actors.reserve(numActors);
 
@@ -496,7 +502,7 @@ std::vector< ActorPtr > getActors(const MeshPtr& mesh,
       ColorUnit color(ambient, diffuse, specular, shininess);
       MeshInstance instance(*mesh, color, program);
 
-      glm::vec3 position = CENTER_OFFSET + glm::vec3(
+      glm::vec3 position = glm::vec3(
        rand_float(minDims.x, maxDims.x),
        rand_float(minDims.y, maxDims.y),
        rand_float(minDims.z, maxDims.z));
@@ -507,7 +513,7 @@ std::vector< ActorPtr > getActors(const MeshPtr& mesh,
 
       BoundingBox boundingBox(
        Transformer(position, orientation, UNIT_SIZE,
-       glm::vec3(), NO_ROTATION, glm::vec3(1.0f)));
+       glm::vec3(), NO_ROTATION, glm::vec3()));
 
       actors.push_back(std::make_shared< Actor >(boundingBox, instance));
    }
