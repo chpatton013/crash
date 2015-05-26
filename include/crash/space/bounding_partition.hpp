@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <vector>
 #include <glm/glm.hpp>
 #include <crash/common/transformer.hpp>
@@ -85,6 +86,7 @@ private:
    BoundingBox _boundingBox;
    glm::ivec3 _partitions;
    std::vector< BoundingGroup > _boundingGroups;
+   std::set< Boundable* > _boundingBoxes;
    unsigned int _numBoundables;
 };
 

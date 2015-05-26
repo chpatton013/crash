@@ -138,26 +138,37 @@ void BoundingPartition::partition(const Transformer& transformer,
 }
 
 bool BoundingPartition::add(Boundable* boundingBox) {
+   this->_boundingBoxes.erase(boundingBox);
+
    bool added = false;
 
-   for (auto& group : this->_boundingGroups) {
+   for (BoundingGroup& group : this->_boundingGroups) {
       if (group.isIntersecting(boundingBox)) {
          added |= group.add(boundingBox);
       }
    }
 
-   if (added) {
-      ++this->_numBoundables;
+   if (!added) {
+      this->_boundingBoxes.insert(boundingBox);
    }
 
+   ++this->_numBoundables;
    return added;
 }
 
 bool BoundingPartition::remove(Boundable* boundingBox) {
    bool removed = false;
 
-   for (auto& group : this->_boundingGroups) {
+   for (BoundingGroup& group : this->_boundingGroups) {
       removed |= group.remove(boundingBox);
+   }
+
+   if (!removed) {
+      auto itr = this->_boundingBoxes.find(boundingBox);
+      if (itr != this->_boundingBoxes.end()) {
+         this->_boundingBoxes.erase(itr);
+         removed = true;
+      }
    }
 
    if (removed) {
@@ -167,18 +178,17 @@ bool BoundingPartition::remove(Boundable* boundingBox) {
    return removed;
 }
 
-bool BoundingPartition::update(Boundable* boundingBox) {
-   if (!this->remove(boundingBox)) {
-      return false;
-   }
-
-   return this->add(boundingBox);
+bool BoundingPartition::update(Boundable* boundable) {
+   this->remove(boundable);
+   return this->add(boundable);
 }
 
 void BoundingPartition::clear() {
    for (BoundingGroup& group : this->_boundingGroups) {
       group.clear();
    }
+
+   this->_boundingBoxes.clear();
 
    this->_numBoundables = 0;
 }
@@ -196,12 +206,21 @@ std::vector< Boundable* > BoundingPartition::getBoundables() const {
    std::set< Boundable* > mark;
 
    accumulator.reserve(this->_numBoundables);
-   for (auto& group : this->_boundingGroups) {
-      for (auto boundingBox : group.getBoundables()) {
-         auto itr = mark.find(boundingBox);
+
+   for (Boundable* boundable : this->_boundingBoxes) {
+      auto itr = mark.find(boundable);
+      if (itr == mark.end()) {
+         accumulator.push_back(boundable);
+         mark.insert(boundable);
+      }
+   }
+
+   for (const BoundingGroup& group : this->_boundingGroups) {
+      for (Boundable* boundable : group.getBoundables()) {
+         auto itr = mark.find(boundable);
          if (itr == mark.end()) {
-            accumulator.push_back(boundingBox);
-            mark.insert(boundingBox);
+            accumulator.push_back(boundable);
+            mark.insert(boundable);
          }
       }
    }
@@ -234,7 +253,7 @@ std::vector< Collision > BoundingPartition::getCollidingElements() const {
    std::vector< Collision > accumulator;
    std::set< Collision > mark;
 
-   for (auto& group : this->_boundingGroups) {
+   for (const BoundingGroup& group : this->_boundingGroups) {
       for (auto collision : group.getCollidingElements()) {
          auto itr = mark.find(collision);
          if (itr == mark.end()) {
@@ -251,6 +270,14 @@ std::vector< Boundable* > BoundingPartition::getVisibleElements(
  const ViewFrustum& viewFrustum) const {
    std::vector< Boundable* > accumulator;
    std::set< Boundable* > mark;
+
+   for (Boundable* boundable : this->_boundingBoxes) {
+      auto itr = mark.find(boundable);
+      if (itr == mark.end() && boundable->isVisible(viewFrustum)) {
+         accumulator.push_back(boundable);
+         mark.insert(boundable);
+      }
+   }
 
    for (const BoundingGroup& group : this->_boundingGroups) {
       for (Boundable* boundingBox : group.getVisibleElements(viewFrustum)) {
