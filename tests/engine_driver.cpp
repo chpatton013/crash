@@ -80,7 +80,8 @@ std::vector< ActorPtr > getActors(const MeshPtr& mesh,
  const ShaderProgramPtr& program, const glm::vec3& dimensions,
  unsigned int numActors);
 BoundingPartitionPtr getBoundingPartition(
- const std::vector< ActorPtr >& actors, const glm::vec3& dimensions);
+ const std::vector< ActorPtr >& actors,
+ const glm::vec3& dimensions, const glm::ivec3& partitions);
 CameraPtr getCamera();
 LightManagerPtr getLightManager(const ShaderProgramPtr& program);
 
@@ -139,13 +140,14 @@ int main(int argc, char** argv) {
    }
 
    glm::vec3 dimensions(10.0f);
-   std::vector< ActorPtr > actors = getActors(mesh, program, dimensions, 100);
-   boundingPartition = getBoundingPartition(actors, dimensions);
+   glm::ivec3 partitions(2);
+   std::vector< ActorPtr > actors = getActors(mesh, program, dimensions, 10);
+   boundingPartition = getBoundingPartition(actors, dimensions, partitions);
    camera = getCamera();
    LightManagerPtr lightManager = getLightManager(program);
 
    driver = std::make_shared< Driver >(
-    boundingPartition, camera, lightManager, window);
+    boundingPartition.get(), camera.get(), lightManager.get(), window.get());
 
    Driver::BoundingCubeMeshInstance = std::make_shared< MeshInstance >(
     *cube, ColorUnit(glm::vec4(), glm::vec4(), glm::vec4(), 0.0f), program);
@@ -522,13 +524,14 @@ std::vector< ActorPtr > getActors(const MeshPtr& mesh,
 }
 
 BoundingPartitionPtr getBoundingPartition(
- const std::vector< ActorPtr >& actors, const glm::vec3& dimensions) {
+ const std::vector< ActorPtr >& actors,
+ const glm::vec3& dimensions, const glm::ivec3& partitions) {
    Transformer transformer(
     ORIGIN, NO_ROTATION, dimensions,
     glm::vec3(), NO_ROTATION, glm::vec3());
 
    BoundingPartitionPtr boundingPartition =
-    std::make_shared< BoundingPartition >(transformer, glm::ivec3(2));
+    std::make_shared< BoundingPartition >(transformer, partitions);
 
    for (const ActorPtr& actor : actors) {
       boundingPartition->add(actor.get());

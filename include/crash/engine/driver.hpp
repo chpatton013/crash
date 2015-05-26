@@ -29,25 +29,24 @@ public:
    static render::MeshInstancePtr BoundingCubeMeshInstance;
 
    Driver(const Driver& driver);
-   Driver(const space::BoundingPartitionPtr& boundingPartition,
-    const engine::CameraPtr& camera,
-    const render::LightManagerPtr& lightManager,
-    const window::WindowPtr& window);
+   Driver(space::BoundingPartition* boundingPartition,
+    engine::Camera* camera,
+    render::LightManager* lightManager,
+    window::Window* window);
    virtual ~Driver();
 
    /////////////////////////////////////////////////////////////////////////////
    // Data access.
    /////////////////////////////////////////////////////////////////////////////
 
-   space::BoundingPartitionPtr getBoundingPartition();
-   void setBoundingPartition(
-    const space::BoundingPartitionPtr& boundingPartition);
+   space::BoundingPartition* getBoundingPartition() const;
+   void setBoundingPartition(space::BoundingPartition* boundingPartition);
 
-   engine::CameraPtr getCamera();
-   void setCamera(const engine::CameraPtr& camera);
+   engine::Camera* getCamera() const;
+   void setCamera(engine::Camera* camera);
 
-   window::WindowPtr getWindow();
-   void setWindow(const window::WindowPtr& window);
+   window::Window* getWindow() const;
+   void setWindow(window::Window* window);
 
    bool getShouldLoop() const;
    void setShouldLoop(bool shouldLoop);
@@ -88,10 +87,10 @@ private:
    // Members.
    /////////////////////////////////////////////////////////////////////////////
 
-   space::BoundingPartitionPtr _boundingPartition;
-   engine::CameraPtr _camera;
-   render::LightManagerPtr _lightManager;
-   window::WindowPtr _window;
+   space::BoundingPartition* _boundingPartition;
+   engine::Camera* _camera;
+   render::LightManager* _lightManager;
+   window::Window* _window;
    bool _shouldLoop;
    bool _renderBoundingBoxes;
    bool _renderBoundingGroups;

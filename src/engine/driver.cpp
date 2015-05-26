@@ -36,9 +36,9 @@ Driver::Driver(const Driver& driver) :
     _rendersPerSecond(0.0f)
 {}
 
-Driver::Driver(const BoundingPartitionPtr& boundingPartition,
- const CameraPtr& camera, const LightManagerPtr& lightManager,
- const WindowPtr& window) :
+Driver::Driver(BoundingPartition* boundingPartition,
+ Camera* camera, LightManager* lightManager,
+ Window* window) :
    _boundingPartition(boundingPartition),
     _camera(camera),
     _lightManager(lightManager),
@@ -58,28 +58,27 @@ Driver::Driver(const BoundingPartitionPtr& boundingPartition,
 // Data access.
 ////////////////////////////////////////////////////////////////////////////////
 
-BoundingPartitionPtr Driver::getBoundingPartition() {
+BoundingPartition* Driver::getBoundingPartition() const {
    return this->_boundingPartition;
 }
 
-void Driver::setBoundingPartition(
- const BoundingPartitionPtr& boundingPartition) {
+void Driver::setBoundingPartition(BoundingPartition* boundingPartition) {
    this->_boundingPartition = boundingPartition;
 }
 
-CameraPtr Driver::getCamera() {
+Camera* Driver::getCamera() const {
    return this->_camera;
 }
 
-void Driver::setCamera(const CameraPtr& camera) {
+void Driver::setCamera(Camera* camera) {
    this->_camera = camera;
 }
 
-WindowPtr Driver::getWindow() {
+Window* Driver::getWindow() const {
    return this->_window;
 }
 
-void Driver::setWindow(const WindowPtr& window) {
+void Driver::setWindow(Window* window) {
    this->_window = window;
 }
 
