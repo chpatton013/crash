@@ -7,32 +7,32 @@
 
 using namespace crash::common;
 
-void Movable::translate(const glm::vec3& translation) {
+/* virtual */ void Movable::translate(const glm::vec3& translation) {
    this->setPosition(this->getPosition() + translation);
 }
 
-void Movable::rotate(const glm::quat& rotation) {
+/* virtual */ void Movable::rotate(const glm::quat& rotation) {
    this->setOrientation(rotation * this->getOrientation());
 }
 
-void Movable::scale(const glm::vec3& scale) {
+/* virtual */ void Movable::scale(const glm::vec3& scale) {
    glm::vec3 size = this->getSize();
    this->setSize(size + size * scale);
 }
 
-void Movable::translate(float delta_t) {
+/* virtual */ void Movable::translate(float delta_t) {
    this->translate(this->getTranslationalDelta(delta_t));
 }
 
-void Movable::rotate(float delta_t) {
+/* virtual */ void Movable::rotate(float delta_t) {
    this->rotate(this->getRotationalDelta(delta_t));
 }
 
-void Movable::scale(float delta_t) {
+/* virtual */ void Movable::scale(float delta_t) {
    this->scale(this->getScaleDelta(delta_t));
 }
 
-void Movable::move(float delta_t) {
+/* virtual */ void Movable::move(float delta_t) {
    this->translate(delta_t);
    this->rotate(delta_t);
    this->scale(delta_t);

@@ -16,8 +16,8 @@
 #include <crash/common/transformer.hpp>
 #include <crash/common/util.hpp>
 #include <crash/engine/actor.hpp>
+#include <crash/engine/camera.hpp>
 #include <crash/engine/driver.hpp>
-#include <crash/render/camera.hpp>
 #include <crash/render/light.hpp>
 #include <crash/render/light_manager.hpp>
 #include <crash/render/mesh.hpp>
@@ -533,7 +533,9 @@ BoundingPartitionPtr getBoundingPartition(
 
 CameraPtr getCamera() {
    return std::make_shared< Camera >(
-    getStartingPosition(), getStartingRotation(),
+    BoundingBox(Transformer(
+    getStartingPosition(), getStartingRotation(), UNIT_SIZE,
+    glm::vec3(), NO_ROTATION, glm::vec3())),
     /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
     /* near */ 0.01f, /* far */ 100.0f);
 }

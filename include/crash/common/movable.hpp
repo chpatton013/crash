@@ -25,15 +25,15 @@ public:
    virtual void setRotationalVelocity(const glm::quat& rotationalVelocity) = 0;
    virtual void setScaleVelocity(const glm::vec3& scaleVelocity) = 0;
 
-   void translate(const glm::vec3& translation);
-   void rotate(const glm::quat& rotation);
-   void scale(const glm::vec3& scale);
+   virtual void translate(const glm::vec3& translation);
+   virtual void rotate(const glm::quat& rotation);
+   virtual void scale(const glm::vec3& scale);
 
-   void translate(float delta_t);
-   void rotate(float delta_t);
-   void scale(float delta_t);
+   virtual void translate(float delta_t);
+   virtual void rotate(float delta_t);
+   virtual void scale(float delta_t);
 
-   void move(float delta_t);
+   virtual void move(float delta_t);
 
    glm::vec3 getUp();
    glm::vec3 getForward();

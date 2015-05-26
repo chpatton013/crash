@@ -3,7 +3,7 @@
 #include <memory>
 #include <set>
 #include <boost/timer/timer.hpp>
-#include <crash/render/camera.hpp>
+#include <crash/engine/camera.hpp>
 #include <crash/render/light_manager.hpp>
 #include <crash/render/mesh_instance.hpp>
 #include <crash/space/bounding_partition.hpp>
@@ -30,7 +30,7 @@ public:
 
    Driver(const Driver& driver);
    Driver(const space::BoundingPartitionPtr& boundingPartition,
-    const render::CameraPtr& camera,
+    const engine::CameraPtr& camera,
     const render::LightManagerPtr& lightManager,
     const window::WindowPtr& window);
    virtual ~Driver();
@@ -43,8 +43,8 @@ public:
    void setBoundingPartition(
     const space::BoundingPartitionPtr& boundingPartition);
 
-   render::CameraPtr getCamera();
-   void setCamera(const render::CameraPtr& camera);
+   engine::CameraPtr getCamera();
+   void setCamera(const engine::CameraPtr& camera);
 
    window::WindowPtr getWindow();
    void setWindow(const window::WindowPtr& window);
@@ -86,7 +86,7 @@ private:
    /////////////////////////////////////////////////////////////////////////////
 
    space::BoundingPartitionPtr _boundingPartition;
-   render::CameraPtr _camera;
+   engine::CameraPtr _camera;
    render::LightManagerPtr _lightManager;
    window::WindowPtr _window;
    bool _shouldLoop;
