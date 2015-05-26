@@ -165,12 +165,17 @@ float Driver::getRendersPerSecond() const {
 void Driver::update(float delta_t) {
    glfwPollEvents();
 
-   this->_camera->move(delta_t);
 
    std::vector< Boundable* > boundables =
     this->_boundingPartition->getBoundables();
+
    for (Boundable* boundable : boundables) {
-      Actor* actor = static_cast< Actor* >(boundable);
+      boundable->move(delta_t);
+      this->_boundingPartition->update(boundable);
+   }
+
+   for (Boundable* boundable : boundables) {
+      Actor* actor = dynamic_cast< Actor* >(boundable);
       if (actor == nullptr) {
          continue;
       }

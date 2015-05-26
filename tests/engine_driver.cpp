@@ -139,11 +139,15 @@ int main(int argc, char** argv) {
       return 7;
    }
 
+   camera = getCamera();
+
    glm::vec3 dimensions(10.0f);
    glm::ivec3 partitions(2);
    std::vector< ActorPtr > actors = getActors(mesh, program, dimensions, 10);
    boundingPartition = getBoundingPartition(actors, dimensions, partitions);
-   camera = getCamera();
+
+   boundingPartition->add(camera.get());
+
    LightManagerPtr lightManager = getLightManager(program);
 
    driver = std::make_shared< Driver >(
