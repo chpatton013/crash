@@ -27,6 +27,8 @@ Driver::Driver(const Driver& driver) :
     _camera(driver._camera),
     _lightManager(driver._lightManager),
     _window(driver._window),
+    _collisionCallbacks(),
+    _updateCallbacks(),
     _shouldLoop(true),
     _renderBoundingGroups(false),
     _renderBoundingPartition(false),
@@ -43,6 +45,8 @@ Driver::Driver(BoundingPartition* boundingPartition,
     _camera(camera),
     _lightManager(lightManager),
     _window(window),
+    _collisionCallbacks(),
+    _updateCallbacks(),
     _shouldLoop(true),
     _renderBoundingGroups(false),
     _renderBoundingPartition(false),
@@ -97,6 +101,22 @@ void Driver::removeCollisionCallback(CollisionCallback callback) {
 
 void Driver::clearCollisionCallbacks() {
    this->_collisionCallbacks.clear();
+}
+
+const std::set< Driver::UpdateCallback >& Driver::getUpdateCallbacks() const {
+   return this->_updateCallbacks;
+}
+
+void Driver::addUpdateCallback(UpdateCallback callback) {
+   this->_updateCallbacks.insert(callback);
+}
+
+void Driver::removeUpdateCallback(UpdateCallback callback) {
+   this->_updateCallbacks.erase(callback);
+}
+
+void Driver::clearUpdateCallbacks() {
+   this->_updateCallbacks.clear();
 }
 
 bool Driver::getShouldLoop() const {
@@ -196,6 +216,10 @@ void Driver::update(float delta_t) {
     this->_boundingPartition->getBoundables();
 
    for (Boundable* boundable : boundables) {
+      for (const UpdateCallback& callback : this->_updateCallbacks) {
+         callback(boundable);
+      }
+
       boundable->move(delta_t);
       this->_boundingPartition->update(boundable);
    }

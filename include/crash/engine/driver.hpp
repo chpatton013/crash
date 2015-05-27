@@ -29,6 +29,7 @@ typedef std::shared_ptr< Driver > DriverPtr;
 class Driver {
 public:
    typedef void (*CollisionCallback)(const space::Collision& collision);
+   typedef void (*UpdateCallback)(space::Boundable* boundable);
 
    static render::MeshInstancePtr BoundingCubeMeshInstance;
 
@@ -56,6 +57,11 @@ public:
    void addCollisionCallback(CollisionCallback callback);
    void removeCollisionCallback(CollisionCallback callback);
    void clearCollisionCallbacks();
+
+   const std::set< UpdateCallback >& getUpdateCallbacks() const;
+   void addUpdateCallback(UpdateCallback callback);
+   void removeUpdateCallback(UpdateCallback callback);
+   void clearUpdateCallbacks();
 
    bool getShouldLoop() const;
    void setShouldLoop(bool shouldLoop);
@@ -101,6 +107,7 @@ private:
    render::LightManager* _lightManager;
    window::Window* _window;
    std::set< CollisionCallback > _collisionCallbacks;
+   std::set< UpdateCallback > _updateCallbacks;
    bool _shouldLoop;
    bool _renderBoundingBoxes;
    bool _renderBoundingGroups;
