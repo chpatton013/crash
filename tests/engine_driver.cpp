@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <glm/gtx/vector_angle.hpp>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -64,10 +65,23 @@ ActorPtr skyActor;
 BoundingPartitionPtr boundingPartition;
 DriverPtr driver;
 
+struct Checkpoints {
+   Checkpoints(const std::vector< glm::vec3 >& checkpoints, unsigned int progress) :
+      checkpoints(checkpoints), progress(progress)
+   {}
+   std::vector< glm::vec3 > checkpoints;
+   unsigned int progress;
+};
+
+std::map< Actor*, Checkpoints > actorCheckpoints;
+std::tuple< glm::vec3, glm::quat > getCheckpointDirection(
+ const Actor* actor, const Checkpoints& checkpoints);
+
 void closeCb(Window& window);
 void keyCb(const Window& window, int key, int, int action, int mods);
 void mouseButtonCb(const Window&, int, int action, int mods);
 void collisionCb(const Collision& collision);
+void updateCb(Boundable* boundable);
 glm::vec3 getStartingPosition();
 glm::quat getStartingRotation();
 glm::vec3 getTranslationalVelocity();
@@ -86,8 +100,9 @@ ShaderProgramPtr getShaderProgram(
 void linkShaderProgram(const ShaderProgramPtr& program,
  const std::vector< MeshPtr >& meshes);
 std::vector< ActorPtr > getActors(const MeshPtr& mesh,
- const ShaderProgramPtr& program, const glm::vec3& dimensions,
- unsigned int numActors);
+ const ShaderProgramPtr& program);
+ActorPtr getActor(const MeshPtr& mesh, const ShaderProgramPtr& program,
+ const Checkpoints& checkpoints);
 BoundingPartitionPtr getBoundingPartition(
  const std::vector< ActorPtr >& actors,
  const glm::vec3& dimensions, const glm::ivec3& partitions);
@@ -158,13 +173,12 @@ int main(int argc, char** argv) {
       return 7;
    }
 
-   camera = getCamera();
-
+   std::vector< ActorPtr > actors = getActors(mesh, program);
    glm::vec3 dimensions(100.0f);
    glm::ivec3 partitions(4);
-   std::vector< ActorPtr > actors = getActors(mesh, program, dimensions, 10);
    boundingPartition = getBoundingPartition(actors, dimensions, partitions);
 
+   camera = getCamera();
    planeActor = getPlane(plane, program);
    skyActor = getSkybox(sky, program);
 
@@ -178,6 +192,7 @@ int main(int argc, char** argv) {
     boundingPartition.get(), camera.get(), lightManager.get(), window.get());
 
    driver->addCollisionCallback(collisionCb);
+   driver->addUpdateCallback(updateCb);
 
    Driver::BoundingCubeMeshInstance = std::make_shared< MeshInstance >(
     *cube, ColorUnit(glm::vec4(), glm::vec4(), glm::vec4(), 0.0f), program);
@@ -192,6 +207,19 @@ int main(int argc, char** argv) {
    sky->teardown();
 
    return 0;
+}
+
+std::tuple< glm::vec3, glm::quat > getCheckpointDirection(
+ const Actor* actor, const Checkpoints& checkpoints) {
+   glm::vec3 nextDestination = checkpoints.checkpoints[checkpoints.progress];
+   glm::vec3 direction = glm::normalize(nextDestination - actor->getPosition());
+
+   glm::vec3 translation = 2.0f * direction;
+
+   float angle = glm::orientedAngle(FORWARD, direction, UP);
+   glm::quat rotation = axisAngleToQuat(glm::vec4(UP, angle));
+
+   return std::make_tuple(translation, rotation);
 }
 
 void closeCb(Window& window) {
@@ -300,6 +328,34 @@ void collisionCb(const Collision& collision) {
    instance->setColor(color);
 }
 
+void updateCb(Boundable* boundable) {
+   Actor* actor = dynamic_cast< Actor* >(boundable);
+   if (actor == nullptr) {
+      return;
+   }
+
+   auto itr = actorCheckpoints.find(actor);
+   if (itr == actorCheckpoints.end()) {
+      return;
+   }
+
+   Checkpoints& checkpoints = itr->second;
+   glm::vec3 destination = checkpoints.checkpoints[checkpoints.progress];
+   glm::vec3 difference = destination - actor->getPosition();
+   if (glm::dot(difference, difference) < 0.5f) {
+      checkpoints.progress =
+       (checkpoints.progress + 1) % checkpoints.checkpoints.size();
+   }
+
+   glm::vec3 translation;
+   glm::quat orientation;
+   std::tie(translation, orientation) =
+    getCheckpointDirection(actor, checkpoints);
+
+   actor->setTranslationalVelocity(translation);
+   actor->setOrientation(orientation);
+}
+
 glm::vec3 getStartingPosition() {
    return glm::vec3(0.0f, 0.5f, 0.0f);
 }
@@ -372,7 +428,9 @@ glm::quat getRotationalVelocity() {
 
 void setVisibleElementsColor(const glm::vec4& diffuse) {
    std::vector< Boundable* > visibleBoundables =
-    boundingPartition->getVisibleElements(camera->getViewFrustum());
+    boundingPartition->getBoundables();
+   /* std::vector< Boundable* > visibleBoundables = */
+   /*  boundingPartition->getVisibleElements(camera->getViewFrustum()); */
    for (Boundable* boundable : visibleBoundables) {
       if (boundable == planeActor.get() || boundable == skyActor.get()) {
          continue;
@@ -542,46 +600,128 @@ void linkShaderProgram(const ShaderProgramPtr& program,
 }
 
 std::vector< ActorPtr > getActors(const MeshPtr& mesh,
- const ShaderProgramPtr& program, const glm::vec3& dimensions,
- unsigned int numActors) {
+ const ShaderProgramPtr& program) {
    std::vector< ActorPtr > actors;
-   actors.reserve(numActors);
 
-   glm::vec3 minDims = -dimensions * 0.5f;
-   glm::vec3 maxDims = dimensions * 0.5f;
+   { // nascar
+      Checkpoints checkpoints({{
+         glm::vec3(-8.0f, 0.5f, -5.0f),
+         glm::vec3(-7.0f, 0.5f, -6.0f),
+         glm::vec3( 7.0f, 0.5f, -6.0f),
+         glm::vec3( 8.0f, 0.5f, -5.0f),
+         glm::vec3( 7.0f, 0.5f, -4.0f),
+         glm::vec3(-7.0f, 0.5f, -4.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
 
-   for (unsigned int i = 0; i < numActors; ++i) {
-      glm::vec4 ambient(1.0f);
-      glm::vec4 diffuse(1.0f, 1.0f, 1.0f, 1.0f);
-      glm::vec4 specular(1.0f);
-      float shininess = 1.0f;
-      ColorUnit color(ambient, diffuse, specular, shininess);
-      MeshInstance instance(*mesh, color, program);
+   { // square
+      Checkpoints checkpoints({{
+         glm::vec3(-9.0f, 0.5f, -2.0f),
+         glm::vec3(-5.0f, 0.5f, -2.0f),
+         glm::vec3(-5.0f, 0.5f,  2.0f),
+         glm::vec3(-9.0f, 0.5f,  2.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
 
-      glm::vec3 position = glm::vec3(
-       rand_float(minDims.x, maxDims.x),
-       rand_float(minDims.y, maxDims.y),
-       rand_float(minDims.z, maxDims.z));
+   { // diamond-tall
+      Checkpoints checkpoints({{
+         glm::vec3( 4.0f, 0.5f,  0.0f),
+         glm::vec3( 6.0f, 0.5f, -6.0f),
+         glm::vec3( 8.0f, 0.5f,  0.0f),
+         glm::vec3( 6.0f, 0.5f,  6.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
 
-      glm::vec3 axis = Y_AXIS;
-      float angle = glm::radians(180.0f);
-      glm::quat orientation = axisAngleToQuat(glm::vec4(axis, angle));
+   { // diamond-fat
+      Checkpoints checkpoints({{
+         glm::vec3( 2.0f, 0.5f,  0.0f),
+         glm::vec3( 6.0f, 0.5f, -2.0f),
+         glm::vec3(10.0f, 0.5f,  0.0f),
+         glm::vec3( 6.0f, 0.5f,  2.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
 
-      BoundingBox boundingBox(
-       Transformer(position, orientation, UNIT_SIZE,
-       glm::vec3(), NO_ROTATION, glm::vec3()));
+   { // line top-left -> bottom-right
+      Checkpoints checkpoints({{
+         glm::vec3(-10.0f, 0.5f, -10.0f),
+         glm::vec3( 10.0f, 0.5f,  10.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
 
-      actors.push_back(std::make_shared< Actor >(boundingBox, instance));
+   { // line top-right -> bottom-left
+      Checkpoints checkpoints({{
+         glm::vec3( 10.0f, 0.5f, -10.0f),
+         glm::vec3(-10.0f, 0.5f,  10.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
+
+   { // line bottom-right -> top-left
+      Checkpoints checkpoints({{
+         glm::vec3( 10.0f, 0.5f,  10.0f),
+         glm::vec3(-10.0f, 0.5f, -10.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
+
+   { // line bottom-left -> top-right
+      Checkpoints checkpoints({{
+         glm::vec3(-10.0f, 0.5f,  10.0f),
+         glm::vec3( 10.0f, 0.5f, -10.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
+   }
+
+   { // figure-eight
+      Checkpoints checkpoints({{
+         glm::vec3(-6.0f, 0.5f,  6.0f),
+         glm::vec3(-6.0f, 0.5f, 10.0f),
+         glm::vec3(-2.0f, 0.5f, 10.0f),
+         glm::vec3( 2.0f, 0.5f,  6.0f),
+         glm::vec3( 6.0f, 0.5f,  6.0f),
+         glm::vec3( 6.0f, 0.5f, 10.0f),
+         glm::vec3( 2.0f, 0.5f, 10.0f),
+         glm::vec3(-2.0f, 0.5f,  6.0f),
+      }}, 0);
+      actors.push_back(getActor(mesh, program, checkpoints));
    }
 
    return actors;
+}
+
+ActorPtr getActor(const MeshPtr& mesh, const ShaderProgramPtr& program,
+ const Checkpoints& checkpoints) {
+   static const ColorUnit color(
+    glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 1.0f);
+
+   ActorPtr actor = std::make_shared< Actor >(BoundingBox(Transformer(
+    glm::vec3(0.0f, 0.5f, 0.0f), NO_ROTATION, UNIT_SIZE,
+    glm::vec3(), NO_ROTATION, glm::vec3())),
+    MeshInstance(*mesh, color, program));
+
+   actorCheckpoints.insert(std::make_pair(actor.get(), checkpoints));
+
+   glm::vec3 translation;
+   glm::quat orientation;
+   std::tie(translation, orientation) =
+    getCheckpointDirection(actor.get(), checkpoints);
+
+   actor->setTranslationalVelocity(translation);
+   actor->setOrientation(orientation);
+
+   return actor;
 }
 
 BoundingPartitionPtr getBoundingPartition(
  const std::vector< ActorPtr >& actors,
  const glm::vec3& dimensions, const glm::ivec3& partitions) {
    Transformer transformer(
-    ORIGIN, NO_ROTATION, dimensions,
+    glm::vec3(0.0f, dimensions.y * 0.5f, 0.0f), NO_ROTATION, dimensions,
     glm::vec3(), NO_ROTATION, glm::vec3());
 
    BoundingPartitionPtr boundingPartition =
