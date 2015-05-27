@@ -59,6 +59,8 @@ static const glm::vec4  BLUE(0.0f, 0.0f, 0.7f, 1.0f);
 
 controls_t controls;
 CameraPtr camera;
+ActorPtr planeActor;
+ActorPtr skyActor;
 BoundingPartitionPtr boundingPartition;
 DriverPtr driver;
 
@@ -90,6 +92,8 @@ BoundingPartitionPtr getBoundingPartition(
  const std::vector< ActorPtr >& actors,
  const glm::vec3& dimensions, const glm::ivec3& partitions);
 CameraPtr getCamera();
+ActorPtr getPlane(const MeshPtr& plane, const ShaderProgramPtr& program);
+ActorPtr getSkybox(const MeshPtr& sky, const ShaderProgramPtr& program);
 LightManagerPtr getLightManager(const ShaderProgramPtr& program);
 
 int main(int argc, char** argv) {
@@ -99,6 +103,8 @@ int main(int argc, char** argv) {
    }
    const std::string meshFile = argv[1];
    const std::string cubeFile = "/Users/cpatton/Desktop/cube/cube.obj";
+   const std::string planeFile = "/Users/cpatton/Desktop/plane/plane.obj";
+   const std::string skyFile = "/Users/cpatton/Desktop/skybox/skybox.obj";
 
    WindowPtr window;
    try {
@@ -110,10 +116,14 @@ int main(int argc, char** argv) {
 
    MeshPtr mesh;
    MeshPtr cube;
+   MeshPtr plane;
+   MeshPtr sky;
    try {
       mesh = getMesh(boost::filesystem::path(meshFile));
       mesh->translate(glm::vec3(0.0f, -0.4f, -0.5f));
       cube = getMesh(boost::filesystem::path(cubeFile));
+      plane = getMesh(boost::filesystem::path(planeFile));
+      sky = getMesh(boost::filesystem::path(skyFile));
    } catch (Mesh::SceneImportFailure e) {
       std::cerr << "Scene Import Failure: " << e.what() << std::endl;
       return 3;
@@ -123,6 +133,8 @@ int main(int argc, char** argv) {
    }
    mesh->initialize();
    cube->initialize();
+   plane->initialize();
+   sky->initialize();
 
    ShaderProgramPtr program;
    try {
@@ -134,7 +146,7 @@ int main(int argc, char** argv) {
       return 5;
    }
 
-   std::vector< MeshPtr > meshes = {{ mesh, cube }};
+   std::vector< MeshPtr > meshes = {{ mesh, cube, plane, sky }};
    try {
       linkShaderProgram(program, meshes);
    } catch (ShaderProgram::LinkFailure e) {
@@ -148,12 +160,17 @@ int main(int argc, char** argv) {
 
    camera = getCamera();
 
-   glm::vec3 dimensions(10.0f);
-   glm::ivec3 partitions(2);
+   glm::vec3 dimensions(100.0f);
+   glm::ivec3 partitions(4);
    std::vector< ActorPtr > actors = getActors(mesh, program, dimensions, 10);
    boundingPartition = getBoundingPartition(actors, dimensions, partitions);
 
+   planeActor = getPlane(plane, program);
+   skyActor = getSkybox(sky, program);
+
    boundingPartition->add(camera.get());
+   boundingPartition->add(planeActor.get());
+   boundingPartition->add(skyActor.get());
 
    LightManagerPtr lightManager = getLightManager(program);
 
@@ -171,6 +188,8 @@ int main(int argc, char** argv) {
 
    mesh->teardown();
    cube->teardown();
+   plane->teardown();
+   sky->teardown();
 
    return 0;
 }
@@ -266,6 +285,10 @@ void collisionCb(const Collision& collision) {
       other = collision.getFirst();
    }
 
+   if (other == planeActor.get() || other == skyActor.get()) {
+      return;
+   }
+
    Renderable* renderable = dynamic_cast< Renderable* >(other);
    if (renderable == nullptr) {
       return;
@@ -278,7 +301,7 @@ void collisionCb(const Collision& collision) {
 }
 
 glm::vec3 getStartingPosition() {
-   return glm::vec3(0.0f, 0.0f, 0.0f);
+   return glm::vec3(0.0f, 0.5f, 0.0f);
 }
 
 glm::quat getStartingRotation() {
@@ -351,6 +374,10 @@ void setVisibleElementsColor(const glm::vec4& diffuse) {
    std::vector< Boundable* > visibleBoundables =
     boundingPartition->getVisibleElements(camera->getViewFrustum());
    for (Boundable* boundable : visibleBoundables) {
+      if (boundable == planeActor.get() || boundable == skyActor.get()) {
+         continue;
+      }
+
       Renderable* renderable = dynamic_cast< Renderable* >(boundable);
       if (renderable == nullptr) {
          continue;
@@ -573,7 +600,27 @@ CameraPtr getCamera() {
     getStartingPosition(), getStartingRotation(), UNIT_SIZE,
     glm::vec3(), NO_ROTATION, glm::vec3())),
     /* fov-y */ glm::radians(60.0f), /* aspect */ 3.0f / 2.0f,
-    /* near */ 0.01f, /* far */ 100.0f);
+    /* near */ 0.01f, /* far */ 2000.0f);
+}
+
+ActorPtr getPlane(const MeshPtr& plane, const ShaderProgramPtr& program) {
+   static const ColorUnit color(
+    glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 1.0f);
+   return std::make_shared< Actor >(
+    BoundingBox(Transformer(
+    ORIGIN, NO_ROTATION, glm::vec3(1000.0f),
+    glm::vec3(), NO_ROTATION, glm::vec3())),
+    MeshInstance(*plane, color, program));
+}
+
+ActorPtr getSkybox(const MeshPtr& sky, const ShaderProgramPtr& program) {
+   static const ColorUnit color(
+    glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 1.0f);
+   return std::make_shared< Actor >(
+    BoundingBox(Transformer(
+    glm::vec3(0.0f, 400.0f, 0.0f), NO_ROTATION, glm::vec3(1000.0f),
+    glm::vec3(), NO_ROTATION, glm::vec3())),
+    MeshInstance(*sky, color, program));
 }
 
 LightManagerPtr getLightManager(const ShaderProgramPtr& program) {
