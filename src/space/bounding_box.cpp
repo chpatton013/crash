@@ -98,23 +98,23 @@ bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
    auto diagonals = this->getDiagonalDirections();
    auto frustumPlanes = viewFrustum.getPlanes();
 
-   for (int planeCount = 0; planeCount < ViewFrustum::NUM_PLANES;
+   for (unsigned int planeCount = 0; planeCount < ViewFrustum::NUM_PLANES;
     ++planeCount) {
       // Utilize temporal locality by starting at the last failing plane.
-      int planeNdx = (this->_frustumPlaneIndex + planeCount) %
+      unsigned int planeNdx = (this->_frustumPlaneIndex + planeCount) %
        ViewFrustum::NUM_PLANES;
       const Plane& plane = frustumPlanes[planeNdx];
 
       // Find the diagonal that is most orthogonal to the plane.
       // Doing this allows us to reduce the maximum number of dot products that
       // need to be calculated from 8 to 6. The minimum rises from 1 to 5, but
-      // the reduction in worst-case behaviour results in better performance
+      // the reduction in worst-case behavior results in better performance
       // when most BoundingBoxes are out of the viewing frustum - as is the norm
       // in large scenes where performance may start to suffer.
       // This step involves 4 dot products.
-      int closestDiagonal = 0;
+      unsigned int closestDiagonal = 0;
       float closestProjection = std::abs(glm::dot(diagonals[0], plane.normal));
-      for (int diagNdx = 1; diagNdx < NUM_DIAGONALS; ++diagNdx) {
+      for (unsigned int diagNdx = 1; diagNdx < NUM_DIAGONALS; ++diagNdx) {
          float projection = std::abs(glm::dot(diagonals[diagNdx], plane.normal));
          if (projection > closestProjection) {
             closestDiagonal = diagNdx;
@@ -124,8 +124,8 @@ bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
 
       // Check distance of each extreme point.
       // This step involves 1 or 2 dot products.
-      auto c1 = corners[closestDiagonal];
-      auto c2 = corners[(NUM_CORNERS - 1) - closestDiagonal];
+      const glm::vec3& c1 = corners[closestDiagonal];
+      const glm::vec3& c2 = corners[(NUM_CORNERS - 1) - closestDiagonal];
       if (plane.distance(c1) < 0 && plane.distance(c2) < 0) {
          this->_frustumPlaneIndex = planeNdx;
          return false;
@@ -216,7 +216,7 @@ void BoundingBox::generateCorners() {
    glm::mat4 transform = this->getTransform();
 
    Corners corners;
-   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
+   for (unsigned int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       corners[ndx] = glm::vec3(transform * unitCorners[ndx]);
    }
 
@@ -239,9 +239,9 @@ void BoundingBox::generateDiagonalDirections() {
    auto corners = this->getCorners();
 
    DiagonalDirections diagonals;
-   for (int ndx = 0; ndx < NUM_DIAGONALS; ++ndx) {
-      auto v1 = corners[ndx];
-      auto v2 = corners[(NUM_CORNERS - 1) - ndx];
+   for (unsigned int ndx = 0; ndx < NUM_DIAGONALS; ++ndx) {
+      const glm::vec3& v1 = corners[ndx];
+      const glm::vec3& v2 = corners[(NUM_CORNERS - 1) - ndx];
       diagonals[ndx] = glm::normalize(glm::vec3(v2 - v1));
    }
 

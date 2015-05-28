@@ -16,7 +16,7 @@ const ViewFrustum::Planes& ViewFrustum::getPlanes() const {
 }
 
 bool ViewFrustum::isPointVisible(const glm::vec3& point) const {
-   for (auto plane : this->getPlanes()) {
+   for (const Plane& plane : this->getPlanes()) {
       if (plane.distance(point) < 0) {
          return false;
       }
@@ -36,14 +36,14 @@ bool ViewFrustum::isPointVisible(const glm::vec3& point) const {
    float farY = tanY * farPlane;
 
    Corners4 corners = {{
-      glm::vec4(-nearX, -nearY, nearPlane, 1.0f), // 0:nbl
-      glm::vec4( nearX, -nearY, nearPlane, 1.0f), // 1:nbr
-      glm::vec4(-nearX,  nearY, nearPlane, 1.0f), // 2:ntl
-      glm::vec4( nearX,  nearY, nearPlane, 1.0f), // 3:ntr
-      glm::vec4( -farX,  -farY,  farPlane, 1.0f), // 4:fbl
-      glm::vec4(  farX,  -farY,  farPlane, 1.0f), // 5:fbr
-      glm::vec4( -farX,   farY,  farPlane, 1.0f), // 6:ftl
-      glm::vec4(  farX,   farY,  farPlane, 1.0f), // 7:ftr
+      glm::vec4(-nearX, -nearY, -nearPlane, 1.0f), // 0:nbl
+      glm::vec4( nearX, -nearY, -nearPlane, 1.0f), // 1:nbr
+      glm::vec4(-nearX,  nearY, -nearPlane, 1.0f), // 2:ntl
+      glm::vec4( nearX,  nearY, -nearPlane, 1.0f), // 3:ntr
+      glm::vec4( -farX,  -farY,  -farPlane, 1.0f), // 4:fbl
+      glm::vec4(  farX,  -farY,  -farPlane, 1.0f), // 5:fbr
+      glm::vec4( -farX,   farY,  -farPlane, 1.0f), // 6:ftl
+      glm::vec4(  farX,   farY,  -farPlane, 1.0f), // 7:ftr
    }};
 
    return ViewFrustum::fromCorners(corners, transformMatrix);
@@ -52,7 +52,7 @@ bool ViewFrustum::isPointVisible(const glm::vec3& point) const {
 /* static */ ViewFrustum ViewFrustum::fromCorners(const Corners3& corners,
  const glm::mat4& transformMatrix) {
    Corners4 wideCorners;
-   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
+   for (unsigned int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       wideCorners[ndx] = glm::vec4(corners[ndx], 1.0f);
    }
 
@@ -61,7 +61,7 @@ bool ViewFrustum::isPointVisible(const glm::vec3& point) const {
 
 /* static */ ViewFrustum ViewFrustum::fromCorners(const Corners3& corners) {
    Corners4 wideCorners;
-   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
+   for (unsigned int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       wideCorners[ndx] = glm::vec4(corners[ndx], 1.0f);
    }
 
@@ -71,7 +71,7 @@ bool ViewFrustum::isPointVisible(const glm::vec3& point) const {
 /* static */ ViewFrustum ViewFrustum::fromCorners(const Corners4& corners,
  const glm::mat4& transformMatrix) {
    Corners4 transformedCorners;
-   for (int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
+   for (unsigned int ndx = 0; ndx < NUM_CORNERS; ++ndx) {
       transformedCorners[ndx] = transformMatrix * corners[ndx];
    }
 

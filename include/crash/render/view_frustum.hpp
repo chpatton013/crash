@@ -9,8 +9,8 @@ namespace render {
 
 class ViewFrustum {
 public:
-   static const int NUM_PLANES = 6;
-   static const int NUM_CORNERS = 8;
+   static const unsigned int NUM_PLANES = 6;
+   static const unsigned int NUM_CORNERS = 8;
 
    typedef std::array< common::Plane, NUM_PLANES > Planes;
    typedef std::array< glm::vec3, NUM_CORNERS > Corners3;

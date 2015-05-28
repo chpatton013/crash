@@ -24,10 +24,10 @@ float Plane::distance(const glm::vec4& target) const {
 
 /* static */ Plane Plane::fromPoints(const glm::vec3& a, const glm::vec3& b,
  const glm::vec3& c) {
-   glm::vec3 v = b - a;
+   glm::vec3 v = a - b;
    glm::vec3 w = c - b;
 
-   return Plane(a, glm::normalize(glm::cross(w, v)));
+   return Plane(b, glm::normalize(glm::cross(w, v)));
 }
 
 /* static */ Plane Plane::fromPoints(const glm::vec4& a, const glm::vec4& b,

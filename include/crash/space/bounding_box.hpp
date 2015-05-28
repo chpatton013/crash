@@ -15,9 +15,9 @@ public:
    // Type definitions.
    /////////////////////////////////////////////////////////////////////////////
 
-   static const int NUM_CORNERS = 8;
-   static const int NUM_FACE_NORMALS = 3;
-   static const int NUM_DIAGONALS = 4;
+   static const unsigned int NUM_CORNERS = 8;
+   static const unsigned int NUM_FACE_NORMALS = 3;
+   static const unsigned int NUM_DIAGONALS = 4;
 
    typedef std::array< glm::vec3, NUM_CORNERS > Corners;
    typedef std::array< glm::vec3, NUM_FACE_NORMALS > FaceNormals;
