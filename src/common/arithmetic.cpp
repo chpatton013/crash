@@ -38,8 +38,12 @@ float crash::common::rand_float(float lower, float upper) {
    return lower + difference * unit_rand();
 }
 
+glm::quat crash::common::axisAngleToQuat(const glm::vec3& axis, float angle) {
+   float c = std::cos(angle * 0.5f);
+   float s = std::sin(angle * 0.5f);
+   return glm::normalize(glm::quat(c, glm::normalize(axis) * s));
+}
+
 glm::quat crash::common::axisAngleToQuat(const glm::vec4& aa) {
-   float c = std::cos(aa.w * 0.5f);
-   float s = std::sin(aa.w * 0.5f);
-   return glm::normalize(glm::quat(c, glm::normalize(glm::vec3(aa)) * s));
+   return axisAngleToQuat(glm::vec3(aa), aa.w);
 }

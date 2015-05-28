@@ -14,6 +14,7 @@ float rand_float();
 float rand_float(float upper);
 float rand_float(float lower, float upper);
 
+glm::quat axisAngleToQuat(const glm::vec3& axis, float angle);
 glm::quat axisAngleToQuat(const glm::vec4& aa);
 
 /**
