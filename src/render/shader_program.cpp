@@ -154,6 +154,10 @@ void ShaderProgram::use() const {
 }
 
 void ShaderProgram::createUniformVariable(const std::string& name) {
+   if (name == "") {
+      return;
+   }
+
    GLint handle = glGetUniformLocation(this->_handle, name.c_str());
    if (handle < 0) {
       throw VariableAllocationFailure(name);
@@ -177,90 +181,150 @@ const UniformVariable& ShaderProgram::getVariableNames() const {
 
 void ShaderProgram::setUniformVariable1f(const std::string& name,
  const GLfloat* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform1fv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable2f(const std::string& name,
  const GLfloat* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform2fv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable3f(const std::string& name,
  const GLfloat* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform3fv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable4f(const std::string& name,
  const GLfloat* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform4fv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable1i(const std::string& name,
  const GLint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform1iv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable2i(const std::string& name,
  const GLint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform2iv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable3i(const std::string& name,
  const GLint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform3iv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable4i(const std::string& name,
  const GLint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform4iv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable1ui(const std::string& name,
  const GLuint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform1uiv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable2ui(const std::string& name,
  const GLuint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform2uiv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable3ui(const std::string& name,
  const GLuint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform3uiv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariable4ui(const std::string& name,
  const GLuint* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniform4uiv(this->_handle, this->getVariableHandle(name),
     length, array);
 }
 
 void ShaderProgram::setUniformVariableMatrix2(const std::string& name,
  const GLfloat* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniformMatrix2fv(this->_handle, this->getVariableHandle(name),
     length, GL_FALSE, array);
 }
 
 void ShaderProgram::setUniformVariableMatrix3(const std::string& name,
  const GLfloat* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniformMatrix3fv(this->_handle, this->getVariableHandle(name),
     length, GL_FALSE, array);
 }
 
 void ShaderProgram::setUniformVariableMatrix4(const std::string& name,
  const GLfloat* array, GLsizei length) const {
+   if (name == "") {
+      return;
+   }
+
    glProgramUniformMatrix4fv(this->_handle, this->getVariableHandle(name),
     length, GL_FALSE, array);
 }
