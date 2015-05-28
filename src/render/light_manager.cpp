@@ -14,27 +14,17 @@ const char* LightManager::LightLimitExceeded::what() const noexcept {
 }
 
 LightManager::LightManager(const LightManager& lightManager) :
-   _countHandle(lightManager._countHandle),
-   _positionHandle(lightManager._positionHandle),
-   _diffuseHandle(lightManager._diffuseHandle),
-   _specularHandle(lightManager._specularHandle),
    _position(lightManager._position),
    _diffuse(lightManager._diffuse),
    _specular(lightManager._specular)
 {}
 
-LightManager::LightManager(const std::string& countHandle,
- const std::string& positionHandle, const std::string& diffuseHandle,
- const std::string specularHandle) :
-   _countHandle(countHandle), _positionHandle(positionHandle),
-    _diffuseHandle(diffuseHandle), _specularHandle(specularHandle),
+LightManager::LightManager() :
     _position(), _diffuse(), _specular()
 {}
 
-LightManager::LightManager(const std::string& countHandle,
- const std::string& positionHandle, const std::string& diffuseHandle,
- const std::string specularHandle, const std::vector< Light >& lights) :
-   LightManager(countHandle, positionHandle, diffuseHandle, specularHandle)
+LightManager::LightManager(const std::vector< Light >& lights) :
+   LightManager()
 {
    for (const Light& light : lights) {
       this->addLight(light);
@@ -90,13 +80,13 @@ void LightManager::clearLights() {
 
 void LightManager::setUniforms(const ShaderProgram& program) const {
    unsigned int numLights = this->getLightCount();
-   program.setUniformVariable1ui(this->_countHandle,
+   program.setUniformVariable1ui(program.getVariableNames().light_count,
     reinterpret_cast< const GLuint* >(&numLights), 1);
-   program.setUniformVariable3f(this->_positionHandle,
+   program.setUniformVariable3f(program.getVariableNames().light_position,
     reinterpret_cast< const GLfloat* >(this->_position.data()), numLights);
-   program.setUniformVariable4f(this->_diffuseHandle,
+   program.setUniformVariable4f(program.getVariableNames().light_diffuse,
     reinterpret_cast< const GLfloat* >(this->_diffuse.data()), numLights);
-   program.setUniformVariable4f(this->_specularHandle,
+   program.setUniformVariable4f(program.getVariableNames().light_specular,
     reinterpret_cast< const GLfloat* >(this->_specular.data()), numLights);
 }
 

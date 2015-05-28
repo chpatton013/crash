@@ -32,12 +32,8 @@ public:
    };
 
    LightManager(const LightManager& lightManager);
-   LightManager(const std::string& countHandle,
-    const std::string& positionHandle, const std::string& diffuseHandle,
-    const std::string specularHandle);
-   LightManager(const std::string& countHandle,
-    const std::string& positionHandle, const std::string& diffuseHandle,
-    const std::string specularHandle, const std::vector< Light >& lights);
+   LightManager();
+   LightManager(const std::vector< Light >& lights);
    virtual ~LightManager();
 
    unsigned int getLightCount() const;
@@ -52,10 +48,6 @@ public:
    void setUniforms(const ShaderProgram& program) const;
 
 private:
-   const std::string _countHandle;
-   const std::string _positionHandle;
-   const std::string _diffuseHandle;
-   const std::string _specularHandle;
    std::vector< glm::vec3 > _position;
    std::vector< glm::vec4 > _diffuse;
    std::vector< glm::vec4 > _specular;
