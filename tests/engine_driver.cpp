@@ -80,12 +80,14 @@ std::tuple< glm::vec3, glm::quat > getCheckpointDirection(
 void closeCb(Window& window);
 void keyCb(const Window& window, int key, int, int action, int mods);
 void mouseButtonCb(const Window&, int, int action, int mods);
-void collisionCb(const Collision& collision);
+void freezeCollisionCb(const Collision& collision);
+void colorCollisionCb(const Collision& collision);
 void updateCb(Boundable* boundable);
 glm::vec3 getStartingPosition();
 glm::quat getStartingRotation();
 glm::vec3 getTranslationalVelocity();
 glm::quat getRotationalVelocity();
+void setColor(Actor* actor);
 void setVisibleElementsColor(const glm::vec4& color);
 void toggleRenderBoundingPartition();
 void toggleRenderBoundingGroups();
@@ -96,7 +98,8 @@ MeshPtr getMesh(const boost::filesystem::path& path);
 MeshPtr getCubeMesh(const boost::filesystem::path& path);
 ShaderProgramPtr getShaderProgram(
  const boost::filesystem::path& vertexShaderPath,
- const boost::filesystem::path& fragmentShaderPath);
+ const boost::filesystem::path& fragmentShaderPath,
+ const UniformVariable& uniforms);
 void linkShaderProgram(const ShaderProgramPtr& program,
  const std::vector< MeshPtr >& meshes);
 std::vector< ActorPtr > getActors(const MeshPtr& mesh,
@@ -109,14 +112,10 @@ BoundingPartitionPtr getBoundingPartition(
 CameraPtr getCamera();
 ActorPtr getPlane(const MeshPtr& plane, const ShaderProgramPtr& program);
 ActorPtr getSkybox(const MeshPtr& sky, const ShaderProgramPtr& program);
-LightManagerPtr getLightManager(const ShaderProgramPtr& program);
+LightManagerPtr getLightManager();
 
-int main(int argc, char** argv) {
-   if (argc < 2) {
-      std::cerr << "usage: " << argv[0] << " <filename>" << std::endl;
-      return 1;
-   }
-   const std::string meshFile = argv[1];
+int main() {
+   const std::string meshFile = "/Users/cpatton/Desktop/batman/batman.dae";
    const std::string cubeFile = "/Users/cpatton/Desktop/cube/cube.obj";
    const std::string planeFile = "/Users/cpatton/Desktop/plane/plane.obj";
    const std::string skyFile = "/Users/cpatton/Desktop/skybox/skybox.obj";
@@ -151,19 +150,83 @@ int main(int argc, char** argv) {
    plane->initialize();
    sky->initialize();
 
-   ShaderProgramPtr program;
+   ShaderProgramPtr modelProgram;
+   ShaderProgramPtr flatProgram;
    try {
-      program = getShaderProgram(
-       boost::filesystem::path("tests/render/vertex.glsl"),
-       boost::filesystem::path("tests/render/fragment.glsl"));
+      modelProgram = getShaderProgram(
+       boost::filesystem::path("tests/render/model.vertex.glsl"),
+       boost::filesystem::path("tests/render/model.fragment.glsl"),
+       UniformVariable(
+       "uModelTransform",
+       "uViewTransform",
+       "uPerspectiveTransform",
+       "uBones",
+       "uCameraPosition",
+       "uLightCount",
+       "uLightPosition",
+       "uLightDiffuse",
+       "uLightSpecular",
+       "uAmbientColor",
+       "uDiffuseColor",
+       "uSpecularColor",
+       "uShininessValue",
+       "uAmbientBaseColor",
+       "uDiffuseBaseColor",
+       "uSpecularBaseColor",
+       "uShininessBaseValue",
+       "uHasDisplacementTexture",
+       "uHasNormalTexture",
+       "uHasAmbientTexture",
+       "uHasDiffuseTexture",
+       "uHasSpecularTexture",
+       "uHasShininessTexture",
+       "uDisplacementTexture",
+       "uNormalTexture",
+       "uAmbientTexture",
+       "uDiffuseTexture",
+       "uSpecularTexture",
+       "uShininessTexture"));
+      flatProgram = getShaderProgram(
+       boost::filesystem::path("tests/render/flat.vertex.glsl"),
+       boost::filesystem::path("tests/render/flat.fragment.glsl"),
+       UniformVariable(
+       "uModelTransform",
+       "uViewTransform",
+       "uPerspectiveTransform",
+       "",
+       "",
+       "uLightCount",
+       "uLightPosition",
+       "uLightDiffuse",
+       "",
+       "uAmbientColor",
+       "uDiffuseColor",
+       "",
+       "",
+       "uAmbientBaseColor",
+       "uDiffuseBaseColor",
+       "",
+       "",
+       "",
+       "",
+       "uHasAmbientTexture",
+       "uHasDiffuseTexture",
+       "",
+       "",
+       "",
+       "",
+       "uAmbientTexture",
+       "uDiffuseTexture",
+       "",
+       ""));
    } catch (Shader::CompileFailure e) {
       std::cerr << "Shader Compile Failure: " << e.what() << std::endl;
       return 5;
    }
 
-   std::vector< MeshPtr > meshes = {{ mesh, cube, plane, sky }};
    try {
-      linkShaderProgram(program, meshes);
+      linkShaderProgram(modelProgram, {{ mesh }});
+      linkShaderProgram(flatProgram, {{ cube, plane, sky }});
    } catch (ShaderProgram::LinkFailure e) {
       std::cerr << "Shader Program Link Failure: " << e.what() << std::endl;
       return 6;
@@ -173,29 +236,30 @@ int main(int argc, char** argv) {
       return 7;
    }
 
-   std::vector< ActorPtr > actors = getActors(mesh, program);
+   std::vector< ActorPtr > actors = getActors(mesh, modelProgram);
    glm::vec3 dimensions(100.0f);
    glm::ivec3 partitions(4);
    boundingPartition = getBoundingPartition(actors, dimensions, partitions);
 
    camera = getCamera();
-   planeActor = getPlane(plane, program);
-   skyActor = getSkybox(sky, program);
+   planeActor = getPlane(plane, flatProgram);
+   skyActor = getSkybox(sky, flatProgram);
 
    boundingPartition->add(camera.get());
    boundingPartition->add(planeActor.get());
    boundingPartition->add(skyActor.get());
 
-   LightManagerPtr lightManager = getLightManager(program);
+   LightManagerPtr lightManager = getLightManager();
 
    driver = std::make_shared< Driver >(
     boundingPartition.get(), camera.get(), lightManager.get(), window.get());
 
-   driver->addCollisionCallback(collisionCb);
+   driver->addCollisionCallback(freezeCollisionCb);
+   driver->addCollisionCallback(colorCollisionCb);
    driver->addUpdateCallback(updateCb);
 
    Driver::BoundingCubeMeshInstance = std::make_shared< MeshInstance >(
-    *cube, ColorUnit(glm::vec4(), glm::vec4(), glm::vec4(), 0.0f), program);
+    *cube, ColorUnit(glm::vec4(), glm::vec4(), glm::vec4(), 0.0f), modelProgram);
 
    const float updateInterval = 1.0f / 25.0f;
    const float renderInterval = 1.0f / 60.0f;
@@ -305,19 +369,47 @@ void mouseButtonCb(const Window&, int, int action, int mods) {
    }
 }
 
-void collisionCb(const Collision& collision) {
+void freezeCollisionCb(const Collision& collision) {
    Boundable* other = nullptr;
    if (collision.getFirst() == camera.get()) {
       other = collision.getSecond();
    } else if (collision.getSecond() == camera.get()) {
       other = collision.getFirst();
+   } else {
+      return;
    }
 
    if (other == planeActor.get() || other == skyActor.get()) {
       return;
    }
 
-   Renderable* renderable = dynamic_cast< Renderable* >(other);
+   Actor* actor = dynamic_cast< Actor* >(other);
+   if (actor != nullptr) {
+      auto itr = actorCheckpoints.find(actor);
+      if (itr != actorCheckpoints.end()) {
+         actorCheckpoints.erase(itr);
+         other->setTranslationalVelocity(glm::vec3());
+      }
+   }
+}
+
+void colorCollisionCb(const Collision& collision) {
+   Actor* first = dynamic_cast< Actor* >(collision.getFirst());
+   Actor* second = dynamic_cast< Actor* >(collision.getSecond());
+   Actor* cameraActor = dynamic_cast< Actor* >(camera.get());
+
+   if (first == cameraActor || first == planeActor.get() ||
+    first == skyActor.get() || second == cameraActor ||
+    second == planeActor.get() || second == skyActor.get()) {
+      return;
+   }
+
+   setColor(first);
+   setColor(second);
+}
+
+void setColor(Actor* actor) {
+   Renderable* renderable = dynamic_cast< Renderable* >(actor);
    if (renderable == nullptr) {
       return;
    }
@@ -357,11 +449,12 @@ void updateCb(Boundable* boundable) {
 }
 
 glm::vec3 getStartingPosition() {
-   return glm::vec3(0.0f, 0.5f, 0.0f);
+   return glm::vec3(10.0f);
 }
 
 glm::quat getStartingRotation() {
-   return NO_ROTATION;
+   return axisAngleToQuat(Y_AXIS, glm::radians(45.0f)) *
+    axisAngleToQuat(X_AXIS, glm::radians(-30.0f));
 }
 
 glm::vec3 getTranslationalVelocity() {
@@ -503,7 +596,8 @@ MeshPtr getMesh(const boost::filesystem::path& path) {
 
 ShaderProgramPtr getShaderProgram(
  const boost::filesystem::path& vertexShaderPath,
- const boost::filesystem::path& fragmentShaderPath) {
+ const boost::filesystem::path& fragmentShaderPath,
+ const UniformVariable& uniforms) {
    ShaderProgram::Shaders shaders = {{
       std::make_shared< Shader >(vertexShaderPath, GL_VERTEX_SHADER),
       std::make_shared< Shader >(fragmentShaderPath, GL_FRAGMENT_SHADER),
@@ -512,37 +606,6 @@ ShaderProgramPtr getShaderProgram(
       // @throws Shader::CompileFailure
       shader->compile();
    }
-
-   UniformVariable uniforms(
-    "uModelTransform",
-    "uViewTransform",
-    "uPerspectiveTransform",
-    "uBones",
-    "uCameraPosition",
-    "uLightCount",
-    "uLightPosition",
-    "uLightDiffuse",
-    "uLightSpecular",
-    "uAmbientColor",
-    "uDiffuseColor",
-    "uSpecularColor",
-    "uShininessValue",
-    "uAmbientBaseColor",
-    "uDiffuseBaseColor",
-    "uSpecularBaseColor",
-    "uShininessBaseValue",
-    "uHasDisplacementTexture",
-    "uHasNormalTexture",
-    "uHasAmbientTexture",
-    "uHasDiffuseTexture",
-    "uHasSpecularTexture",
-    "uHasShininessTexture",
-    "uDisplacementTexture",
-    "uNormalTexture",
-    "uAmbientTexture",
-    "uDiffuseTexture",
-    "uSpecularTexture",
-    "uShininessTexture");
 
    return std::make_shared< ShaderProgram >(shaders, uniforms);
 }
@@ -699,8 +762,13 @@ ActorPtr getActor(const MeshPtr& mesh, const ShaderProgramPtr& program,
    static const ColorUnit color(
     glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 1.0f);
 
+   glm::vec3 position = ORIGIN;
+   if (checkpoints.checkpoints.size() > 0) {
+      position = checkpoints.checkpoints[0];
+   }
+
    ActorPtr actor = std::make_shared< Actor >(BoundingBox(Transformer(
-    glm::vec3(0.0f, 0.5f, 0.0f), NO_ROTATION, UNIT_SIZE,
+    position, NO_ROTATION, UNIT_SIZE,
     glm::vec3(), NO_ROTATION, glm::vec3())),
     MeshInstance(*mesh, color, program));
 
@@ -746,6 +814,7 @@ CameraPtr getCamera() {
 ActorPtr getPlane(const MeshPtr& plane, const ShaderProgramPtr& program) {
    static const ColorUnit color(
     glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 1.0f);
+
    return std::make_shared< Actor >(
     BoundingBox(Transformer(
     ORIGIN, NO_ROTATION, glm::vec3(1000.0f),
@@ -756,14 +825,15 @@ ActorPtr getPlane(const MeshPtr& plane, const ShaderProgramPtr& program) {
 ActorPtr getSkybox(const MeshPtr& sky, const ShaderProgramPtr& program) {
    static const ColorUnit color(
     glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 1.0f);
+
    return std::make_shared< Actor >(
     BoundingBox(Transformer(
-    glm::vec3(0.0f, 400.0f, 0.0f), NO_ROTATION, glm::vec3(1000.0f),
+    ORIGIN, NO_ROTATION, glm::vec3(1000.0f),
     glm::vec3(), NO_ROTATION, glm::vec3())),
     MeshInstance(*sky, color, program));
 }
 
-LightManagerPtr getLightManager(const ShaderProgramPtr& program) {
+LightManagerPtr getLightManager() {
    std::vector< Light > lights = {{
       Light(
        /* position */ glm::vec3(1000.0f, 1000.0f, 1000.0f),
@@ -799,8 +869,5 @@ LightManagerPtr getLightManager(const ShaderProgramPtr& program) {
        /* specular */ glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
    }};
 
-   const UniformVariable& uniforms = program->getVariableNames();
-   return std::make_shared< LightManager >(
-    uniforms.light_count, uniforms.light_position,
-    uniforms.light_diffuse, uniforms.light_specular, lights);
+   return std::make_shared< LightManager >(lights);
 }
