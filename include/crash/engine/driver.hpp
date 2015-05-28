@@ -30,6 +30,7 @@ class Driver {
 public:
    typedef void (*CollisionCallback)(const space::Collision& collision);
    typedef void (*UpdateCallback)(space::Boundable* boundable);
+   typedef void (*RenderCallback)(render::Renderable* renderable);
 
    static render::MeshInstancePtr BoundingCubeMeshInstance;
 
@@ -62,6 +63,11 @@ public:
    void addUpdateCallback(UpdateCallback callback);
    void removeUpdateCallback(UpdateCallback callback);
    void clearUpdateCallbacks();
+
+   const std::set< RenderCallback >& getRenderCallbacks() const;
+   void addRenderCallback(RenderCallback callback);
+   void removeRenderCallback(RenderCallback callback);
+   void clearRenderCallbacks();
 
    bool getShouldLoop() const;
    void setShouldLoop(bool shouldLoop);
@@ -108,6 +114,7 @@ private:
    window::Window* _window;
    std::set< CollisionCallback > _collisionCallbacks;
    std::set< UpdateCallback > _updateCallbacks;
+   std::set< RenderCallback > _renderCallbacks;
    bool _shouldLoop;
    bool _renderBoundingBoxes;
    bool _renderBoundingGroups;

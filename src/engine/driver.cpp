@@ -119,6 +119,22 @@ void Driver::clearUpdateCallbacks() {
    this->_updateCallbacks.clear();
 }
 
+const std::set< Driver::RenderCallback >& Driver::getRenderCallbacks() const {
+   return this->_renderCallbacks;
+}
+
+void Driver::addRenderCallback(RenderCallback callback) {
+   this->_renderCallbacks.insert(callback);
+}
+
+void Driver::removeRenderCallback(RenderCallback callback) {
+   this->_renderCallbacks.erase(callback);
+}
+
+void Driver::clearRenderCallbacks() {
+   this->_renderCallbacks.clear();
+}
+
 bool Driver::getShouldLoop() const {
    return this->_shouldLoop && !this->_window->shouldClose();
 }
@@ -245,6 +261,10 @@ void Driver::render(float delta_t) const {
       Renderable* renderable = dynamic_cast< Renderable* >(boundable);
       if (renderable == nullptr) {
          continue;
+      }
+
+      for (const RenderCallback& callback : this->_renderCallbacks) {
+         callback(renderable);
       }
 
       ShaderProgramPtr program =
