@@ -87,5 +87,6 @@ bool ViewFrustum::isPointVisible(const glm::vec3& point) const {
       Plane::fromPoints(corners[1], corners[0], corners[2]), // 4:near
       Plane::fromPoints(corners[4], corners[5], corners[7]), // 5:far
    }};
+
    return ViewFrustum(planes);
 }
