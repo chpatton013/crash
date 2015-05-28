@@ -126,7 +126,7 @@ bool BoundingBox::isVisible(const ViewFrustum& viewFrustum) {
       // This step involves 1 or 2 dot products.
       const glm::vec3& c1 = corners[closestDiagonal];
       const glm::vec3& c2 = corners[(NUM_CORNERS - 1) - closestDiagonal];
-      if (plane.distance(c1) < 0 && plane.distance(c2) < 0) {
+      if (plane.distance(c1) < 0.0f && plane.distance(c2) < 0.0f) {
          this->_frustumPlaneIndex = planeNdx;
          return false;
       }

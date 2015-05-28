@@ -80,7 +80,7 @@ public:
     Boundable* boundingBox) const;
    std::vector< Collision > getCollidingElements() const;
    std::vector< Boundable* > getVisibleElements(
-    const render::ViewFrustum& viewFrustum) const;
+    const render::ViewFrustum& viewFrustum);
 
 private:
    BoundingBox _boundingBox;

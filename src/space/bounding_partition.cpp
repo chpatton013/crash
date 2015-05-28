@@ -267,7 +267,7 @@ std::vector< Collision > BoundingPartition::getCollidingElements() const {
 }
 
 std::vector< Boundable* > BoundingPartition::getVisibleElements(
- const ViewFrustum& viewFrustum) const {
+ const ViewFrustum& viewFrustum) {
    std::vector< Boundable* > accumulator;
    std::set< Boundable* > mark;
 
@@ -279,12 +279,14 @@ std::vector< Boundable* > BoundingPartition::getVisibleElements(
       }
    }
 
-   for (const BoundingGroup& group : this->_boundingGroups) {
-      for (Boundable* boundingBox : group.getVisibleElements(viewFrustum)) {
-         auto itr = mark.find(boundingBox);
-         if (itr == mark.end()) {
-            accumulator.push_back(boundingBox);
-            mark.insert(boundingBox);
+   for (BoundingGroup& group : this->_boundingGroups) {
+      if (group.isVisible(viewFrustum)) {
+         for (Boundable* boundingBox : group.getVisibleElements(viewFrustum)) {
+            auto itr = mark.find(boundingBox);
+            if (itr == mark.end()) {
+               accumulator.push_back(boundingBox);
+               mark.insert(boundingBox);
+            }
          }
       }
    }
