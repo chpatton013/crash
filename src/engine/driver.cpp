@@ -255,8 +255,9 @@ void Driver::render(float delta_t) const {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    std::vector< Boundable* > visibleBoundables =
-    this->_boundingPartition->getVisibleElements(
-    this->_camera->getViewFrustum());
+    this->_boundingPartition->getBoundables();
+    /* this->_boundingPartition->getVisibleElements( */
+    /* this->_camera->getViewFrustum()); */
    for (Boundable* boundable : visibleBoundables) {
       Renderable* renderable = dynamic_cast< Renderable* >(boundable);
       if (renderable == nullptr) {
@@ -288,7 +289,8 @@ void Driver::render(float delta_t) const {
       this->_lightManager->setUniforms(*program);
 
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      glEnable(GL_CULL_FACE);
+      /* glEnable(GL_CULL_FACE); */
+      glDisable(GL_CULL_FACE);
 
       renderable->render(delta_t);
 

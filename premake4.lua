@@ -49,20 +49,6 @@ flags({
    'OptimizeSpeed',
 })
 
-project('crash_util')
-kind('SharedLib')
-targetdir('lib')
-files({
-   'src/util/**.cpp',
-   'include/crash/util/**.hpp',
-   'include/crash/util/**.inl'
-})
-links({
-   'boost_filesystem',
-   'boost_system',
-})
-linkoptions({})
-
 project('crash_common')
 kind('SharedLib')
 targetdir('lib')
@@ -122,24 +108,53 @@ links({
 })
 linkoptions({})
 
-project('crash_unit_test')
-kind('ConsoleApp')
-targetdir('bin')
+project('crash_engine')
+kind('SharedLib')
+targetdir('lib')
 files({
-   'tests/unit_driver.cpp',
-   'tests/unit/**.cpp',
-   'tests/unit/**.hpp',
-   'tests/unit/**.inl'
+   'src/engine/**.cpp',
+   'include/crash/engine/**.hpp',
+   'include/crash/engine/**.inl'
 })
 links({
-   'crash_math',
+   'crash_common',
    'crash_space',
-   'crash_util',
-   'crash_window',
+
+   'crash_render',
+   'assimp',
    'boost_filesystem',
    'boost_system',
+
+   'crash_window',
+   'GLEW',
+   'glfw3',
+
+   'boost_timer',
 })
 linkoptions({})
+configuration("macosx")
+links({"OpenGL.framework"})
+configuration("not macosx")
+links({"GL"})
+
+-- project('crash_unit_test')
+-- kind('ConsoleApp')
+-- targetdir('bin')
+-- files({
+--    'tests/unit_driver.cpp',
+--    'tests/unit/**.cpp',
+--    'tests/unit/**.hpp',
+--    'tests/unit/**.inl'
+-- })
+-- links({
+--    'crash_common',
+--    'crash_space',
+--    'crash_util',
+--    'crash_window',
+--    'boost_filesystem',
+--    'boost_system',
+-- })
+-- linkoptions({})
 
 project('crash_asset_test')
 kind('ConsoleApp')
@@ -154,15 +169,16 @@ links({
 })
 linkoptions({})
 
-project('crash_render_test')
+project('crash_engine_test')
 kind('ConsoleApp')
 targetdir('bin')
 files({
-   'tests/render_driver.cpp',
+   'tests/engine_driver.cpp',
 })
 links({
    'crash_common',
    'crash_space',
+   'crash_engine',
 
    'crash_render',
    'assimp',
@@ -180,6 +196,33 @@ configuration('macosx')
 links({'OpenGL.framework'})
 configuration('not macosx')
 links({'GL'})
+
+-- project('crash_render_test')
+-- kind('ConsoleApp')
+-- targetdir('bin')
+-- files({
+--    'tests/render_driver.cpp',
+-- })
+-- links({
+--    'crash_common',
+--    'crash_space',
+
+--    'crash_render',
+--    'assimp',
+--    'boost_filesystem',
+--    'boost_system',
+
+--    'crash_window',
+--    'glfw3',
+--    'GLEW',
+
+--    'boost_timer',
+-- })
+-- linkoptions({})
+-- configuration('macosx')
+-- links({'OpenGL.framework'})
+-- configuration('not macosx')
+-- links({'GL'})
 
 project('crash_window_test')
 kind('ConsoleApp')

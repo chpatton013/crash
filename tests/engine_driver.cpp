@@ -522,8 +522,7 @@ glm::quat getRotationalVelocity() {
 void setVisibleElementsColor(const glm::vec4& diffuse) {
    std::vector< Boundable* > visibleBoundables =
     boundingPartition->getBoundables();
-   /* std::vector< Boundable* > visibleBoundables = */
-   /*  boundingPartition->getVisibleElements(camera->getViewFrustum()); */
+    /* boundingPartition->getVisibleElements(camera->getViewFrustum()); */
    for (Boundable* boundable : visibleBoundables) {
       if (boundable == planeActor.get() || boundable == skyActor.get()) {
          continue;
@@ -561,7 +560,7 @@ WindowPtr getWindow() {
    Window::setHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
    WindowPtr window = std::make_shared< Window >(
-    glm::ivec2(900, 600), "OpenGL Test", boost::none, boost::none);
+    glm::ivec2(900, 600), "CRASH", boost::none, boost::none);
    window->makeContextCurrent();
    window->swapInterval(1);
 
@@ -754,6 +753,27 @@ std::vector< ActorPtr > getActors(const MeshPtr& mesh,
       actors.push_back(getActor(mesh, program, checkpoints));
    }
 
+   /* actors.clear(); */
+   /* actorCheckpoints.clear(); */
+
+   /* static const ColorUnit color( */
+   /*  glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 1.0f); */
+   /* for (unsigned int i = 0; i < 10; ++i) { */
+   /*    glm::vec3 position(rand_float(-5.0f, 5.0f), */
+   /*                       rand_float(-5.0f, 5.0f), */
+   /*                       rand_float(-5.0f, 5.0f)); */
+   /*    glm::vec3 axis(rand_float(-1.0f, 1.0f), */
+   /*                   rand_float(-1.0f, 1.0f), */
+   /*                   rand_float(-1.0f, 1.0f)); */
+   /*    float angle = rand_float(0.0f, 2 * crash::common::pi); */
+   /*    glm::quat orientation = axisAngleToQuat(axis, angle); */
+
+   /*    actors.push_back(std::make_shared< Actor >(BoundingBox(Transformer( */
+   /*     position, orientation, UNIT_SIZE, */
+   /*     glm::vec3(), NO_ROTATION, glm::vec3())), */
+   /*     MeshInstance(*mesh, color, program))); */
+   /* } */
+
    return actors;
 }
 
@@ -789,7 +809,7 @@ BoundingPartitionPtr getBoundingPartition(
  const std::vector< ActorPtr >& actors,
  const glm::vec3& dimensions, const glm::ivec3& partitions) {
    Transformer transformer(
-    glm::vec3(0.0f, dimensions.y * 0.5f, 0.0f), NO_ROTATION, dimensions,
+    ORIGIN, NO_ROTATION, dimensions,
     glm::vec3(), NO_ROTATION, glm::vec3());
 
    BoundingPartitionPtr boundingPartition =

@@ -228,11 +228,19 @@ void MeshComponent::activateMaterial(const ShaderProgram& program,
    program.setUniformVariable1f(vars.shininess_base_value,
     &color.shininess, 1);
 
-   if (this->_materialUnit.twoSided) {
-      glDisable(GL_CULL_FACE);
-   } else {
-      glEnable(GL_CULL_FACE);
-   }
+   // TODO: replace color with material. allow all material property overrides
+
+   /* if (this->_materialUnit.twoSided) { */
+   /*    glDisable(GL_CULL_FACE); */
+   /* } else { */
+   /*    glEnable(GL_CULL_FACE); */
+   /* } */
+
+   /* if (this->_materialUnit.wireFrame) { */
+   /*    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); */
+   /* } else { */
+   /*    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
+   /* } */
 }
 
 void MeshComponent::activateTextures(const ShaderProgram& program) const {
